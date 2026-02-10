@@ -1,7 +1,13 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Card from './Card';
-import { subjects } from '../data/mockData';
+
+const subjects = [
+  { id: 'Physics', name: 'Physics', icon: '⚛️', color: '#3b82f6' },
+  { id: 'Chemistry', name: 'Chemistry', icon: '🧪', color: '#10b981' },
+  { id: 'Biology', name: 'Biology', icon: '🧬', color: '#22c55e' },
+  { id: 'Computer', name: 'Computer', icon: '💻', color: '#06b6d4' },
+];
 
 function SubjectGrid({ board, classLevel }) {
   const navigate = useNavigate();

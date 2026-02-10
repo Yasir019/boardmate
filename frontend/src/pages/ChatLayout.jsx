@@ -1,34 +1,57 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import ChapterList from '../components/ChapterList';
 import ChatPanel from '../components/ChatPanel';
-import { getBoardById, getClassById, getSubjectById, mockMessages } from '../data/mockData';
+import { api } from '../api/client';
+
+// Available chapters - Only Sindh Board, Class 10, Chemistry for now
+const availableChapters = {
+  'Sindh': {
+    '10th': {
+      'Chemistry': [
+        { id: 1, name: 'Chapter 1: Chemical Equilibrium' },
+      ]
+    }
+  }
+};
 
 function ChatLayout() {
   const { board, classLevel, subject } = useParams();
   const [selectedChapter, setSelectedChapter] = useState(null);
-  const [messages, setMessages] = useState(mockMessages);
+  const [messages, setMessages] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // Get data from mock
-  const boardData = getBoardById(board);
-  const classData = getClassById(classLevel);
-  const subjectData = getSubjectById(subject);
+  // Create data objects from URL params
+  const boardData = { id: board, name: board };
+  const classData = { id: classLevel, name: classLevel };
+  const subjectData = { id: subject, name: subject };
 
-  const handleSelectChapter = (chapter) => {
-    setSelectedChapter(chapter);
-    // Reset messages when chapter changes
+  // Get chapters for current selection (or empty if not available)
+  const chapters = availableChapters[board]?.[classLevel]?.[subject] || [];
+  const isAvailable = chapters.length > 0;
+
+  // Initialize with welcome message
+  useEffect(() => {
+    const welcomeText = isAvailable
+      ? `Welcome! I'm BoardMate, your AI study assistant for ${subject} (${board} - ${classLevel}). Ask me any question about your textbook!`
+      : `🚧 Coming Soon! Content for ${subject} (${board} - ${classLevel}) is under development.`;
+    
     setMessages([
       {
         id: Date.now(),
         type: 'bot',
-        text: `Welcome to ${chapter.name}! I'm here to help you understand this chapter. Feel free to ask any questions.`,
+        text: welcomeText,
         timestamp: new Date().toISOString(),
       },
     ]);
+  }, [board, classLevel, subject, isAvailable]);
+
+  const handleSelectChapter = (chapter) => {
+    setSelectedChapter(chapter);
   };
 
-  const handleSendMessage = (text) => {
+  const handleSendMessage = async (text) => {
     // Add user message
     const userMessage = {
       id: Date.now(),
@@ -37,17 +60,37 @@ function ChatLayout() {
       timestamp: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, userMessage]);
+    setIsLoading(true);
 
-    // Simulate bot response after a short delay
-    setTimeout(() => {
+    try {
+      // Call the real RAG backend API
+      const response = await api.askQuestion(
+        board,
+        classLevel,
+        subject,
+        text
+      );
+
       const botMessage = {
         id: Date.now() + 1,
         type: 'bot',
-        text: `Thank you for your question about "${text.slice(0, 50)}${text.length > 50 ? '...' : ''}".\n\nThis is a mock response. In the full implementation, this would connect to the RAG backend to provide accurate answers based on your ${subjectData?.name || 'subject'} textbook content for ${classData?.name || 'your class'} (${boardData?.name || 'your board'}).`,
+        text: response.answer,
+        sources: response.sources,
         timestamp: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, botMessage]);
-    }, 800);
+    } catch (error) {
+      console.error('API Error:', error);
+      const errorMessage = {
+        id: Date.now() + 1,
+        type: 'bot',
+        text: `Sorry, I encountered an error: ${error.message}. Please make sure the backend server is running.`,
+        timestamp: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const toggleSidebar = () => {
@@ -57,6 +100,7 @@ function ChatLayout() {
   return (
     <div className="chat-layout">
       <ChapterList
+        chapters={chapters}
         selectedChapter={selectedChapter}
         onSelectChapter={handleSelectChapter}
         isOpen={isSidebarOpen}
@@ -70,6 +114,8 @@ function ChatLayout() {
         messages={messages}
         onSendMessage={handleSendMessage}
         onToggleChapters={toggleSidebar}
+        isLoading={isLoading}
+        chatEnabled={isAvailable}
       />
     </div>
   );

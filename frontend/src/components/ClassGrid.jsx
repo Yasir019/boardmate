@@ -1,6 +1,12 @@
 import React from 'react';
 import Card from './Card';
-import { classes } from '../data/mockData';
+
+const classes = [
+  { id: '9th', name: '9th', icon: '9️⃣', description: 'Matriculation Part 1' },
+  { id: '10th', name: '10th', icon: '🔟', description: 'Matriculation Part 2' },
+  { id: '11th', name: '11th', icon: '1️⃣1️⃣', description: 'Intermediate Part 1' },
+  { id: '12th', name: '12th', icon: '1️⃣2️⃣', description: 'Intermediate Part 2' },
+];
 
 function ClassGrid({ board, onSelectClass }) {
   return (

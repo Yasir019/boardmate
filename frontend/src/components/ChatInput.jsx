@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-function ChatInput({ onSendMessage, disabled }) {
+function ChatInput({ onSendMessage, disabled, placeholder = "Ask a question about this chapter..." }) {
   const [message, setMessage] = useState('');
 
   const handleSubmit = (e) => {
@@ -23,7 +23,7 @@ function ChatInput({ onSendMessage, disabled }) {
       <form className="chat-input-form" onSubmit={handleSubmit}>
         <textarea
           className="chat-input"
-          placeholder="Ask a question about this chapter..."
+          placeholder={placeholder}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={handleKeyDown}

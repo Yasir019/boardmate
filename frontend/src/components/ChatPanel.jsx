@@ -9,7 +9,9 @@ function ChatPanel({
   selectedChapter, 
   messages, 
   onSendMessage,
-  onToggleChapters 
+  onToggleChapters,
+  isLoading = false,
+  chatEnabled = false
 }) {
   const messagesEndRef = useRef(null);
 
@@ -46,35 +48,28 @@ function ChatPanel({
 
       {/* Messages */}
       <div className="messages-container">
-        {!selectedChapter ? (
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            height: '100%',
-            color: 'var(--text-secondary)',
-            textAlign: 'center',
-            padding: '2rem'
-          }}>
-            <div>
-              <p style={{ fontSize: '3rem', marginBottom: '1rem' }}>📖</p>
-              <p>Select a chapter from the sidebar to start chatting</p>
+        {messages.map((message) => (
+          <MessageBubble key={message.id} message={message} />
+        ))}
+        {isLoading && (
+          <div className="message-bubble bot">
+            <div className="message-content">
+              <span className="typing-indicator">
+                <span></span>
+                <span></span>
+                <span></span>
+              </span>
             </div>
           </div>
-        ) : (
-          <>
-            {messages.map((message) => (
-              <MessageBubble key={message.id} message={message} />
-            ))}
-            <div ref={messagesEndRef} />
-          </>
         )}
+        <div ref={messagesEndRef} />
       </div>
 
       {/* Input */}
       <ChatInput 
         onSendMessage={onSendMessage} 
-        disabled={!selectedChapter}
+        disabled={!chatEnabled || isLoading}
+        placeholder={chatEnabled ? "Ask me anything..." : "Content coming soon..."}
       />
     </main>
   );

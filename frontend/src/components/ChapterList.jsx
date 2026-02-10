@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { chapters } from '../data/mockData';
 
-function ChapterList({ selectedChapter, onSelectChapter, isOpen, onClose }) {
+function ChapterList({ chapters = [], selectedChapter, onSelectChapter, isOpen, onClose }) {
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredChapters = chapters.filter((chapter) =>
@@ -25,22 +24,30 @@ function ChapterList({ selectedChapter, onSelectChapter, isOpen, onClose }) {
         />
       </div>
       <div className="chapter-list">
-        {filteredChapters.map((chapter) => (
-          <div
-            key={chapter.id}
-            className={`chapter-item ${selectedChapter?.id === chapter.id ? 'active' : ''}`}
-            onClick={() => {
-              onSelectChapter(chapter);
-              if (onClose) onClose();
-            }}
-          >
-            {chapter.name}
+        {chapters.length === 0 ? (
+          <div className="chapter-item coming-soon" style={{ color: 'var(--text-secondary)', cursor: 'default', textAlign: 'center', padding: '20px' }}>
+            🚧 Coming Soon
           </div>
-        ))}
-        {filteredChapters.length === 0 && (
-          <div className="chapter-item" style={{ color: 'var(--text-secondary)', cursor: 'default' }}>
-            No chapters found
-          </div>
+        ) : (
+          <>
+            {filteredChapters.map((chapter) => (
+              <div
+                key={chapter.id}
+                className={`chapter-item ${selectedChapter?.id === chapter.id ? 'active' : ''}`}
+                onClick={() => {
+                  onSelectChapter(chapter);
+                  if (onClose) onClose();
+                }}
+              >
+                {chapter.name}
+              </div>
+            ))}
+            {filteredChapters.length === 0 && searchQuery && (
+              <div className="chapter-item" style={{ color: 'var(--text-secondary)', cursor: 'default' }}>
+                No chapters found
+              </div>
+            )}
+          </>
         )}
       </div>
     </aside>
