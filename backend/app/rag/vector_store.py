@@ -80,7 +80,22 @@ class VectorStore:
         Returns:
             List of results with text, metadata, and distance
         """
-        where = filters if filters else None
+        # Build ChromaDB where clause with $and for multiple filters
+        where = None
+        if filters:
+            # Filter out None values
+            valid_filters = {k: v for k, v in filters.items() if v is not None}
+            if len(valid_filters) == 1:
+                # Single filter - use directly
+                key, value = list(valid_filters.items())[0]
+                where = {key: {"$eq": value}}
+            elif len(valid_filters) > 1:
+                # Multiple filters - use $and
+                where = {
+                    "$and": [
+                        {k: {"$eq": v}} for k, v in valid_filters.items()
+                    ]
+                }
         
         results = self.collection.query(
             query_embeddings=[query_embedding],

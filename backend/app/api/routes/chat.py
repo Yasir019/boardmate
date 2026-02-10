@@ -12,6 +12,7 @@ class ChatRequest(BaseModel):
 
 class Source(BaseModel):
     chapter: str
+    subject: str = None
     snippet: str
 
 class ChatResponse(BaseModel):

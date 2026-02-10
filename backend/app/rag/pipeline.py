@@ -5,6 +5,7 @@ from app.rag.cleaner import clean_text
 from app.rag.chunker import chunk_text
 from app.rag.embeddings import EmbeddingModel
 from app.rag.vector_store import VectorStore
+from app.services.llm_service import generate_response
 from app.core.config import (
     DATA_DIR, VECTOR_DB_DIR, EMBEDDING_MODEL,
     CHUNK_SIZE, CHUNK_OVERLAP, COLLECTION_NAME, TOP_K_RESULTS
@@ -137,21 +138,26 @@ class RAGPipeline:
         # Build response
         if not results:
             return {
-                "answer": "Not found in textbook.",
+                "answer": "I couldn't find information about this topic in the textbook. Please try rephrasing your question or check if this topic is covered in another chapter.",
                 "sources": []
             }
         
         # Create context from retrieved chunks
-        context = "\n\n".join([r["text"] for r in results])
+        context = "\n\n---\n\n".join([r["text"] for r in results])
         
-        # For now, return a stub answer with context
-        # In production, this would be sent to an LLM
-        answer = f"Based on the textbook content:\n\n{context}\n\n(Note: This is a stub response showing retrieved context. In production, an LLM would generate a proper answer.)"
+        # Generate answer using Groq LLM
+        answer = generate_response(
+            question=question,
+            context=context,
+            board=board,
+            class_level=class_level
+        )
         
         # Format sources
         sources = [
             {
                 "chapter": r["metadata"]["chapter"],
+                "subject": r["metadata"]["subject"],
                 "snippet": r["text"][:150] + "..." if len(r["text"]) > 150 else r["text"]
             }
             for r in results
