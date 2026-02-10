@@ -35,7 +35,6 @@ boardmate/
 │   ├── src/
 │   │   ├── components/     # Reusable UI components
 │   │   ├── pages/          # Page components
-│   │   ├── data/           # Mock data
 │   │   └── styles/         # CSS files
 │   └── package.json
 │
@@ -46,10 +45,11 @@ boardmate/
 │   │   ├── rag/            # RAG pipeline
 │   │   ├── services/       # Business logic
 │   │   └── storage/        # Vector DB storage
-│   └── requirements.txt
+│   └── pyproject.toml
 │
-├── data/                   # Textbook files (see structure below)
-├── docker-compose.yml      # Docker setup (optional)
+├── data/                   # Textbook files
+├── .env                    # Environment variables (not in git)
+├── .env.example            # Environment template
 └── README.md
 ```
 
@@ -101,20 +101,14 @@ data/
 ```bash
 cd backend
 
-# Create virtual environment
-python -m venv .venv
-
-# Activate (Windows)
-.venv\Scripts\activate
-
-# Activate (Linux/Mac)
-source .venv/bin/activate
+# Install uv (if not installed)
+pip install uv
 
 # Install dependencies
-pip install -r requirements.txt
+uv sync
 
 # Run server
-uvicorn app.main:app --reload --port 8000
+uv run uvicorn app.main:app --reload --port 8000
 ```
 
 ### Frontend Setup
@@ -170,14 +164,23 @@ npm run dev
 
 ## 🔧 Configuration
 
-Environment variables (create `.env` in backend/):
+Environment variables (copy `.env.example` to `.env` in project root):
 
 ```env
-ADMIN_TOKEN=admin123
+# Admin Security
+ADMIN_TOKEN=your_secure_token
+
+# Groq LLM Settings
+GROQ_API_KEY=your_groq_api_key
+GROQ_MODEL=llama-3.1-8b-instant
+
+# Embedding Model
+EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
+
+# RAG Settings
 CHUNK_SIZE=400
 CHUNK_OVERLAP=60
-TOP_K_RESULTS=3
-EMBEDDING_MODEL=all-MiniLM-L6-v2
+TOP_K_RESULTS=5
 ```
 
 ---
@@ -195,8 +198,8 @@ npm run build
 ### Backend
 
 ```bash
-# Use production server
-uvicorn app.main:app --host 0.0.0.0 --port 8000
+cd backend
+uv run uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
 ---
