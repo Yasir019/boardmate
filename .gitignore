@@ -1,0 +1,78 @@
+# =====================
+# Python
+# =====================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+env/
+.env
+.env.local
+.env.*.local
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# =====================
+# Node.js
+# =====================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+*.log
+
+# =====================
+# Build Outputs
+# =====================
+frontend/dist/
+*.local
+
+# =====================
+# Vector Database
+# =====================
+backend/app/storage/vector_db/*
+!backend/app/storage/vector_db/.gitkeep
+
+# =====================
+# IDE & Editors
+# =====================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-workspace
+*.sublime-project
+
+# =====================
+# OS Files
+# =====================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# =====================
+# Testing
+# =====================
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+
+# =====================
+# Misc
+# =====================
+*.bak
+*.tmp
+*.temp

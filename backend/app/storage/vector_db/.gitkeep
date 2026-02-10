@@ -1,0 +1,6 @@
+# Vector DB Storage Directory
+
+This directory will contain ChromaDB's persistent storage.
+It will be automatically populated when you run the re-index operation.
+
+**Note:** This directory is excluded from git (.gitignore) to avoid committing large database files.
