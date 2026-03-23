@@ -20,8 +20,9 @@ BoardMate is a RAG (Retrieval-Augmented Generation) based educational assistant 
 | Layer | Technology |
 |-------|------------|
 | Frontend | React 18 + Vite |
-| Backend | FastAPI (Python) |
-| Vector DB | ChromaDB |
+| Backend | FastAPI (Python) + LangChain |
+| LLM | Groq (Llama 3.1) |
+| Vector DB | ChromaDB (via LangChain) |
 | Embeddings | sentence-transformers |
 | Requirements | CPU-only, 8GB RAM |
 
@@ -57,7 +58,9 @@ boardmate/
 
 ## 📖 Data Folder Structure
 
-Place your textbook files in the `data/` folder following this structure:
+**Note**: You can now configure a custom data folder path using the `DATA_DIR` environment variable in `.env`. If not specified, the default `data/` folder will be used.
+
+Place your textbook files in your data folder following this structure:
 
 ```
 data/
@@ -101,14 +104,14 @@ data/
 ```bash
 cd backend
 
-# Install uv (if not installed)
-pip install uv
+# Create virtual environment once (from project root)
+py -m venv .venv
 
-# Install dependencies
-uv sync
+# Install dependencies once
+..\.venv\Scripts\python.exe -m pip install -r requirements.txt
 
 # Run server
-uv run uvicorn app.main:app --reload --port 8000
+..\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000
 ```
 
 ### Frontend Setup
@@ -170,7 +173,11 @@ Environment variables (copy `.env.example` to `.env` in project root):
 # Admin Security
 ADMIN_TOKEN=your_secure_token
 
-# Groq LLM Settings
+# Data Directory (optional - leave empty to use default ./data folder)
+# Example: DATA_DIR=D:/my_textbooks
+DATA_DIR=
+
+# Groq LLM Settings (get your key from https://console.groq.com)
 GROQ_API_KEY=your_groq_api_key
 GROQ_MODEL=llama-3.1-8b-instant
 

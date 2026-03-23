@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Unit 3 – Algorithms and Problem Solving | Computer Science Class 11</title>
+  <style>
+    /* ── Base ─────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.75;
+      color: #1a1a2e;
+      background: #f4f6fb;
+    }
+
+    /* ── Layout ───────────────────────────────────────────── */
+    .wrapper {
+      display: flex;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+    main { flex: 1; min-width: 0; padding: 32px 40px 80px 40px; background: #fff; box-shadow: 0 0 40px rgba(0,0,0,.08); }
+
+    /* ── Sidebar ──────────────────────────────────────────── */
+    aside {
+      width: 240px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      padding: 24px 16px;
+      background: #1a1a2e;
+      color: #ccd6f6;
+      font-size: 13px;
+    }
+    aside h2 { color: #64ffda; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
+    aside ul { list-style: none; }
+    aside ul li { margin: 4px 0; }
+    aside ul li a { color: #a8b2d8; text-decoration: none; display: block; padding: 3px 6px; border-radius: 4px; transition: all .2s; }
+    aside ul li a:hover { color: #64ffda; background: rgba(100,255,218,.08); }
+    aside ul li.sub a { padding-left: 16px; font-size: 12px; color: #8892b0; }
+    aside ul li.sub2 a { padding-left: 28px; font-size: 11.5px; color: #6a7899; }
+
+    /* ── Cover ────────────────────────────────────────────── */
+    .cover {
+      background: linear-gradient(135deg, #0f3460 0%, #16213e 60%, #0d0d2b 100%);
+      color: #fff;
+      padding: 60px 40px;
+      margin: -32px -40px 48px -40px;
+      position: relative;
+      overflow: hidden;
+    }
+    .cover::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 70% 30%, rgba(100,255,218,.12), transparent 60%);
+    }
+    .cover .badge {
+      display: inline-block;
+      background: #64ffda;
+      color: #0d0d2b;
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+    }
+    .cover h1 {
+      font-size: 2.4rem;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 10px;
+      position: relative;
+    }
+    .cover .subtitle {
+      font-size: 1.05rem;
+      color: #a8d8ea;
+      margin-bottom: 32px;
+    }
+    .cover .subject-tag {
+      font-size: 12px;
+      color: #64ffda;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* ── Page marker ──────────────────────────────────────── */
+    .page-marker {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 36px 0 10px;
+      color: #8892b0;
+      font-size: 11.5px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .page-marker::before, .page-marker::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #e0e7ff;
+    }
+    .page-marker span { white-space: nowrap; }
+
+    /* ── Typography ───────────────────────────────────────── */
+    h1.section-title { font-size: 1.7rem; color: #0f3460; margin: 32px 0 12px; border-left: 5px solid #64ffda; padding-left: 14px; }
+    h2.section-title { font-size: 1.35rem; color: #16213e; margin: 28px 0 10px; border-left: 4px solid #4fc3f7; padding-left: 12px; }
+    h3.section-title { font-size: 1.1rem; color: #1a237e; margin: 22px 0 8px; border-left: 3px solid #a5d6a7; padding-left: 10px; }
+    h4.section-title { font-size: 1rem; color: #37474f; margin: 18px 0 6px; padding-left: 10px; border-left: 3px solid #ffcc80; }
+    p { margin-bottom: 14px; }
+    ul, ol { margin: 10px 0 14px 28px; }
+    li { margin-bottom: 6px; }
+    strong { color: #0f3460; }
+
+    /* ── SLO Box ──────────────────────────────────────────── */
+    .slo-box {
+      background: linear-gradient(120deg, #e8f5e9, #f1f8ff);
+      border: 1.5px solid #81c784;
+      border-radius: 12px;
+      padding: 24px 28px;
+      margin: 24px 0 32px;
+    }
+    .slo-box h3 { color: #2e7d32; font-size: 1rem; margin-bottom: 12px; letter-spacing: .5px; }
+    .slo-box ul { margin-left: 20px; }
+    .slo-box li { margin-bottom: 8px; color: #1b5e20; font-size: 14px; }
+
+    /* ── Info / Tip / Fun Fact box ────────────────────────── */
+    .info-box {
+      display: flex;
+      gap: 14px;
+      background: #fff8e1;
+      border-left: 5px solid #ffd54f;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 20px 0;
+    }
+    .info-box .icon { font-size: 1.6rem; flex-shrink: 0; line-height: 1; }
+    .info-box .content { font-size: 13.5px; color: #5d4037; }
+    .tip-box {
+      background: #e8f4fd;
+      border-left: 5px solid #42a5f5;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 20px 0;
+      font-size: 13.5px;
+      color: #0d47a1;
+    }
+    .tip-box strong { color: #0d47a1; }
+
+    /* ── Class Activity ───────────────────────────────────── */
+    .activity-box {
+      background: linear-gradient(135deg, #fce4ec, #fff9c4);
+      border: 1.5px dashed #e91e63;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin: 24px 0;
+    }
+    .activity-box .activity-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #880e4f;
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+    .activity-box .activity-header::before { content: '🎯'; font-size: 1.2rem; }
+
+    /* ── Complexity Class Cards ───────────────────────────── */
+    .complexity-card {
+      border-radius: 10px;
+      padding: 20px 24px;
+      margin: 18px 0;
+    }
+    .card-p          { background: #e8f5e9; border-left: 6px solid #43a047; }
+    .card-np         { background: #e3f2fd; border-left: 6px solid #1e88e5; }
+    .card-nphard     { background: #fff3e0; border-left: 6px solid #fb8c00; }
+    .card-npcomplete { background: #fce4ec; border-left: 6px solid #e53935; }
+    .card-p h3          { color: #2e7d32; margin-bottom: 8px; font-size: 1rem; }
+    .card-np h3         { color: #1565c0; margin-bottom: 8px; font-size: 1rem; }
+    .card-nphard h3     { color: #e65100; margin-bottom: 8px; font-size: 1rem; }
+    .card-npcomplete h3 { color: #b71c1c; margin-bottom: 8px; font-size: 1rem; }
+
+    /* ── Big O Cards ──────────────────────────────────────── */
+    .bigo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin: 18px 0; }
+    .bigo-card {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 10px;
+      padding: 16px 18px;
+    }
+    .bigo-card .bigo-notation { font-family: 'Courier New', monospace; font-size: 1.25rem; font-weight: 700; color: #0f3460; margin-bottom: 6px; }
+    .bigo-card .bigo-name { font-size: 12px; font-weight: 600; color: #42a5f5; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .bigo-card p { font-size: 13px; color: #37474f; margin: 0; }
+
+    /* ── Algorithm Box ────────────────────────────────────── */
+    .algo-box {
+      background: #f3e5f5;
+      border-left: 5px solid #8e24aa;
+      border-radius: 8px;
+      padding: 18px 22px;
+      margin: 18px 0;
+    }
+    .algo-box h4 { color: #4a148c; margin-bottom: 10px; font-size: 1rem; }
+
+    /* ── Table ────────────────────────────────────────────── */
+    .table-wrap { overflow-x: auto; margin: 20px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    thead { background: #0f3460; color: #fff; }
+    thead th { padding: 10px 14px; text-align: left; }
+    tbody tr:nth-child(even) { background: #f0f4ff; }
+    tbody td { padding: 9px 14px; border-bottom: 1px solid #e0e7ff; vertical-align: top; }
+    .table-caption { font-size: 12.5px; color: #6a7899; text-align: center; margin-top: 6px; font-style: italic; }
+
+    /* ── Figure ───────────────────────────────────────────── */
+    .figure-caption {
+      display: block;
+      text-align: center;
+      font-size: 12.5px;
+      color: #5c6bc0;
+      font-style: italic;
+      background: #e8eaf6;
+      border-radius: 6px;
+      padding: 8px 16px;
+      margin: 8px 0 20px;
+    }
+
+    /* ── Formula block ────────────────────────────────────── */
+    .formula-block {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 16px 0;
+      font-family: 'Courier New', monospace;
+      font-size: 13.5px;
+      color: #212529;
+    }
+
+    /* ── Exercise ─────────────────────────────────────────── */
+    .exercise-section {
+      background: #f3e5f5;
+      border-top: 4px solid #7b1fa2;
+      border-radius: 12px;
+      padding: 28px 32px;
+      margin: 40px 0 0;
+    }
+    .exercise-section h2 { color: #4a148c; margin-bottom: 20px; border: none; padding: 0; font-size: 1.3rem; }
+    .exercise-section h3 { color: #6a1b9a; margin: 22px 0 12px; font-size: 1rem; border: none; padding: 0; }
+    .mcq-item { margin-bottom: 18px; }
+    .mcq-item .question { font-weight: 600; color: #1a1a2e; margin-bottom: 6px; }
+    .mcq-item .options { list-style: lower-alpha; margin-left: 20px; color: #37474f; font-size: 14px; }
+    .mcq-item .options li { margin-bottom: 3px; }
+    .sq-item, .lq-item { margin-bottom: 12px; font-size: 14px; color: #37474f; }
+
+    /* ── Summary ──────────────────────────────────────────── */
+    .summary-box {
+      background: linear-gradient(135deg, #e3f2fd, #e8eaf6);
+      border-left: 5px solid #1565c0;
+      border-radius: 10px;
+      padding: 24px 28px;
+      margin: 32px 0;
+    }
+    .summary-box h2 { color: #0d47a1; font-size: 1.1rem; margin-bottom: 12px; border: none; padding: 0; }
+
+    /* ── Scrollbar ────────────────────────────────────────── */
+    aside::-webkit-scrollbar { width: 4px; }
+    aside::-webkit-scrollbar-thumb { background: #233554; border-radius: 4px; }
+
+    /* ── Responsive ───────────────────────────────────────── */
+    @media (max-width: 900px) {
+      aside { display: none; }
+      .wrapper { display: block; }
+      main { padding: 24px 20px 60px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="wrapper">
+
+  <!-- ── Sidebar TOC ─────────────────────────────────────── -->
+  <aside>
+    <h2>Contents</h2>
+    <ul>
+      <li><a href="#cover">Unit 3 Overview</a></li>
+      <li><a href="#slo">Learning Outcomes</a></li>
+      <li><a href="#intro">Introduction</a></li>
+      <li><a href="#s3_1">3.1 Computational Problems</a></li>
+      <li class="sub"><a href="#s3_1_1">3.1.1 Characterizing</a></li>
+      <li class="sub2"><a href="#s3_1_1_1">3.1.1.1 Classifying</a></li>
+      <li class="sub2"><a href="#s3_1_1_2">3.1.1.2 Well vs Ill-defined</a></li>
+      <li><a href="#s3_2">3.2 Algorithms</a></li>
+      <li class="sub"><a href="#s3_2_1">3.2.1 Generate and Test</a></li>
+      <li class="sub2"><a href="#s3_2_1_1">3.2.1.1 Definition &amp; Process</a></li>
+      <li class="sub2"><a href="#s3_2_1_2">3.2.1.2 Applications</a></li>
+      <li class="sub2"><a href="#s3_2_1_3">3.2.1.3 Pros and Cons</a></li>
+      <li><a href="#s3_3">3.3 Solvability &amp; Complexity</a></li>
+      <li class="sub"><a href="#s3_3_1">3.3.1 Solvable vs Unsolvable</a></li>
+      <li class="sub"><a href="#s3_3_2">3.3.2 Tractable vs Intractable</a></li>
+      <li class="sub"><a href="#complexity">Complexity Classes</a></li>
+      <li class="sub2"><a href="#class_p">Class P</a></li>
+      <li class="sub2"><a href="#class_np">Class NP</a></li>
+      <li class="sub2"><a href="#class_nphard">NP-Hard</a></li>
+      <li class="sub2"><a href="#class_npcomplete">NP-Complete</a></li>
+      <li><a href="#s3_4">3.4 Algorithm Analysis</a></li>
+      <li class="sub"><a href="#s3_4_1_time">3.4.1 Time Complexity</a></li>
+      <li class="sub2"><a href="#bigo">Big O Notation</a></li>
+      <li class="sub"><a href="#s3_4_1_space">3.4.1 Space Complexity</a></li>
+      <li><a href="#s3_5">3.5 Efficiency &amp; Scalability</a></li>
+      <li class="sub"><a href="#efficiency">3.5.1 Efficiency</a></li>
+      <li class="sub"><a href="#scalability">3.5.2 Scalability</a></li>
+      <li class="sub"><a href="#suitability">3.5.3 Suitability</a></li>
+      <li><a href="#s3_6">3.6 Design Techniques</a></li>
+      <li class="sub"><a href="#divide_conquer">Divide and Conquer</a></li>
+      <li class="sub"><a href="#greedy">Greedy Algorithms</a></li>
+      <li class="sub"><a href="#dynamic">Dynamic Programming</a></li>
+      <li class="sub"><a href="#backtracking">Backtracking</a></li>
+      <li><a href="#s3_7">3.7 Commonly Used Algorithms</a></li>
+      <li class="sub"><a href="#sorting">3.7.1 Sorting Algorithms</a></li>
+      <li class="sub2"><a href="#bubble_sort">Bubble Sort</a></li>
+      <li class="sub2"><a href="#selection_sort">Selection Sort</a></li>
+      <li class="sub"><a href="#search">3.6.2 Search Algorithms</a></li>
+      <li class="sub2"><a href="#linear_search">Linear Search</a></li>
+      <li class="sub2"><a href="#binary_search">Binary Search</a></li>
+      <li class="sub"><a href="#graph_algo">3.7.3 Graph Algorithms</a></li>
+      <li class="sub2"><a href="#bfs">BFS</a></li>
+      <li class="sub2"><a href="#dfs">DFS</a></li>
+      <li><a href="#summary">Summary</a></li>
+      <li><a href="#exercise">Exercise</a></li>
+    </ul>
+  </aside>
+
+  <!-- ── Main Content ────────────────────────────────────── -->
+  <main>
+
+    <!-- COVER — Page 65 -->
+    <div class="cover" id="cover">
+      <div class="badge">Unit 3</div>
+      <h1>Algorithms and Problem Solving</h1>
+      <p class="subtitle">Computer Science | Class 11 | Punjab Curriculum &amp; Textbook Board</p>
+      <p class="subject-tag">Single National Curriculum 2022</p>
+    </div>
+
+    <!-- STUDENT LEARNING OUTCOMES — Page 65 -->
+    <div class="page-marker"><span>Page 65</span></div>
+    <div class="slo-box" id="slo">
+      <h3>🎓 Student Learning Outcomes</h3>
+      <p><strong>By the end of this chapter, students will be able to:</strong></p>
+      <ul>
+        <li>Describe and classify computational problems.</li>
+        <li>Explain the importance of algorithms in problem-solving.</li>
+        <li>Apply the generate and test method to solve problems.</li>
+        <li>Differentiate between solvable and unsolvable problems.</li>
+        <li>Understand problem complexity and categorize problems (P, NP, NP-Hard, NP-Complete).</li>
+        <li>Identify common computational problems like sorting and searching.</li>
+        <li>Use algorithm design techniques like divide and conquer, greedy methods, and dynamic programming.</li>
+        <li>Implement and compare algorithms such as Bubble Sort, Binary Search, BFS, and DFS.</li>
+        <li>Evaluate algorithms based on efficiency and scalability.</li>
+        <li>Develop algorithmic thinking to solve problems systematically.</li>
+      </ul>
+    </div>
+
+    <!-- INTRODUCTION — Page 66 -->
+    <div class="page-marker"><span>Page 66</span></div>
+    <h1 class="section-title" id="intro">Introduction</h1>
+    <p>In this chapter, we will explore how to solve problems using algorithms, which are step-by-step instructions for performing tasks. Understanding algorithms is essential not only for computer science but also for everyday problem-solving. We will start by learning what computational problems are and how to describe them clearly. Then, we will look at different types of algorithms and how they can help us solve various kinds of problems. We will also discuss how to measure the efficiency of algorithms to find the best solutions. By the end of this chapter, you'll have the skills to think systematically and create effective solutions using algorithms.</p>
+
+    <!-- 3.1 — Page 66 -->
+    <h2 class="section-title" id="s3_1">3.1 Understanding Computational Problems</h2>
+    <p>A computational problem is a challenge that can be solved through a computational process, which involves using an algorithm, i.e., a set of step-by-step instructions that a computer can execute. The objective is to find a solution by following a finite sequence of steps that a computer can perform.</p>
+    <ul>
+      <li><strong>Input:</strong> The problem starts with an input, which is the data or information given to the algorithm.</li>
+      <li><strong>Output:</strong> The solution or result produced by the algorithm after processing the input.</li>
+      <li><strong>Process:</strong> The steps or rules (algorithm) that are applied to the input to generate the output.</li>
+    </ul>
+
+    <!-- 3.1.1 — Page 66 -->
+    <h3 class="section-title" id="s3_1_1">3.1.1 Characterizing Computational Problems</h3>
+    <p>To solve a problem computationally, we need to understand its characteristics. This involves identifying the inputs, the desired outputs, and the process needed to transform the inputs into outputs.</p>
+
+    <!-- 3.1.1.1 — Page 66 -->
+    <h4 class="section-title" id="s3_1_1_1">3.1.1.1 Classifying Computational Problems</h4>
+    <p>Computational problems can be classified into different categories based on their characteristics and the methods required to solve them. Some common classifications include:</p>
+    <ul>
+      <li><strong>Decision Problems:</strong> Problems where the output is a simple "yes" or "no".</li>
+      <li><strong>Search Problems:</strong> Problems where the task is to find a solution or an item that meets certain criteria.</li>
+      <li><strong>Optimization Problems:</strong> Problems where the goal is to find the best solution according to some criteria.</li>
+      <li><strong>Counting Problems:</strong> Problems where the objective is to count the number of ways certain conditions can be met.</li>
+    </ul>
+
+    <!-- 3.1.1.2 — Pages 66–67 -->
+    <h4 class="section-title" id="s3_1_1_2">3.1.1.2 Well-defined vs. Ill-defined Problems</h4>
+    <p>Problems can also be categorized based on how clearly they are defined:</p>
+    <ul>
+      <li><strong>Well-defined Problems:</strong> These problems have clear goals, inputs, processes, and outputs. For instance, the problem of determining if a number is even, is a well-defined problem because it has a clear goal (determine if the number is even), clear input (a single integer), a clear process (check if the number is divisible by 2), and a clear output (even or odd) as shown in Figure 3.1.</li>
+      <li><strong>Ill-defined Problems:</strong> These problems lack clear definitions or may have ambiguous goals and requirements. For instance, consider a project aimed at "improving education in Pakistan". This goal is vague and broad. The input might include resources such as funding, teachers, and educational materials, but without clear specifications on how much funding is needed, what kind of teachers are required, or which educational materials are most effective.</li>
+    </ul>
+
+    <!-- Page 67 -->
+    <div class="page-marker"><span>Page 67</span></div>
+
+    <div class="activity-box">
+      <div class="activity-header">Class Activity</div>
+      <p>Students will explore route optimization by drawing maps of their city that include several colleges. Each student will create a map, marking at least five colleges and assigning distances between them. The goal is to plan the shortest possible route to visit each college <strong>exactly once</strong> and return to the starting point.</p>
+    </div>
+
+    <span class="figure-caption">Figure 3.1: Finding an Even Number — Flowchart: Start → Write "Enter an integer" → Read x → Decision: x MOD 2 == 0? → True path: Write "Even" → End; False path: Write "Odd" → End</span>
+
+    <!-- 3.2 — Page 68 -->
+    <div class="page-marker"><span>Page 68</span></div>
+    <h2 class="section-title" id="s3_2">3.2 Algorithms for Problem Solving</h2>
+    <p>Algorithms are step-by-step procedures for solving problems, much like a recipe provides steps for cooking a dish. They form the backbone of computer science, enabling machines to perform tasks efficiently. Understanding algorithms is essential because they provide the logic behind software operations, allowing us to solve complex problems, optimize performance, and ensure accuracy in various applications.</p>
+
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content">The Google search engine uses a complex algorithm called <strong>PageRank</strong> to determine the relevance of web pages. This algorithm considers various factors, including the number of links to a page and the quality of those links, to rank pages in search results.</div>
+    </div>
+
+    <div class="tip-box">When learning about algorithms, try to relate them to real-life tasks you already know. This will help you understand how algorithms work and why they are important.</div>
+
+    <!-- 3.2.1 — Page 68 -->
+    <h3 class="section-title" id="s3_2_1">3.2.1 Generate and Test Algorithm</h3>
+    <p>The Generate and Test algorithm is a straightforward and intuitive problem-solving approach commonly used in artificial intelligence and computer science. This algorithm works by generating potential solutions to a problem and then testing each one to determine if it meets the required conditions. The process continues until a satisfactory solution is found or all possible solutions have been exhausted.</p>
+
+    <!-- 3.2.1.1 — Page 68 -->
+    <h4 class="section-title" id="s3_2_1_1">3.2.1.1 Definition and Process</h4>
+    <p>The Generate and Test algorithm involves two main steps:</p>
+    <ol>
+      <li><strong>Generate:</strong> In this step, the algorithm generates possible solutions to the problem. These solutions can be generated randomly, systematically, or based on some heuristic.</li>
+      <li><strong>Test:</strong> After generating a potential solution, the algorithm tests it against the problem's requirements or constraints. If the solution satisfies all the conditions, it is considered valid. If not, the algorithm generates a new solution and repeats the process.</li>
+    </ol>
+
+    <!-- 3.2.1.2 — Pages 68–69 -->
+    <h4 class="section-title" id="s3_2_1_2">3.2.1.2 Applications and Examples</h4>
+    <p>The Generate and Test algorithm is particularly useful in scenarios where:</p>
+    <ul>
+      <li>The problem space is small, making it feasible to generate and test all possible solutions.</li>
+      <li>There is no clear strategy for finding a solution, and an exhaustive search is necessary.</li>
+      <li>Heuristics or rules can be applied to reduce the number of generated solutions, making the process more efficient.</li>
+    </ul>
+
+    <!-- Page 69 -->
+    <div class="page-marker"><span>Page 69</span></div>
+
+    <!-- 3.2.1.3 — Page 69 -->
+    <h4 class="section-title" id="s3_2_1_3">3.2.1.3 Pros and Cons</h4>
+    <ul>
+      <li>
+        <strong>Pros:</strong>
+        <ol style="margin-top:6px;">
+          <li><strong>Simplicity:</strong> The Generate and Test algorithm is easy to understand and implement, making it a useful approach for simple problems.</li>
+          <li><strong>Versatility:</strong> It can be applied to a wide range of problems, particularly when no clear solution strategy exists.</li>
+          <li><strong>Exhaustiveness:</strong> The algorithm explores all possible solutions, ensuring that no potential solution is overlooked.</li>
+        </ol>
+      </li>
+      <li style="margin-top:10px;">
+        <strong>Cons:</strong>
+        <ol style="margin-top:6px;">
+          <li><strong>Inefficiency:</strong> The algorithm can be highly inefficient, especially for large problem spaces, as it may require testing many possible solutions before finding a valid one.</li>
+          <li><strong>No Optimality Guarantee:</strong> The Generate and Test algorithm does not necessarily find the optimal solution; it only guarantees a valid one. For example, in optimization problems, it may find a solution that works but is not the best possible.</li>
+          <li><strong>Computational Expense:</strong> For problems with a vast number of potential solutions, the algorithm may become computationally expensive and impractical.</li>
+        </ol>
+      </li>
+    </ul>
+
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content">The Generate and Test algorithm is often used in AI applications, such as game playing and problem-solving, where the solution space is large, and the best approach is to try different possibilities until one works!</div>
+    </div>
+
+    <span class="figure-caption">Figure 3.2: Flowchart of the Generate and Test Algorithm Process — GENERATOR produces a Possible Solution → TESTER evaluates it → Correct Solution leads to STOP; Incorrect Solution loops back to GENERATOR</span>
+
+    <!-- 3.3 — Page 70 -->
+    <div class="page-marker"><span>Page 70</span></div>
+    <h2 class="section-title" id="s3_3">3.3 Problem Solvability and Complexity</h2>
+    <p>Understanding the solvability and complexity of problems is a fundamental concept in computer science. It helps us determine whether a problem can be solved using an algorithm and, if so, how efficiently it can be solved. This section explores the distinctions between solvable and unsolvable problems, as well as tractable and intractable problems, providing a foundation for understanding computational complexity.</p>
+
+    <!-- 3.3.1 — Page 70 -->
+    <h3 class="section-title" id="s3_3_1">3.3.1 Solvable vs. Unsolvable Problems</h3>
+    <p>In computer science, problems are classified as solvable or unsolvable based on whether there exists an algorithm that can provide a solution.</p>
+
+    <p><strong>Solvable Problems:</strong> A problem is considered solvable if an algorithm can solve it within a finite amount of time. These problems have clearly defined inputs and outputs, and there is a step-by-step procedure to reach the solution.</p>
+    <p><strong>Example:</strong> Calculating the greatest common divisor (GCD) of two integers is a solvable problem. The Euclidean algorithm provides a clear and finite method to determine the GCD, making it a classic example of a solvable problem.</p>
+
+    <p><strong>Unsolvable Problems:</strong> On the other hand, a problem is unsolvable if no algorithm can be created that will provide a solution in all cases. These problems do not have a general procedure that can guarantee a solution for every possible input.</p>
+    <p><strong>Example:</strong> The Halting Problem is a famous example of an unsolvable problem. It involves determining whether a given program will eventually halt (finish running) or continue to run forever. Alan Turing proved that no general algorithm can solve the Halting Problem for all possible program-input pairs, making it a fundamental example of an unsolvable problem.</p>
+
+    <div class="tip-box">When tackling complex problems, it's essential to first determine whether the problem is solvable. This saves time and resources by ensuring you are working on a problem that can be resolved using an algorithm.</div>
+
+    <!-- 3.3.2 — Pages 70–71 -->
+    <h3 class="section-title" id="s3_3_2">3.3.2 Tractable vs. Intractable Problems</h3>
+    <p>Once a problem is determined to be solvable, the next consideration is its computational complexity—how efficiently it can be solved. Problems are categorized as tractable or intractable based on the resources required (time and space) to solve them.</p>
+
+    <p><strong>Tractable Problems:</strong> A problem is considered tractable if it can be solved in polynomial time, denoted as P. Polynomial time means that the time taken to solve the problem increases at a manageable rate (as a polynomial function) relative to the size of the input. Tractable problems are considered "efficiently solvable."</p>
+    <p><strong>Example:</strong> Sorting a list of numbers using algorithms like Merge Sort or Quick Sort is a tractable problem because these algorithms have a polynomial time complexity of O(n log n), where n is the number of elements in the list.</p>
+
+    <!-- Page 71 -->
+    <div class="page-marker"><span>Page 71</span></div>
+
+    <p><strong>Intractable Problems:</strong> Intractable problems are those that require super-polynomial time to solve, often growing exponentially with the size of the input. These problems are impractical to solve for large inputs because the time required becomes unmanageable.</p>
+    <p><strong>Example:</strong> The Travelling Salesman Problem (TSP), where the goal is to find the shortest possible route that visits a set of cities and returns to the origin, is an example of an intractable problem. The problem is NP-hard, meaning that as the number of cities increases, the number of possible routes grows factorially, making it infeasible to solve exactly for large instances. Factorially means, multiplying all whole numbers from n down to 1.</p>
+
+    <div class="formula-block">
+      For 2 cities:&nbsp; 2! = 2 &times; 1 = 2 possible routes.<br>
+      For 3 cities:&nbsp; 3! = 3 &times; 2 &times; 1 = 6 possible routes.<br>
+      For 4 cities:&nbsp; 4! = 4 &times; 3 &times; 2 &times; 1 = 24 possible routes.
+    </div>
+    <p>As you can see, the number of possible routes increases very rapidly as you add more cities.</p>
+
+    <!-- Complexity Classes — Pages 71–74 -->
+    <h3 class="section-title" id="complexity">3.3.2 Complexity Classes (P, NP, NP-hard, NP-complete)</h3>
+    <p>Understanding the complexity of problems involves classifying them into different categories based on their solvability and the time required to solve them.</p>
+
+    <!-- Class P — Pages 71–72 -->
+    <h4 class="section-title" id="class_p">3.3.2.1 Class P</h4>
+    <div class="complexity-card card-p">
+      <h3>&#10003; Class P — Efficiently Solvable (Polynomial Time)</h3>
+      <p>Class P refers to a category of problems that can be solved efficiently by a computer. In simpler terms, these are problems where a computer can find a solution quickly, even as the size of the problem grows.</p>
+      <p><strong>Example:</strong> Let's consider a simple problem: sorting a list of numbers. Suppose you have the following list:</p>
+      <div class="formula-block" style="margin:10px 0;">[4, 1, 3, 2, 5]</div>
+      <p>The goal is to arrange these numbers in ascending order:</p>
+      <div class="formula-block" style="margin:10px 0;">[1, 2, 3, 4, 5]</div>
+      <p><strong>Class P and Sorting</strong></p>
+      <ul>
+        <li><strong>Easy to Solve:</strong> The sorting problem can be solved efficiently by a computer. As the list gets larger, the time required to sort it increases at a manageable rate.</li>
+        <li><strong>Polynomial Time:</strong> This means the time needed grows in a predictable and reasonable way. Example: Doubling the size of the list results in roughly double the time needed.</li>
+        <li><strong>Deterministic Algorithm:</strong> Sorting uses a set of clear steps or a recipe. For instance, the algorithm compares and swaps numbers to sort the list. Following these steps always leads to the correct result if done correctly.</li>
+      </ul>
+    </div>
+
+    <!-- Page 72 -->
+    <div class="page-marker"><span>Page 72</span></div>
+    <p><strong>How It Works</strong></p>
+    <p>To sort the list [4, 1, 3, 2, 5], a computer might follow these steps:</p>
+    <ol>
+      <li>Compare the first number with the second number. Swap them if needed.</li>
+      <li>Move to the next pair and repeat the process.</li>
+      <li>Continue until the entire list is sorted.</li>
+    </ol>
+    <p>The time required to sort the list grows at a manageable rate as the list size increases. For example, going from 5 numbers to 10 numbers will increase the time, but it remains within a reasonable limit.</p>
+
+    <!-- Class NP — Pages 72–73 -->
+    <h4 class="section-title" id="class_np">3.3.3.2 Class NP</h4>
+    <div class="complexity-card card-np">
+      <h3>&#9679; Class NP — Non-deterministic Polynomial Time</h3>
+      <p>Class NP refers to a category of problems for which, if a solution is given, it can be checked quickly by a computer. These are problems where verifying a proposed solution is easy, but finding that solution might be difficult and time-consuming.</p>
+      <p><strong>Example:</strong> Consider a common example of solving a Sudoku puzzle. In Sudoku, you fill a 9 &times; 9 grid with numbers so that each row, column, and 3 &times; 3 sub-grid contains all digits from 1 to 9 exactly once as shown in Figure 3.3.</p>
+      <p><strong>Class NP and Sudoku</strong></p>
+      <ul>
+        <li><strong>Verification is Easy:</strong> If someone gives you a completed Sudoku grid, you can quickly check if the solution is correct. You just need to ensure that each row, column, and 3 &times; 3 sub-grid contains all numbers from 1 to 9 without repeating.</li>
+        <li><strong>Finding the Solution is Hard:</strong> Solving Sudoku from scratch, especially larger or more complex puzzles, can be difficult and time-consuming. There is no simple, fast way to guarantee a solution, which means finding the solution is not always efficient.</li>
+        <li><strong>Non-deterministic Polynomial Time:</strong> Class NP problems can be solved quickly if given a correct solution, but finding that solution might take an impractically long time for large problems.</li>
+      </ul>
+      <p><strong>How It Works</strong></p>
+      <p>In the context of Sudoku:</p>
+      <ol>
+        <li><strong>Checking a Solution:</strong> To verify if a Sudoku solution is correct, you can quickly check each row, column, and subgrid to ensure they all have numbers 1 through 9 without repetition. This verification process is straightforward and efficient.</li>
+        <li><strong>Solving the Puzzle:</strong> Finding the correct arrangement of numbers for a Sudoku puzzle can be challenging. There are many possible configurations, and determining the correct one involves a lot of trial and error or advanced algorithms.</li>
+      </ol>
+    </div>
+
+    <!-- Page 73 -->
+    <div class="page-marker"><span>Page 73</span></div>
+    <span class="figure-caption">Figure 3.3: A simple Sudoku Puzzle — 9&times;9 grid with some cells pre-filled; each row, column, and 3&times;3 sub-grid must contain all digits from 1 to 9 exactly once</span>
+
+    <!-- NP-Hard — Page 73 -->
+    <h4 class="section-title" id="class_nphard">3.3.3.3 Class NP-Hard</h4>
+    <div class="complexity-card card-nphard">
+      <h3>&#9632; Class NP-Hard — At Least as Hard as the Hardest NP Problems</h3>
+      <p><strong>NP-hard</strong> problems are a class of problems that are at least as difficult as the hardest problems in NP (Non-deterministic Polynomial time). Solving an NP-hard problem is challenging, and no efficient algorithm is known for finding a solution. These problems are usually very difficult and take a lot of time to solve, even when the cases are not very large.</p>
+      <p><strong>Example:</strong> A well-known example of an NP-hard problem is the Traveling Salesman Problem (TSP), we discussed in Section 3.3.2.</p>
+      <p><strong>Why TSP is NP-Hard</strong></p>
+      <ul>
+        <li><strong>No Known Efficient Solution:</strong> There is no known algorithm that can solve TSP quickly for large numbers of cities. As the number of cities increases, the number of possible routes grows factorially, making the problem extremely difficult to solve exactly.</li>
+        <li><strong>Computational Complexity:</strong> The time required to solve TSP grows so quickly with the number of cities that it becomes impractical to compute the exact solution for large instances. For example, with just 10 cities, there are 3,628,800 possible routes.</li>
+      </ul>
+      <p><strong>Illustration of Complexity</strong></p>
+      <p>To illustrate the complexity:</p>
+      <ul>
+        <li><strong>With 5 Cities:</strong> There are 120 possible routes.</li>
+        <li><strong>With 10 Cities:</strong> There are 3,628,800 possible routes.</li>
+        <li><strong>With 20 Cities:</strong> The number of possible routes is approximately 2.43 &times; 10<sup>18</sup>, which is an extremely huge number.</li>
+      </ul>
+    </div>
+
+    <!-- NP-Complete — Page 74 -->
+    <div class="page-marker"><span>Page 74</span></div>
+    <h4 class="section-title" id="class_npcomplete">3.3.3.4 NP-Complete</h4>
+    <div class="complexity-card card-npcomplete">
+      <h3>&#9670; Class NP-Complete — In NP and as Hard as the Hardest NP Problems</h3>
+      <p><strong>NP-Complete</strong> problems are a special subset of NP problems that are both in NP and as hard as the hardest problems in NP. This means that these problems are particularly challenging, and if you can solve one NP-Complete problem efficiently, you can solve all problems in NP efficiently.</p>
+      <p><strong>Example:</strong> A classic example of an NP-Complete problem is the Knapsack Problem.</p>
+      <p><strong>The Knapsack Problem</strong></p>
+      <p>In the Knapsack Problem, you have a knapsack with a maximum weight capacity and a set of items, each with a weight and a value. The goal is to determine the most valuable combination of items to put in the knapsack without exceeding its weight capacity.</p>
+      <p><strong>Why the Knapsack Problem is NP-Complete</strong></p>
+      <ul>
+        <li><strong>Verification is Easy:</strong> If you are given a set of items and a proposed solution, you can quickly check if the total weight is within the knapsack's capacity and if the total value is correct.</li>
+        <li><strong>Solving the Problem is Hard:</strong> Finding the optimal combination of items to maximize the total value while staying within the weight limit is challenging, especially as the number of items increases.</li>
+        <li><strong>NP-Completeness:</strong> The Knapsack Problem is NP-Complete because it is both in NP (you can verify a solution quickly) and as hard as the hardest problems in NP. If you could solve the Knapsack Problem efficiently, you could solve all NP problems efficiently.</li>
+      </ul>
+      <p><strong>Illustration of Complexity</strong></p>
+      <p>To illustrate why the Knapsack Problem is NP-Complete:</p>
+      <ul>
+        <li><strong>Small Instances:</strong> For a small number of items, it might be feasible to find the optimal solution by checking all possible combinations.</li>
+        <li><strong>Larger Instances:</strong> As the number of items grows, the number of possible combinations increases exponentially, making it impractical to solve the problem by brute force.</li>
+      </ul>
+    </div>
+
+    <span class="figure-caption">Figure 3.4: Venn Diagram of the Complexity Classes P, NP, NP-hard, and NP-complete — P is the innermost set (most efficient), contained within NP, which is contained within NP-Complete, all of which are contained within NP-Hard (the outermost)</span>
+
+    <!-- Page 75 -->
+    <div class="page-marker"><span>Page 75</span></div>
+    <p>Figure 3.4 shows a Venn diagram of the complexity classes P, NP, NP-hard, and NP-complete. It visually represents the relationships between these classes, highlighting how some problems can be solved efficiently, while others pose significant challenges to computational theory.</p>
+
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content">The question of whether P equals NP is one of the most important unsolved problems in computer science. It has significant implications for cryptography, algorithm design, and the overall understanding of computational complexity.</div>
+    </div>
+
+    <!-- 3.4 — Page 75 -->
+    <h2 class="section-title" id="s3_4">3.4 Algorithm Analysis</h2>
+    <p>Algorithm analysis is the process of determining the computational complexity of algorithms, which includes their time and space complexity. This analysis helps predict the algorithm's performance and is crucial for selecting the best algorithm for a particular task.</p>
+
+    <!-- 3.4.1 Time Complexity — Pages 75–76 -->
+    <h3 class="section-title" id="s3_4_1_time">3.4.1 Time Complexity</h3>
+    <p>Time complexity is a measure of how the runtime of an algorithm increases as the size of the input data grows. It helps us understand how efficiently an algorithm performs when dealing with larger amounts of data.</p>
+    <p><strong>Example:</strong> Consider the task of sorting a list of numbers. If the list has only a few numbers, the task might be quick. However, as the volume of numbers increases, the time required to sort them also increases. Time complexity allows us to predict how this runtime will grow as the size of the list becomes larger.</p>
+
+    <!-- Big O Notation — Pages 75–76 -->
+    <h4 class="section-title" id="bigo">3.4.1.1 Big O Notation</h4>
+    <p>Big O notation is a mathematical way to describe the time complexity of an algorithm. It provides an upper bound on the time an algorithm will take to complete as the input size grows. This notation helps in comparing the efficiency of different algorithms by giving a clear picture of their performance.</p>
+    <p><strong>How Big O Notation Works</strong></p>
+    <p>Big O notation uses symbols to describe how the runtime of an algorithm changes with the size of the input. Here are some common examples:</p>
+
+    <div class="bigo-grid">
+      <div class="bigo-card">
+        <div class="bigo-notation">O(1)</div>
+        <div class="bigo-name">Constant Time</div>
+        <p>The runtime does not change with the size of the input. For instance, accessing a specific item in an array by its index is constant time because it takes the same amount of time regardless of the array size.</p>
+      </div>
+      <div class="bigo-card">
+        <div class="bigo-notation">O(n)</div>
+        <div class="bigo-name">Linear Time</div>
+        <p>The runtime grows linearly with the size of the input. For example, consider a scenario where there are n students in a college, each with a unique student ID. If we need to find a specific student by searching through the list of all n students, the time it takes will depend on the number of students we have to check. In the worst-case scenario, the student we are looking for might be the very last one on the list, meaning we would have to check all n students. This process involves examining each student one by one, making the search take a time proportional to n. Therefore, this example represents a linear time complexity O(n), where the time taken increases directly with the number of students.</p>
+      </div>
+      <div class="bigo-card">
+        <div class="bigo-notation">O(n&sup2;)</div>
+        <div class="bigo-name">Quadratic Time</div>
+        <p>The runtime grows quadratically as the size of the input increases. For instance, consider a scenario where n students in a college are participating in a programming competition, and we want to compare the performance of each pair of students to determine the best team. To do this, we must compare each student with every other student. The number of comparisons required is the sum of the first n&nbsp;-&nbsp;1 integers, which can be approximated as n(n&nbsp;-1). Thus, the time complexity for this task is quadratic, represented as O(n&sup2;). The time taken increases quadratically as the number of students n increases.</p>
+      </div>
+      <div class="bigo-card">
+        <div class="bigo-notation">O(log n)</div>
+        <div class="bigo-name">Logarithmic Time</div>
+        <p>The runtime grows logarithmically, meaning it increases very slowly relative to the input size. For example, imagine a scenario where you are playing a guessing game with n students in a college. One student thinks of a number between 1 and n, and your task is to guess the number. After each guess, the student will tell you whether the actual number is higher or lower than your guess. By starting in the middle of the range and adjusting your guess based on the feedback, you can quickly narrow down the possible numbers. The number of guesses required to find the correct number is proportional to the number of times you can halve the range, which is logarithmic in nature. Therefore, the time complexity of this guessing process is O(log n).</p>
+      </div>
+    </div>
+
+    <!-- Page 76 -->
+    <div class="page-marker"><span>Page 76</span></div>
+    <span class="figure-caption">Figure 1.1 (Big O Notation Graph): Graph showing Time (y-axis) vs Input Size (x-axis) — O(n&sup2;) rises steeply, O(n) rises linearly, O(log n) rises very slowly, and O(1) is a flat horizontal line at the bottom</span>
+
+    <!-- Page 77 -->
+    <div class="page-marker"><span>Page 77</span></div>
+    <p>When comparing different time complexities, it's essential to understand how the time required for an algorithm grows as the size of the input n increases. Constant time, represented as O(1), remains unchanged regardless of the size of n. This means that no matter how large the input is, the time taken will be the same, as seen by the flat line in the graph.</p>
+
+    <!-- 3.4.1 Space Complexity — Page 77 -->
+    <h3 class="section-title" id="s3_4_1_space">3.4.1 Space Complexity</h3>
+    <p>Space complexity measures how the amount of memory or space an algorithm uses changes as the size of the input data increases. It helps us understand how efficiently an algorithm uses memory when dealing with larger amounts of data.</p>
+    <p><strong>Example:</strong> If an algorithm needs to store a list of numbers, its space complexity tells us how much memory will be required as the volume of numbers increases.</p>
+    <p><strong>Why Space Complexity Matters</strong></p>
+    <p>Understanding space complexity is important because it helps us gauge the memory requirements of an algorithm. Efficient use of memory is crucial, especially for large-scale applications or systems with limited memory resources.</p>
+    <p><strong>How Space Complexity is Analyzed</strong></p>
+    <p>Space complexity is typically expressed using Big O notation, similar to time complexity. It describes the upper limit on the amount of memory an algorithm will use as the input size grows. Here are some common examples:</p>
+
+    <div class="bigo-grid">
+      <div class="bigo-card">
+        <div class="bigo-notation">O(1)</div>
+        <div class="bigo-name">Constant Space</div>
+        <p>The algorithm uses a fixed amount of memory regardless of the input size. For example, a simple algorithm that only needs a few variables to store intermediate values has constant space complexity.</p>
+      </div>
+      <div class="bigo-card">
+        <div class="bigo-notation">O(n)</div>
+        <div class="bigo-name">Linear Space</div>
+        <p>The memory usage grows linearly with the size of the input. For instance, if an algorithm needs to store a list of items, the amount of memory required increases directly with the number of items.</p>
+      </div>
+      <div class="bigo-card">
+        <div class="bigo-notation">O(n&sup2;)</div>
+        <div class="bigo-name">Quadratic Space</div>
+        <p>The memory usage grows quadratically as the size of the input increases. For example, an algorithm that needs to store a matrix of size n &times; n will have quadratic space complexity, as the number of elements in the matrix increases with the square of n.</p>
+      </div>
+      <div class="bigo-card">
+        <div class="bigo-notation">O(log n)</div>
+        <div class="bigo-name">Logarithmic Space</div>
+        <p>The memory usage grows logarithmically, meaning it increases very slowly relative to the input size. For instance, some algorithms that use divide-and-conquer strategies may have logarithmic space complexity because they only need to store a small portion of the data at each step.</p>
+      </div>
+    </div>
+
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content">Big O notation helps computer scientists understand the efficiency of an algorithm in the worst-case scenario, allowing them to predict how well it will perform as the size of the input data increases.</div>
+    </div>
+
+    <!-- 3.5 — Page 78 -->
+    <div class="page-marker"><span>Page 78</span></div>
+    <h2 class="section-title" id="s3_5">3.5 Algorithm Efficiency and Scalability</h2>
+
+    <h3 class="section-title" id="efficiency">3.5.1 Efficiency</h3>
+    <p>Algorithm efficiency refers to how well an algorithm uses resources like time and space (memory) to solve a problem. The efficiency of an algorithm is typically evaluated based on its time complexity (how the run time increases as the input size increases) and space complexity (how the memory usage grows as the input size increases).</p>
+    <p><strong>Example:</strong> Consider two sorting algorithms: Bubble Sort and Merge Sort. Bubble Sort has a time complexity of O(n&sup2;), meaning that if the input size doubles, the time taken increases by four times. Merge Sort, however, has a time complexity of O(n log n), which grows much more slowly as the input size increases, making it more efficient for large datasets.</p>
+
+    <h3 class="section-title" id="scalability">3.5.2 Scalability</h3>
+    <p>Scalability refers to an algorithm's ability to maintain its efficiency as the size of the input data grows. An algorithm that scales well will perform efficiently even when the input data is significantly larger than what it was initially designed for.</p>
+
+    <h3 class="section-title" id="suitability">3.5.3 Suitability for Specific Problems</h3>
+    <p>Not all algorithms are suitable for all types of problems. The choice of algorithm depends on the problem's specific requirements, such as the need for speed, memory usage, or the nature of the data.</p>
+    <p><strong>Example:</strong> Imagine you're looking for a book in a small, unorganized collection. The best way is to check each book one by one, this is a Linear Search. Now, if your books are neatly arranged alphabetically on a shelf, you can quickly find the book by starting in the middle and deciding which half to search, this is a Binary Search.</p>
+
+    <!-- 3.6 — Pages 78–80 -->
+    <h2 class="section-title" id="s3_6">3.6 Algorithm Design Techniques</h2>
+    <p>Algorithm design is a critical aspect of problem-solving in computer science. It involves creating systematic methods to solve problems efficiently and effectively. There are several well-known algorithm design techniques that help in developing robust algorithms for a variety of computational problems.</p>
+
+    <!-- Divide and Conquer — Pages 78–79 -->
+    <h3 class="section-title" id="divide_conquer">3.6.1 Divide and Conquer</h3>
+    <p>Divide and Conquer is a powerful algorithm design technique that works by breaking a large problem into smaller, more manageable parts. Each smaller part is solved independently, and then their solutions are combined to solve the original problem, as shown in Figure 3.6. This approach is particularly effective for problems that can be divided into similar smaller problems, making it easier to find a solution step by step.</p>
+
+    <span class="figure-caption">Figure 3.6: Merge Sort Process — An array [14, 7, 3, 12] is divided (Divide) into sub-arrays [14, 7] and [3, 12]; each is divided further into single elements [7], [14], [3], [12]; then merged in sorted order: [3, 7, 12, 14]</span>
+
+    <!-- Page 79 -->
+    <div class="page-marker"><span>Page 79</span></div>
+    <p><strong>Example:</strong> Merge Sort is a classic example of a Divide and Conquer algorithm. The algorithm begins by dividing an unsorted list into two halves. Each half is then sorted independently, and finally, the two sorted halves are merged together to create the final sorted list. Figure 3.6 illustrates the process of Merge Sort, showing how the list is divided and then combined to produce a sorted output. This visualization highlights the efficiency of the Divide and Conquer approach.</p>
+
+    <!-- Greedy Algorithms — Page 79 -->
+    <h3 class="section-title" id="greedy">3.6.1 Greedy Algorithms</h3>
+    <p>Greedy algorithms work by making a sequence of choices, each of which is locally optimal, with the hope that these choices will lead to a globally optimal solution. The greedy approach is often used when a problem has an optimal substructure, meaning that the optimal solution to the problem can be constructed from optimal solutions to its sub-problems.</p>
+    <p><strong>Example:</strong> A classic example of a greedy algorithm is the Coin Change problem. Suppose you have coins of different denominations and you want to make a specific amount with the fewest coins possible. The greedy algorithm would involve choosing the largest denomination coin that does not exceed the remaining amount, then subtracting that value and repeating the process until the desired amount is achieved.</p>
+    <div class="tip-box">Greedy algorithms are often faster and easier to implement than other techniques, but they don't always guarantee the optimal solution for every problem. Always analyze the problem to ensure that a greedy approach is appropriate.</div>
+
+    <!-- Dynamic Programming — Pages 79–80 -->
+    <h3 class="section-title" id="dynamic">3.6.1 Dynamic Programming</h3>
+    <p>Dynamic Programming (DP) is an optimization technique used to solve problems by breaking them down into simpler subproblems and storing the results of these subproblems to avoid redundant calculations. DP is particularly useful for problems with overlapping subproblems and optimal substructure.</p>
+    <p><strong>Example:</strong> The Fibonacci sequence is a well-known example where DP can be applied. Instead of recalculating Fibonacci numbers repeatedly, DP stores the results of each Fibonacci number as it is computed, allowing the algorithm to retrieve these values directly when needed, significantly reducing the number of calculations.</p>
+
+    <p><strong>Fibonacci Sequence</strong></p>
+    <p>The Fibonacci sequence is a series of numbers that starts with 0 and 1. Each subsequent number in the sequence is found by adding the two preceding numbers. Here's how it works:</p>
+    <ol>
+      <li>Start with 0 and 1.</li>
+      <li>Add them together to get the next number: 0 + 1 = 1.</li>
+      <li>Now add the last two numbers in the sequence: 1 + 1 = 2.</li>
+      <li>Continue this pattern: 1 + 2 = 3, and so on.</li>
+    </ol>
+
+    <!-- Page 80 -->
+    <div class="page-marker"><span>Page 80</span></div>
+    <p>So the Fibonacci sequence begins like this: 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, and so forth. It is named after Leonardo of Pisa, who is also known as Fibonacci, and it appears in many interesting places in nature, such as the pattern of leaves on a stem, the branching of trees, and even the arrangement of a pine cone's scales.</p>
+
+    <div class="activity-box">
+      <div class="activity-header">Class Activity</div>
+      <p>Implement a dynamic programming algorithm to solve the Fibonacci sequence up to the 20th term.</p>
+    </div>
+
+    <!-- Backtracking — Page 80 -->
+    <h3 class="section-title" id="backtracking">3.6.1 Backtracking</h3>
+    <p>Backtracking is a method used in solving problems where you build up a solution step by step. If you find that a particular path doesn't lead to a solution, you simply go back and try a different path. It's like trying out different routes on a map and turning back if you find that you're going the wrong way. This method is often used for problems where you need to look at all possible options, like with puzzles or problems that involve different combinations.</p>
+
+    <!-- 3.7 — Pages 80–84 -->
+    <h2 class="section-title" id="s3_7">3.7 Commonly Used Algorithms</h2>
+    <p>Algorithms are essential tools in computer science and are applied to a wide range of problems, from sorting data to searching for information in large datasets. Some algorithms are foundational, serving as building blocks for more complex operations. This section explores some of the most commonly used algorithms, including sorting, searching, and graph traversal algorithms.</p>
+
+    <!-- 3.7.1 Sorting Algorithms — Page 80 -->
+    <h3 class="section-title" id="sorting">3.7.1 Sorting Algorithms</h3>
+    <p>Sorting algorithms are used to arrange data in a particular order, such as ascending or descending. Sorting is a fundamental operation that is often a prerequisite for other tasks like searching and data analysis.</p>
+
+    <!-- Bubble Sort — Pages 80–81 -->
+    <h4 class="section-title" id="bubble_sort">3.7.1.1 Bubble Sort</h4>
+    <div class="algo-box">
+      <h4>Bubble Sort</h4>
+      <p>Bubble Sort is one of the simplest sorting algorithms. It works by repeatedly stepping through the list, comparing adjacent elements, and swapping them if they are in the wrong order. This process is repeated until the list is sorted.</p>
+      <p><strong>Process:</strong></p>
+      <ul>
+        <li>Start from the beginning of the list.</li>
+        <li>Compare each pair of adjacent elements.</li>
+        <li>Swap them if they are in the wrong order.</li>
+        <li>Continue the process until no more swaps are needed.</li>
+      </ul>
+      <p><strong>Example:</strong> Consider the list [5, 3, 8, 4, 2]. Bubble Sort will compare 5 and 3, swap them, then move to the next pair, and so on. After several passes through the list, the algorithm will sort the list as [2, 3, 4, 5, 8].</p>
+    </div>
+
+    <!-- Page 81 -->
+    <div class="page-marker"><span>Page 81</span></div>
+    <p><strong>Complexity:</strong> The time complexity of Bubble Sort is O(n&sup2;), making it inefficient for large datasets. However, it is easy to understand and implement, making it useful for educational purposes and small datasets.</p>
+    <div class="tip-box">While Bubble Sort is easy to implement, consider using more efficient sorting algorithms like Quick Sort or Merge Sort for larger datasets to save time and resources.</div>
+
+    <!-- Selection Sort — Page 81 -->
+    <h4 class="section-title" id="selection_sort">3.6.1.1 Selection Sort</h4>
+    <div class="algo-box">
+      <h4>Selection Sort</h4>
+      <p>Selection Sort is another simple sorting algorithm. It works by selecting the smallest (or largest, depending on the desired order) element from the unsorted part of the list and swapping it with the first element of the unsorted part. This process is repeated for the remaining unsorted portion of the list.</p>
+      <p><strong>Process:</strong></p>
+      <ul>
+        <li>Find the minimum element in the unsorted part of the list.</li>
+        <li>Swap it with the first unsorted element.</li>
+        <li>Move the boundary of the sorted and unsorted sections by one element.</li>
+        <li>Repeat the process for the remaining elements.</li>
+      </ul>
+      <p><strong>Example:</strong> For the list [29, 10, 14, 37, 13], Selection Sort will first find the smallest element, 10, and swap it with 29. The list becomes [10, 29, 14, 37, 13]. The process continues until the list is fully sorted.</p>
+      <p><strong>Complexity:</strong> The time complexity of Selection Sort is O(n&sup2;). Like Bubble Sort, it is not efficient for large datasets but is straightforward to implement.</p>
+    </div>
+
+    <!-- Search Algorithms — Pages 81–82 -->
+    <h3 class="section-title" id="search">3.6.2 Search Algorithms</h3>
+    <p>Search algorithms are designed to find specific elements or a set of elements within a dataset. They are critical for tasks such as information retrieval, database queries, and decision-making processes.</p>
+
+    <!-- Linear Search — Page 81 -->
+    <h4 class="section-title" id="linear_search">3.6.2.1 Linear Search</h4>
+    <div class="algo-box">
+      <h4>Linear Search</h4>
+      <p>A linear search is a straightforward method for finding an item in a list. You check each item one by one until you find what you're looking for. Here's how it works:</p>
+      <ol>
+        <li><strong>Start at the Beginning:</strong> Look at the first item in the list.</li>
+        <li><strong>Check Each Item:</strong> Compare the item you're looking for with the current item.</li>
+        <li><strong>Move to the Next:</strong> If they don't match, move to the next item in the list.</li>
+        <li><strong>Repeat:</strong> Continue this process until you find the item or reach the end of the list.</li>
+      </ol>
+      <p><strong>Example:</strong> Suppose you have a list of city names: [Karachi, Lahore, Islamabad, Faisalabad] and you want to find out if Islamabad is in the list.</p>
+      <ol>
+        <li>Start with Karachi. Since Karachi isn't Islamabad, move to the next city.</li>
+        <li>Next is Lahore. Lahore isn't Islamabad, so move to the next city.</li>
+        <li>Now you have Islamabad. This is the city you're looking for!</li>
+      </ol>
+    </div>
+
+    <!-- Page 82 -->
+    <div class="page-marker"><span>Page 82</span></div>
+    <p>In this case, you've found Islamabad in the list. If Islamabad weren't in the list, you would check all the cities and then conclude that it's not there. This method is called a linear search because you check each item in a straight line, from start to finish.</p>
+
+    <!-- Binary Search — Page 82 -->
+    <h4 class="section-title" id="binary_search">3.7.2.2 Binary Search</h4>
+    <div class="algo-box">
+      <h4>Binary Search</h4>
+      <p>Binary Search is an efficient algorithm for finding an item in a sorted list. It works by repeatedly dividing the search interval in half and discarding the half where the item cannot be, until the item is found or the interval is empty.</p>
+      <p><strong>Process:</strong></p>
+      <ul>
+        <li>Start with the middle element of the sorted list.</li>
+        <li>If the middle element is the target, return its position.</li>
+        <li>If the target is smaller than the middle element, repeat the search on the left half.</li>
+        <li>If the target is larger, repeat the search on the right half.</li>
+      </ul>
+      <p><strong>Example:</strong> Suppose you have a sorted list [1, 3, 5, 7, 9, 11, 13] and you are searching for the number 7.</p>
+      <ul>
+        <li>Binary Search will start at the middle element (7) and find the target immediately.</li>
+      </ul>
+      <p><strong>Complexity:</strong> The time complexity of Binary Search is O(log n), making it much faster than linear search algorithms, especially for large datasets. Figure 3.7 illustrates the binary search process, showing how the search interval is halved at each step, making the search more efficient.</p>
+    </div>
+
+    <span class="figure-caption">Figure 3.7: Binary Search Process — Searching for 78 in a sorted list [21, 34, 43, 57, 66, 78]: Start at middle (43), 78 &gt; 43 so look right; new middle (66), 78 &gt; 66 so look right; new middle (78) — element found</span>
+
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content">Binary Search is only effective on sorted lists. If your data isn't sorted, consider using a sorting algorithm like Merge Sort before applying Binary Search!</div>
+    </div>
+
+    <!-- Graph Algorithms — Pages 83–84 -->
+    <div class="page-marker"><span>Page 83</span></div>
+    <h3 class="section-title" id="graph_algo">3.7.3 Graph Algorithms</h3>
+    <p>Graph algorithms are used to explore and analyze graphs, which are data structures made up of nodes (vertices) connected by edges. These algorithms are essential for network analysis, route planning, and social network analysis.</p>
+
+    <!-- BFS — Page 83 -->
+    <h4 class="section-title" id="bfs">3.7.3.1 Breadth-First Search (BFS)</h4>
+    <div class="algo-box">
+      <h4>Breadth-First Search (BFS)</h4>
+      <p>Breadth-First Search (BFS) is a graph traversal algorithm that explores all the nodes of a graph level by level, starting from a given node (often called the root). It uses a queue to keep track of the nodes that need to be explored.</p>
+      <p><strong>Process:</strong></p>
+      <ul>
+        <li>Start from the root node and enqueue it.</li>
+        <li>Dequeue a node, process it, and enqueue all its unvisited neighbors.</li>
+        <li>Repeat the process until the queue is empty.</li>
+      </ul>
+      <p><strong>Example:</strong> In a social network graph, where each node represents a person and edges represent friendships, BFS can be used to find the shortest path between two people (e.g., finding the degree of separation between two users).</p>
+      <p><strong>Complexity:</strong> The time complexity of BFS is O(V + E), where V is the number of vertices and E is the number of edges. This makes it efficient for exploring large graphs.</p>
+    </div>
+
+    <!-- DFS — Pages 83–84 -->
+    <h4 class="section-title" id="dfs">3.7.3.2 Depth-First Search (DFS)</h4>
+    <div class="algo-box">
+      <h4>Depth-First Search (DFS)</h4>
+      <p>Depth-First Search (DFS) is another graph traversal algorithm that explores as far down a branch as possible before backtracking to explore other branches. It uses a stack to manage the nodes to be explored.</p>
+      <p><strong>Process:</strong></p>
+      <ul>
+        <li>Start from the root node and push it onto the stack.</li>
+        <li>Pop a node, process it, and push all its unvisited neighbors onto the stack.</li>
+        <li>Repeat the process until the stack is empty.</li>
+      </ul>
+    </div>
+
+    <span class="figure-caption">Figure 3.8: Comparison of BFS and DFS — BFS (left): Layer 0: Source Node 0; Layer 1: nodes 1, 2, 3; Layer 2: nodes 4, 5, 6, 7; Output: 0, 1, 2, 3, 4, 5, 6, 7. DFS (right): Source Node 0; explores deep branches first; Output: 0, 1, 4, 5, 2, 6, 3, 7</span>
+
+    <!-- Page 84 -->
+    <div class="page-marker"><span>Page 84</span></div>
+    <p><strong>Example:</strong> DFS can be used in solving puzzles like mazes, where the algorithm explores one possible path to the end, and if it hits a dead end, it backtracks and tries another path.</p>
+    <p><strong>Complexity:</strong> The time complexity of DFS is O(V + E), similar to BFS. However, DFS is more memory-efficient for deep graphs, while BFS is more suited for shallow graphs.</p>
+    <p>Figure 3.9 compares the BFS and DFS algorithms, showing how BFS explores a graph level by level, while DFS explores as far as possible down each branch before backtracking.</p>
+
+    <!-- Algorithm Comparison Table -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Algorithm</th>
+            <th>Time Complexity</th>
+            <th>Space Complexity</th>
+            <th>Best Use Case</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Bubble Sort</td>
+            <td>O(n&sup2;)</td>
+            <td>O(1)</td>
+            <td>Educational / small datasets</td>
+          </tr>
+          <tr>
+            <td>Selection Sort</td>
+            <td>O(n&sup2;)</td>
+            <td>O(1)</td>
+            <td>Small datasets</td>
+          </tr>
+          <tr>
+            <td>Merge Sort</td>
+            <td>O(n log n)</td>
+            <td>O(n)</td>
+            <td>Large datasets (efficient)</td>
+          </tr>
+          <tr>
+            <td>Linear Search</td>
+            <td>O(n)</td>
+            <td>O(1)</td>
+            <td>Unsorted / small lists</td>
+          </tr>
+          <tr>
+            <td>Binary Search</td>
+            <td>O(log n)</td>
+            <td>O(1)</td>
+            <td>Sorted lists (fast)</td>
+          </tr>
+          <tr>
+            <td>BFS</td>
+            <td>O(V + E)</td>
+            <td>O(V)</td>
+            <td>Shortest path, shallow graphs</td>
+          </tr>
+          <tr>
+            <td>DFS</td>
+            <td>O(V + E)</td>
+            <td>O(V)</td>
+            <td>Maze solving, deep graphs</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="table-caption">Table: Comparison of commonly used algorithms — Time Complexity, Space Complexity, and Best Use Cases</p>
+    </div>
+
+    <div class="activity-box">
+      <div class="activity-header">Class Activity</div>
+      <p>Implement both BFS and DFS algorithms to traverse a graph. Compare their performance on different types of graphs (e.g., shallow vs. deep graphs) and discuss in class which algorithm is better suited for specific scenarios.</p>
+    </div>
+
+    <!-- SUMMARY — Page 84 -->
+    <div class="summary-box" id="summary">
+      <h2>📝 Summary</h2>
+      <p>This chapter offers a thorough introduction to algorithms and problem-solving. It begins by defining and categorizing computational problems as solvable or unsolvable, and tractable or intractable. Key algorithmic methods such as generate and test are explained, alongside problem types like search, sorting, optimization, and decision problems. It also explores design techniques including greedy algorithms, divide and conquer, dynamic programming, and backtracking. The chapter further covers commonly used algorithms, efficiency, and complexity analysis with Big O notation. It highlights the importance of algorithmic thinking for effective problem-solving and practical implementation, emphasizing the need to evaluate and balance trade-offs based on specific problem requirements.</p>
+    </div>
+
+    <!-- EXERCISE — Pages 84–86 -->
+    <div class="exercise-section" id="exercise">
+      <h2>📋 Exercise</h2>
+
+      <h3>Multiple Choice Questions</h3>
+
+      <div class="mcq-item">
+        <p class="question">1. Which of the following is a characteristic of a well-defined problem?</p>
+        <ol class="options">
+          <li>Ambiguous goals and unclear requirements</li>
+          <li>Vague processes and inputs</li>
+          <li>Clear goals, inputs, processes, and outputs</li>
+          <li>Undefined solutions</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">2. Which complexity class represents problems that can be solved efficiently by a deterministic algorithm?</p>
+        <ol class="options">
+          <li>NP</li>
+          <li>NP-hard</li>
+          <li>NP-complete</li>
+          <li>P</li>
+        </ol>
+      </div>
+
+      <!-- Page 85 -->
+      <div class="page-marker"><span>Page 85</span></div>
+
+      <div class="mcq-item">
+        <p class="question">3. Which of the following is true for unsolvable problems?</p>
+        <ol class="options">
+          <li>They can be solved in polynomial time.</li>
+          <li>They cannot be solved by any algorithm.</li>
+          <li>They are always in NP class.</li>
+          <li>They require exponential time to solve.</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">4. What does NP stand for in computational complexity?</p>
+        <ol class="options">
+          <li>Non-deterministic Polynomial time</li>
+          <li>Negative Polynomial time</li>
+          <li>Non-trivial Polynomial time</li>
+          <li>Numerical Polynomial time</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">5. Which of the following search algorithm is more efficient for large datasets?</p>
+        <ol class="options">
+          <li>Bubble Sort</li>
+          <li>Merge Sort</li>
+          <li>Selection Sort</li>
+          <li>Quick Sort</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">6. In which scenario is Dynamic Programming particularly useful?</p>
+        <ol class="options">
+          <li>When problems do not have overlapping subproblems.</li>
+          <li>When a problem can be solved by making a sequence of local choices.</li>
+          <li>When problems have overlapping subproblems and optimal substructure.</li>
+          <li>When a problem can be divided into independent subproblems.</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">7. Which of the following algorithms is used for sorting data by repeatedly stepping through the list and swapping adjacent elements if they are in the wrong order?</p>
+        <ol class="options">
+          <li>Selection Sort</li>
+          <li>Quick Sort</li>
+          <li>Bubble Sort</li>
+          <li>Merge Sort</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">8. What is the time complexity of Depth-First Search (DFS) in a graph?</p>
+        <ol class="options">
+          <li>O(n log n)</li>
+          <li>O(V&sup2;)</li>
+          <li>O(V + E)</li>
+          <li>O(n)</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">9. Which of the following best describes the time complexity?</p>
+        <ol class="options">
+          <li>The amount of memory an algorithm needs to execute.</li>
+          <li>The time taken by an algorithm to complete as a function of input size.</li>
+          <li>The algorithm's ability to maintain efficiency as input size grows.</li>
+          <li>The upper bound of an algorithm's space requirements.</li>
+        </ol>
+      </div>
+
+      <!-- Page 86 -->
+      <div class="page-marker"><span>Page 86</span></div>
+
+      <div class="mcq-item">
+        <p class="question">10. Which of the following algorithms has a time complexity of O(n log n)?</p>
+        <ol class="options">
+          <li>Bubble Sort</li>
+          <li>Binary Search</li>
+          <li>Merge Sort</li>
+          <li>Insertion Sort</li>
+        </ol>
+      </div>
+
+      <h3>Short Questions</h3>
+      <ol>
+        <li class="sq-item">Differentiate between well-defined and ill-defined problems within the realm of computational problem-solving.</li>
+        <li class="sq-item">Outline the main steps involved in the Generate and Test algorithm.</li>
+        <li class="sq-item">Compare tractable and intractable problems in the context of computational complexity.</li>
+        <li class="sq-item">Summarize the key idea behind Greedy Algorithms.</li>
+        <li class="sq-item">Discuss the advantages of using Dynamic Programming.</li>
+        <li class="sq-item">Compare the advantages of Breadth-First Search (BFS) with Depth-First Search (DFS) in graph traversal.</li>
+        <li class="sq-item">Explain the importance of breaking down a problem into smaller components in algorithmic thinking.</li>
+        <li class="sq-item">Identify the key factors used to evaluate the performance of an algorithm.</li>
+      </ol>
+
+      <h3>Long Questions</h3>
+      <ol>
+        <li class="lq-item">Discuss the different complexity classes (P, NP, NP-hard, NP-complete) and their importance in understanding problem difficulty.</li>
+        <li class="lq-item">Provide a detailed explanation of why the Halting Problem is considered unsolvable and its implications in computer science.</li>
+        <li class="lq-item">Discuss the characteristics of search problems and compare the efficiency of Linear Search and Binary Search algorithm.</li>
+        <li class="lq-item">Discuss the nature of optimization problems and provide examples of their applications in real-world scenarios.</li>
+        <li class="lq-item">Explain the Backtracking technique with reference to the N-Queens problem. Discuss how the algorithm explores different configurations to solve the problem.</li>
+        <li class="lq-item">Explain the process and time complexity of the Bubble Sort algorithm. Compare it with another sorting algorithm of your choice in terms of efficiency.</li>
+        <li class="lq-item">Discuss the differences between time complexity and space complexity. How do they impact the choice of an algorithm for a specific problem?</li>
+      </ol>
+
+    </div><!-- end exercise -->
+
+  </main>
+</div>
+
+</body>
+</html>

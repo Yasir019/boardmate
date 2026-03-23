@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Unit 1 – Introduction to Software Development | Computer Science Class 11</title>
+  <style>
+    /* ── Base ─────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.75;
+      color: #1a1a2e;
+      background: #f4f6fb;
+    }
+
+    /* ── Layout ───────────────────────────────────────────── */
+    .wrapper {
+      display: block;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+    main { width: 100%; padding: 32px 20px 80px 20px; background: #fff; box-shadow: 0 0 40px rgba(0,0,0,.08); }
+    aside {
+      width: 240px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      padding: 24px 16px;
+      background: #1a1a2e;
+      color: #ccd6f6;
+      font-size: 13px;
+    }
+    aside h2 { color: #64ffda; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
+    aside ul { list-style: none; }
+    aside ul li { margin: 4px 0; }
+    aside ul li a { color: #a8b2d8; text-decoration: none; display: block; padding: 3px 6px; border-radius: 4px; transition: all .2s; }
+    aside ul li a:hover { color: #64ffda; background: rgba(100,255,218,.08); }
+    aside ul li.sub a { padding-left: 16px; font-size: 12px; color: #8892b0; }
+    aside ul li.sub2 a { padding-left: 28px; font-size: 11.5px; color: #6a7899; }
+
+    /* ── Cover ────────────────────────────────────────────── */
+    .cover {
+      background: linear-gradient(135deg, #0f3460 0%, #16213e 60%, #0d0d2b 100%);
+      color: #fff;
+      padding: 60px 40px;
+      margin: -32px -40px 48px -40px;
+      position: relative;
+      overflow: hidden;
+    }
+    .cover::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 70% 30%, rgba(100,255,218,.12), transparent 60%);
+    }
+    .cover .badge {
+      display: inline-block;
+      background: #64ffda;
+      color: #0d0d2b;
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+    }
+    .cover h1 {
+      font-size: 2.4rem;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 10px;
+      position: relative;
+    }
+    .cover .subtitle {
+      font-size: 1.05rem;
+      color: #a8d8ea;
+      margin-bottom: 32px;
+    }
+    .cover .subject-tag {
+      font-size: 12px;
+      color: #64ffda;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* ── Page marker ──────────────────────────────────────── */
+    .page-marker {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 36px 0 10px;
+      color: #8892b0;
+      font-size: 11.5px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .page-marker::before, .page-marker::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #e0e7ff;
+    }
+    .page-marker span { white-space: nowrap; }
+
+    /* ── Typography ───────────────────────────────────────── */
+    h1.section-title { font-size: 1.7rem; color: #0f3460; margin: 32px 0 12px; border-left: 5px solid #64ffda; padding-left: 14px; }
+    h2.section-title { font-size: 1.35rem; color: #16213e; margin: 28px 0 10px; border-left: 4px solid #4fc3f7; padding-left: 12px; }
+    h3.section-title { font-size: 1.1rem; color: #1a237e; margin: 22px 0 8px; border-left: 3px solid #a5d6a7; padding-left: 10px; }
+    h4.section-title { font-size: 1rem; color: #37474f; margin: 18px 0 6px; padding-left: 10px; border-left: 3px solid #ffcc80; }
+    p { margin-bottom: 14px; }
+    ul, ol { margin: 10px 0 14px 28px; }
+    li { margin-bottom: 6px; }
+    strong { color: #0f3460; }
+
+    /* ── SLO Box ──────────────────────────────────────────── */
+    .slo-box {
+      background: linear-gradient(120deg, #e8f5e9, #f1f8ff);
+      border: 1.5px solid #81c784;
+      border-radius: 12px;
+      padding: 24px 28px;
+      margin: 24px 0 32px;
+    }
+    .slo-box h3 { color: #2e7d32; font-size: 1rem; margin-bottom: 12px; letter-spacing: .5px; }
+    .slo-box ul { margin-left: 20px; }
+    .slo-box li { margin-bottom: 8px; color: #1b5e20; font-size: 14px; }
+
+    /* ── Info / Tip / Fun Fact box ────────────────────────── */
+    .info-box {
+      display: flex;
+      gap: 14px;
+      background: #fff8e1;
+      border-left: 5px solid #ffd54f;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 20px 0;
+    }
+    .info-box .icon { font-size: 1.6rem; flex-shrink: 0; line-height: 1; }
+    .info-box .content { font-size: 13.5px; color: #5d4037; }
+    .tip-box {
+      background: #e8f4fd;
+      border-left: 5px solid #42a5f5;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 20px 0;
+      font-size: 13.5px;
+      color: #0d47a1;
+    }
+    .tip-box strong { color: #0d47a1; }
+
+    /* ── Class Activity ───────────────────────────────────── */
+    .activity-box {
+      background: linear-gradient(135deg, #fce4ec, #fff9c4);
+      border: 1.5px dashed #e91e63;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin: 24px 0;
+    }
+    .activity-box .activity-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #880e4f;
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+    .activity-box .activity-header::before { content: '🎯'; font-size: 1.2rem; }
+
+    /* ── Table ────────────────────────────────────────────── */
+    .table-wrap { overflow-x: auto; margin: 20px 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+    }
+    thead { background: #0f3460; color: #fff; }
+    thead th { padding: 10px 14px; text-align: left; }
+    tbody tr:nth-child(even) { background: #f0f4ff; }
+    tbody td { padding: 9px 14px; border-bottom: 1px solid #e0e7ff; vertical-align: top; }
+    .table-caption {
+      font-size: 12.5px;
+      color: #6a7899;
+      text-align: center;
+      margin-top: 6px;
+      font-style: italic;
+    }
+
+    /* ── Figure ───────────────────────────────────────────── */
+    .figure-caption {
+      display: block;
+      text-align: center;
+      font-size: 12.5px;
+      color: #5c6bc0;
+      font-style: italic;
+      background: #e8eaf6;
+      border-radius: 6px;
+      padding: 8px 16px;
+      margin: 8px 0 20px;
+    }
+
+    /* ── Cost / Formula block ─────────────────────────────── */
+    .formula-block {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 16px 0;
+      font-family: 'Courier New', monospace;
+      font-size: 13.5px;
+      color: #212529;
+    }
+
+    /* ── Exercise ─────────────────────────────────────────── */
+    .exercise-section {
+      background: #f3e5f5;
+      border-top: 4px solid #7b1fa2;
+      border-radius: 12px;
+      padding: 28px 32px;
+      margin: 40px 0 0;
+    }
+    .exercise-section h2 { color: #4a148c; margin-bottom: 20px; border: none; padding: 0; font-size: 1.3rem; }
+    .exercise-section h3 { color: #6a1b9a; margin: 22px 0 12px; font-size: 1rem; border: none; padding: 0; }
+    .mcq-item { margin-bottom: 18px; }
+    .mcq-item .question { font-weight: 600; color: #1a1a2e; margin-bottom: 6px; }
+    .mcq-item .options { list-style: lower-alpha; margin-left: 20px; color: #37474f; font-size: 14px; }
+    .mcq-item .options li { margin-bottom: 3px; }
+    .sq-item, .lq-item { margin-bottom: 12px; font-size: 14px; color: #37474f; }
+
+    /* ── Summary ──────────────────────────────────────────── */
+    .summary-box {
+      background: linear-gradient(135deg, #e3f2fd, #e8eaf6);
+      border-left: 5px solid #1565c0;
+      border-radius: 10px;
+      padding: 24px 28px;
+      margin: 32px 0;
+    }
+    .summary-box h2 { color: #0d47a1; font-size: 1.1rem; margin-bottom: 12px; border: none; padding: 0; }
+
+    /* ── Scrollbar ────────────────────────────────────────── */
+    aside::-webkit-scrollbar { width: 4px; }
+    aside::-webkit-scrollbar-thumb { background: #233554; border-radius: 4px; }
+
+    /* ── Responsive ───────────────────────────────────────── */
+    @media (max-width: 900px) {
+      aside { display: none; }
+      .wrapper { display: block; }
+      main { padding: 24px 20px 60px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="wrapper">
+  <!-- ── Sidebar TOC ─────────────────────────────────────── -->
+  
+
+  <!-- ── Main Content ────────────────────────────────────── -->
+  <main>
+
+    <!-- COVER — Page 4 -->
+    <div class="cover" id="cover">
+      <div class="badge">Unit 1</div>
+      <h1>Introduction to Software Development</h1>
+      <p class="subtitle">Computer Science | Class 11 | Punjab Curriculum &amp; Textbook Board</p>
+      <p class="subject-tag">Single National Curriculum 2022</p>
+    </div>
+    <div class="page-marker"><span>Page 1</span></div>
+
+    <!-- STUDENT LEARNING OUTCOMES — Page 4 -->
+    <div class="slo-box" id="slo">
+      <h3>🎓 Student Learning Outcomes</h3>
+      <p><strong>By the end of this chapter, students will be able to:</strong></p>
+      <ul>
+        <li>Define software development and explain its importance.</li>
+        <li>Understand and describe key software development terminology, including Software Development Life Cycle (SDLC), debugging, testing, and design patterns.</li>
+        <li>Explain the stages of the SDLC and the objectives and activities involved in each stage.</li>
+        <li>Differentiate between various software development methodologies such as the Waterfall model and Agile methodology.</li>
+        <li>Plan a software project by setting timelines, estimating costs, and managing risks.</li>
+        <li>Recognize and apply quality assurance techniques to ensure software standards.</li>
+        <li>Utilize Unified Modeling Language (UML) diagrams to represent software systems.</li>
+        <li>Identify and apply common software design patterns in software design.</li>
+        <li>Employ debugging techniques and testing strategies to ensure software reliability.</li>
+        <li>Understand and utilize various software development tools, including Integrated Development Environment (IDEs), compilers, and source code repositories.</li>
+      </ul>
+    </div>
+
+    <!-- INTRODUCTION — Page 5 -->
+    <div class="page-marker"><span>Page 2</span></div>
+    <h1 class="section-title" id="intro">Introduction</h1>
+    <p>Software development is a systematic process that transforms user needs into software products. It involves a series of stages, from initial analysis through design, coding, testing, and deployment. Each stage has its own importance and requires specific skills and tools. Understanding the software development process is crucial for creating reliable, maintainable, and scalable software solutions. This chapter introduces the fundamental concepts of software development, including key terminology, the Software Development Life Cycle (SDLC), software development methodologies, project planning and management, quality assurance, and software design patterns.</p>
+
+    <h2 class="section-title">1.1 Software Development</h2>
+    <p>Software development is the process of creating computer programs designed to perform specific tasks. This involves writing code, testing it, and addressing any issues that arise. Software development is important because it helps solve problems and makes our lives easier. For example, software allows us to communicate with friends through social media, helps us manage our money with banking apps, and makes learning fun with educational games.</p>
+
+    <!-- SDLC — Pages 5–6 -->
+    <h2 class="section-title" id="sdlc">1.2 Introduction to Software Development Life Cycle (SDLC)</h2>
+    <p>Software Development Life Cycle (SDLC) is a framework that defines the processes used by organizations to build an application from its initial conception to its deployment and maintenance. The primary purpose of SDLC is to deliver high-quality software that meets or exceeds customer expectations, reaches completion within time and cost estimates, and works efficiently.</p>
+
+    <h3 class="section-title" id="framework">1.2.1 Framework in Software Development</h3>
+    <p>In software engineering, a <strong>framework</strong> is a standardized and reusable set of concepts, practices, and tools that provides a structured foundation for developing software applications. It offers predefined components and architectures that facilitate the implementation of specific software functionalities, allowing developers to focus on writing code specific to their application rather than reinventing common solutions. Frameworks promote efficiency, consistency, and code reusability, thereby improving the overall quality and maintainability of software systems.</p>
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content"><strong>Example:</strong> Imagine you want to create a website. Instead of writing all the code from scratch, you can use a framework like Django (for websites). Django comes with ready-made features like user login, database management, and page templates. This is similar to using a pre-designed blueprint to build a house instead of designing everything yourself.</div>
+    </div>
+
+    <!-- STAGES — Pages 5–10 -->
+    <div class="page-marker"><span>Page 3</span></div>
+    <h3 class="section-title" id="stages">1.2.2 Stages Involved in SDLC</h3>
+    <p>The SDLC is an organized method for developing software that ensures it meets quality standards and functions properly. It is used by software developers and engineers to guide the design, development, and testing of software. The SDLC consists of several steps as shown in Figure 1.1. Each step has distinct tasks and goals.</p>
+    <span class="figure-caption">Figure 1.1: System development life cycle stages</span>
+
+    <!-- Requirement Gathering — Page 6 -->
+    <h4 class="section-title" id="req-gathering">Requirement Gathering</h4>
+    <p>In this initial phase, the goal is to understand and collect what the software needs to achieve. This involves talking to the people who will use the software, as well as other stakeholders, to find out their needs and expectations. For example, if you're developing a new app for a school, you might ask students, teachers, and administrators what features they would like to see.</p>
+    <p><strong>Key activities in this phase include:</strong></p>
+    <ul>
+      <li><strong>Interviews and Surveys:</strong> Asking questions and collecting feedback from potential users to understand their needs and preferences.</li>
+      <li><strong>Observations:</strong> Watching how users interact with current systems to identify problems and opportunities for improvement.</li>
+      <li><strong>Document Review:</strong> Looking at existing documents, such as reports and user manuals, to gather additional information about the requirements.</li>
+    </ul>
+    <div class="tip-box">
+      <strong>Analogy:</strong> Requirement gathering is similar to planning a big event, like a wedding. Just as you need to know the preferences of the bride and groom, developers need to know what the users want from the software.
+    </div>
+
+    <!-- Functional & Non-Functional Requirements — Page 7 -->
+    <div class="page-marker"><span>Page 4</span></div>
+    <h4 class="section-title">Functional and Non-Functional Requirements</h4>
+    <p>Requirements are generally categorized into two types: functional and non-functional requirements.</p>
+
+    <h4 class="section-title">Functional Requirements</h4>
+    <p>Functional requirements describe the specific behaviors or functions of a system. These requirements outline what the system should do and include tasks, services, and functionalities that the system must perform. They define the interactions between the system and its users or other systems.</p>
+    <div class="info-box">
+      <div class="icon">📚</div>
+      <div class="content">
+        <strong>Example: Functional Requirements for a Library Management System</strong>
+        <ul style="margin-top:8px; margin-left:18px;">
+          <li><strong>User Registration:</strong> The system should allow users (students, faculty) to register and create an account.</li>
+          <li><strong>Book Borrowing:</strong> The system should enable users to search for books and borrow them.</li>
+          <li><strong>Book Return:</strong> The system should allow users to return borrowed books.</li>
+          <li><strong>Inventory Management:</strong> Librarians should be able to add, update, and remove books from the inventory.</li>
+          <li><strong>Notification:</strong> The system should send notifications to users about due dates and overdue books.</li>
+        </ul>
+      </div>
+    </div>
+
+    <h4 class="section-title">Non-Functional Requirements</h4>
+    <p>Non-functional requirements define the quality attributes, performance criteria, and constraints of the system. These requirements specify how the system performs a function rather than what the system should do. They include aspects like usability, reliability, performance, and security.</p>
+    <div class="info-box">
+      <div class="icon">🔒</div>
+      <div class="content">
+        <strong>Example: Non-Functional Requirements for a Library Management System</strong>
+        <ul style="margin-top:8px; margin-left:18px;">
+          <li><strong>Performance:</strong> The system should handle up to 1000 simultaneous users without performance degradation.</li>
+          <li><strong>Usability:</strong> The user interface should be intuitive and easy to navigate, allowing users to perform tasks with minimal effort.</li>
+          <li><strong>Reliability:</strong> The system should be available 99.9% of the time, ensuring high availability and minimal downtime.</li>
+          <li><strong>Security:</strong> User data should be encrypted, and access should be controlled through secure authentication mechanisms.</li>
+          <li><strong>Scalability:</strong> The system should be able to scale to accommodate an increasing number of users and books in the inventory.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Table — Page 8 -->
+    <div class="page-marker"><span>Page 5</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Functional Requirements</th>
+            <th>Non-Functional Requirements</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Define specific behaviors or functions of the system</td>
+            <td>Define the quality attributes and constraints of the system</td>
+          </tr>
+          <tr>
+            <td>What the system should do</td>
+            <td>How the system should perform</td>
+          </tr>
+          <tr>
+            <td>Example: User can borrow books</td>
+            <td>Example: System should handle 1000 users simultaneously</td>
+          </tr>
+          <tr>
+            <td>Directly related to user interactions and system tasks</td>
+            <td>Related to system performance, usability, reliability, etc.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="table-caption">Table 1.1: Comparison between Functional and Non-Functional Requirements</p>
+    </div>
+
+    <!-- Design Phase — Page 8 -->
+    <h4 class="section-title" id="design">Design Phase</h4>
+    <p>In the design phase, we plan out how the software will look and work. This is like drawing a blueprint before building a house. During this phase, we:</p>
+    <ul>
+      <li><strong>Create Diagrams:</strong> To show how different parts of the software will connect and work together. For example, we draw a flowchart to map out the steps the program will take to complete a task.</li>
+      <li><strong>Develop Models:</strong> To represent the software's structure. This could include creating mockups of the user interface, showing what the program will look like and how users will interact with it.</li>
+      <li><strong>Plan the Architecture:</strong> To decide the overall structure of the software, including how different components will interact. This helps ensure that the program is organized and functions smoothly.</li>
+      <li><strong>Specify Requirements:</strong> To define clearly what each part of the software needs to do, ensuring that all features are planned out and nothing is overlooked.</li>
+    </ul>
+    <p>These steps help to ensure that the final software is well-organized, user-friendly, and meets the needs of its users.</p>
+    <div class="tip-box">Think of this phase like designing a new house. You need blueprints to show where the rooms and furniture will go before you start building.</div>
+
+    <!-- Development Phase — Pages 8–9 -->
+    <h4 class="section-title" id="development">Development Phase</h4>
+    <p>In the development phase, the actual creation of the software begins. This is where programmers write the code, which is a set of instructions that the computer follows to perform specific tasks. Based on the design specifications, which outline what the software should do and how it should look, programmers translate these specifications into a programming language.</p>
+
+    <div class="page-marker"><span>Page 6</span></div>
+    <div class="tip-box">Think of it like following a recipe: the design specifications are the recipe, and coding is the process of mixing and baking the ingredients to make a cake. Each line of code is like a step in the recipe, ensuring the software works correctly and meets the requirements set out in the design.</div>
+    <p>During this phase, programmers also test their code to find and fix any errors or bugs. This testing helps ensure that the software performs as expected and is free from mistakes. If any issues are found, programmers revise the code, correct the problems, and test again until the software is ready for the next stage.</p>
+
+    <!-- Testing Stage — Page 9 -->
+    <h4 class="section-title" id="testing-stage">Testing Phase</h4>
+    <p>Once the software has been developed, it undergoes a crucial phase called testing. Testing is the process of checking the software to identify any bugs, errors, or issues. Think of it as a quality check to make sure everything works as expected. During testing, the software is run under various conditions to see if it behaves correctly. This includes:</p>
+    <ul>
+      <li><strong>Functionality Testing:</strong> Ensuring all features of the software work according to the specifications.</li>
+      <li><strong>Performance Testing:</strong> Checking if the software performs well under different conditions, such as high traffic or heavy data.</li>
+      <li><strong>Compatibility Testing:</strong> Making sure the software works well on various devices and operating systems.</li>
+    </ul>
+    <p>Testing helps in identifying any hidden issues that were not apparent during development. By fixing these issues, developers ensure that the software runs smoothly and meets the user's needs, providing a better and more reliable experience.</p>
+
+    <!-- Deployment — Page 9 -->
+    <h4 class="section-title" id="deployment">Deployment Phase</h4>
+    <p>Once the software has been thoroughly tested and any issues have been fixed, it moves to the deployment phase. Deployment is the process of making the software available for users to access and use. This often involves several steps:</p>
+    <ul>
+      <li><strong>Installation:</strong> The software is installed on the user's system or server. This may involve running an installation program that copies files and sets up necessary configurations.</li>
+      <li><strong>Configuration:</strong> The software is adjusted to fit the specific needs of the user or organization. This can include setting up user preferences, network settings, and database connections.</li>
+      <li><strong>Testing in the Real World:</strong> After installation, the software is tested in its real-world environment to ensure it works correctly with other systems and meets user needs.</li>
+    </ul>
+    <div class="tip-box">Deploying software is like opening a new store. Once everything is set up, you welcome customers (users) to start using your product.</div>
+
+    <!-- Maintenance — Page 10 -->
+    <div class="page-marker"><span>Page 7</span></div>
+    <h4 class="section-title" id="maintenance">Maintenance Phase</h4>
+    <p>The final phase involves ongoing maintenance and updates. This ensures the software continues to function correctly and adapts to any changes in user needs or technology.</p>
+    <div class="tip-box">Maintenance is like taking care of a plant. You need to water it regularly and address any problems to keep it healthy and growing.</div>
+
+    <!-- METHODOLOGIES — Pages 10–16 -->
+    <h2 class="section-title" id="methodologies">1.1 Software Development Methodologies</h2>
+    <p>Software development methodologies are structured approaches to software development that guide the planning, creation, and management of software projects. They help ensure that the development process is systematic, efficient, and produces high-quality software.</p>
+
+    <h3 class="section-title">1.1.1 Introduction to Software Process Models</h3>
+    <p>Software process models are abstract representations of the processes involved in the software development lifecycle. They provide a framework for planning, structuring, and controlling the development of software systems. The importance of software process models lies in their ability to provide:</p>
+    <ul>
+      <li><strong>Predictability:</strong> By following a defined process, teams can predict outcomes and manage risks more effectively.</li>
+      <li><strong>Efficiency:</strong> Structured methodologies streamline the development process, reducing wasted effort.</li>
+      <li><strong>Quality:</strong> Adhering to a process model ensures that quality assurance practices are integrated throughout the development lifecycle.</li>
+    </ul>
+
+    <!-- Waterfall — Page 10 -->
+    <h3 class="section-title" id="waterfall">Waterfall Model</h3>
+    <p>The Waterfall Model is a straightforward approach to software development where each phase of the project must be completed before the next one begins. Think of it like a waterfall flowing from one stage to the next. This model is linear and sequential, meaning that you move through each phase in order, without going back to previous phases once they are completed as shown in Figure 1.2. The main phases of the Waterfall Model are:</p>
+    <ul>
+      <li><strong>Requirements:</strong> Gather and document what the software needs to do.</li>
+      <li><strong>Design:</strong> Plan how the software will be built and how it will look.</li>
+      <li><strong>Implementation:</strong> Write the actual code to create the software.</li>
+      <li><strong>Testing:</strong> Check for and fix any problems or bugs in the software.</li>
+      <li><strong>Deployment:</strong> Release the software for users to use.</li>
+      <li><strong>Maintenance:</strong> Make updates and fix any issues that come up after the software is in use.</li>
+    </ul>
+    <span class="figure-caption">Figure 1.2: Waterfall Model</span>
+
+    <!-- Page 11 -->
+    <div class="page-marker"><span>Page 8</span></div>
+    <h4 class="section-title">Benefits and Limitations of Waterfall Model</h4>
+    <p><strong>Benefits:</strong></p>
+    <ol>
+      <li><strong>Simple and Easy to Understand:</strong> The Waterfall Model is easy to follow because it has clear, distinct phases.</li>
+      <li><strong>Sequential Process:</strong> Each phase is completed one at a time, which makes it easier to manage and track progress.</li>
+      <li><strong>Suitable for Small Projects:</strong> Works well for projects with clear, fixed requirements where changes are unlikely.</li>
+    </ol>
+    <p><strong>Limitations:</strong></p>
+    <ol>
+      <li><strong>Inflexibility:</strong> Once a phase is completed, going back to make changes is difficult and costly.</li>
+      <li><strong>Not Ideal for Complex Projects:</strong> For projects with evolving requirements or complex designs, this model can be challenging to use effectively.</li>
+      <li><strong>Risk and Uncertainty:</strong> The model assumes that all requirements are known from the start, which can be risky if new needs or issues arise later in the process.</li>
+    </ol>
+
+    <!-- Agile — Pages 11–12 -->
+    <h3 class="section-title" id="agile">Agile Methodology</h3>
+    <p>Agile Methodology is a flexible and adaptive approach to software development. Unlike the Waterfall Model, which follows a strict sequence of steps, Agile focuses on delivering small, functional parts of the software quickly and adapting to changes as the project progresses. The main idea is to work in short cycles, called iterations or sprints, which help teams deliver parts of the software rapidly and gather feedback early as shown in Figure 1.3. Agile methods include practices such as:</p>
+    <ul>
+      <li><strong>Continuous Integration:</strong> Regularly merging code changes into a central repository to detect and fix issues early.</li>
+      <li><strong>Test-Driven Development:</strong> Writing tests before writing the code to ensure the software works as expected.</li>
+      <li><strong>Pair Programming:</strong> Two developers work together at one workstation, with one writing code and the other reviewing it in real-time.</li>
+    </ul>
+    <span class="figure-caption">Figure 1.3: Agile Methodology</span>
+
+    <div class="page-marker"><span>Page 9</span></div>
+    <h4 class="section-title">Benefits and Limitations of Agile</h4>
+    <p><strong>Benefits:</strong></p>
+    <ol>
+      <li><strong>High Flexibility:</strong> Agile allows for changes in requirements even after development has started, making it easier to adapt to new needs or feedback.</li>
+      <li><strong>Improved Customer Satisfaction:</strong> Regular updates and frequent delivery of working software mean that customers can see progress and provide feedback more often.</li>
+    </ol>
+    <p><strong>Limitations:</strong></p>
+    <ol>
+      <li><strong>Scaling Challenges:</strong> Managing large projects with many teams can be difficult, as it requires careful coordination and communication.</li>
+      <li><strong>Stakeholder Involvement:</strong> Agile requires active participation from all stakeholders, which can be challenging if some are unavailable or not fully engaged.</li>
+      <li><strong>Less Predictable:</strong> Since Agile projects evolve through feedback and changes, it can be harder to predict the exact timeline and scope of the final product.</li>
+    </ol>
+
+    <!-- Other Methodologies — Pages 13–16 -->
+    <h3 class="section-title">Other Methodologies</h3>
+
+    <!-- Scrum — Page 13 -->
+    <h4 class="section-title" id="scrum">I. Scrum</h4>
+    <div class="page-marker"><span>Page 10</span></div>
+    <p>Scrum is an agile framework widely used for managing and completing complex software projects. It promotes iterative progress, collaboration, and flexibility, making it well-suited for dynamic environments where requirements can change frequently. The framework is built around a set of roles, events, and artifacts designed to create a structured yet adaptable approach to project management.</p>
+    <p><strong>Key Components of Scrum:</strong></p>
+    <ul>
+      <li><strong>Roles:</strong> The primary roles in Scrum are the Product Owner, Scrum Master, and Development Team. The Product Owner defines the product backlog and ensures that the team is working on the highest-priority items. The Scrum Master facilitates the process, removes obstacles, and ensures that the team follows Scrum practices. The Development Team, consisting of cross-functional members, is responsible for delivering the product increments.</li>
+      <li><strong>Events:</strong> Scrum employs a series of events to ensure regular progress and review. These include Sprints (time-boxed iterations), Sprint Planning, Daily Standups, Sprint Reviews, and Sprint Retrospectives.</li>
+      <li><strong>Artifacts:</strong> Key artifacts in Scrum are the Product Backlog (a prioritized list of features and requirements), Sprint Backlog (a list of tasks to be completed in a Sprint), and Increment (the working product that is the result of the current Sprint).</li>
+    </ul>
+    <p><strong>Suitable for Scrum:</strong> Scrum is particularly suitable for software projects that require frequent updates and have evolving requirements, such as:</p>
+    <ul>
+      <li><strong>Mobile Applications:</strong> Mobile app development often involves continuous feedback and rapid iterations to meet user needs and stay competitive. Scrum's iterative nature allows for quick adjustments based on user feedback and market changes.</li>
+      <li><strong>Web Development:</strong> For web applications that require regular feature updates and improvements. Scrum facilitates a responsive development process that can quickly adapt to new requirements and user feedback.</li>
+    </ul>
+    <p><strong>Not Suitable for Scrum:</strong> Scrum may not be ideal for projects with well-defined requirements and little expected change, such as:</p>
+    <ul>
+      <li><strong>Embedded Systems:</strong> Development of embedded systems, which often involves hardware integration and stringent regulatory requirements, may benefit from a more traditional, linear approach rather than the iterative nature of Scrum.</li>
+      <li><strong>Safety-Critical Software:</strong> Projects such as medical software or aerospace systems, where thorough documentation and extensive validation are crucial, might not align well with the flexible and iterative nature of Scrum.</li>
+    </ul>
+
+    <!-- Page 14 -->
+    <div class="page-marker"><span>Page 11</span></div>
+    <p>Figure 1.4 illustrates the Scrum process flow, highlighting the key components and their interactions within a Scrum framework.</p>
+    <span class="figure-caption">Figure 1.4: Scrum Lifecycle</span>
+
+    <!-- Lean — Pages 14–15 -->
+    <h4 class="section-title" id="lean">ii. Lean Software Development</h4>
+    <p>Lean Software Development is an iterative approach to software development that emphasizes efficiency, eliminating waste, and delivering high-quality products quickly. Derived from Lean manufacturing principles, Lean Software Development focuses on delivering value to the customer by optimizing the flow of work and minimizing unnecessary activities.</p>
+    <p><strong>Key Principles of Lean Software Development:</strong></p>
+    <ol>
+      <li><strong>Eliminate Waste:</strong> Identify and remove activities that do not add value to the customer.</li>
+      <li><strong>Amplify Learning:</strong> Foster an environment of continuous improvement and learning.</li>
+      <li><strong>Decide as Late as Possible:</strong> Make decisions based on the latest possible information to reduce uncertainty.</li>
+      <li><strong>Deliver as Fast as Possible:</strong> Prioritize rapid delivery of small, incremental features.</li>
+      <li><strong>Empower the Team:</strong> Give teams the authority and responsibility to make decisions and solve problems.</li>
+      <li><strong>Build Integrity In:</strong> Ensure quality is maintained throughout the development process.</li>
+      <li><strong>See the Whole:</strong> Consider the entire system and its context to optimize the overall flow of work.</li>
+    </ol>
+
+    <div class="page-marker"><span>Page 12</span></div>
+    <span class="figure-caption">Figure 1.5: Lean Software Development Model</span>
+    <p><strong>Suitable for Lean:</strong> Lean Software Development is particularly suitable for projects that require rapid delivery and frequent iterations, such as startup software, mobile applications, and web-based services. For instance, a startup developing a new mobile app would benefit from Lean principles by quickly iterating on user feedback and delivering updates that add value.</p>
+    <p><strong>Not Suitable for Lean:</strong> Lean Software Development might not be ideal for projects that require extensive upfront planning and are highly complex or regulated, such as large-scale enterprise systems, embedded systems, or safety-critical applications. For example, developing software for an aviation control system would demand rigorous documentation, extensive testing, and regulatory compliance, which may not align well with the iterative nature of Lean.</p>
+
+    <!-- DevOps — Pages 15–16 -->
+    <h4 class="section-title" id="devops">DevOps</h4>
+    <p>DevOps is a set of practices that combines software development (Dev) and IT operations (Ops) to enhance collaboration, efficiency, and agility in delivering software products and services as shown in Figure 1.6. The primary goal of DevOps is to shorten the development lifecycle, improve software quality, and provide continuous delivery with high reliability.</p>
+    <p><strong>Why DevOps Should Be Practiced:</strong> DevOps should be practiced because it brings numerous benefits to the software development and delivery process:</p>
+    <ol>
+      <li><strong>Improved Collaboration:</strong> DevOps fosters a culture of collaboration between development and operations teams, breaking down silos and ensuring that both teams work towards common goals.</li>
+      <li><strong>Faster Time-to-Market:</strong> By automating processes and enabling continuous integration and continuous delivery (CI/CD), DevOps allows teams to deliver software updates and new features more rapidly.</li>
+      <li><strong>Enhanced Quality:</strong> Continuous testing and monitoring in DevOps help identify and address issues early in the development cycle, resulting in higher quality software.</li>
+      <li><strong>Increased Efficiency:</strong> Automation of repetitive tasks reduces manual effort and the risk of human error, leading to more efficient workflows.</li>
+    </ol>
+
+    <div class="page-marker"><span>Page 13</span></div>
+    <span class="figure-caption">Figure 1.6: DevOps Methodology</span>
+    <p><strong>Suitable for DevOps:</strong> DevOps is ideal for web and mobile apps, and cloud services where fast development and scaling are crucial. For example, Amazon's e-commerce platform uses DevOps to continuously release new features and updates.</p>
+    <p><strong>Not Suitable for DevOps:</strong> DevOps may be less suitable for highly regulated or hardware-dependent projects. For instance, software for medical devices needs rigorous testing and compliance, which may not fit with DevOps's rapid pace.</p>
+    <div class="info-box">
+      <div class="icon">📖</div>
+      <div class="content">The term <strong>Waterfall</strong> was first introduced by Dr. Winston W. Royce in 1970, but he did not advocate for its use without iteration.</div>
+    </div>
+
+    <!-- PROJECT PLANNING — Pages 16–19 -->
+    <h2 class="section-title" id="planning">1.5 Project Planning and Management</h2>
+    <p>Planning a software project is like planning a trip. You need to know where you're going, how long it will take, and how much it will cost.</p>
+    <span class="figure-caption">Figure 1.7: Step by step process of project planning — The 5 Phases of a Project Management Plan</span>
+
+    <div class="page-marker"><span>Page 14</span></div>
+    <h3 class="section-title">1.4.1 Comprehensive Project Planning</h3>
+    <p>Comprehensive project planning involves thinking about all the details of your project before you start. This includes understanding what needs to be done, who will do it, and how it will be done.</p>
+    <div class="info-box">
+      <div class="icon">🌐</div>
+      <div class="content">Some of the largest software development companies in the world are worth billions of dollars! For example, as of 2023, Microsoft, one of the leading software giants, has a market capitalization exceeding $2 trillion. This immense value highlights the significant impact and economic importance of software development in today's digital age.</div>
+    </div>
+
+    <h3 class="section-title" id="timelines">1.4.2 Setting Project Timelines</h3>
+    <p>Setting project timelines means deciding how long each part of the project will take. This helps keep the project on track and ensures it gets done on time.</p>
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content"><strong>Example:</strong> If you're building a website, you might set a timeline for designing the site, another for writing the content, and another for testing everything.</div>
+    </div>
+
+    <h3 class="section-title" id="costs">1.4.3 Estimating Costs</h3>
+    <p>Estimating the cost of a software project is a critical step in project planning and management. It involves predicting the total expenses required to complete the project successfully. Accurate cost estimation helps in budgeting, resource allocation, and setting realistic expectations.</p>
+    <p><strong>Key Factors in Cost Estimation:</strong></p>
+    <ul>
+      <li><strong>Development Team:</strong> The cost depends on the number of developers, their expertise, and their hourly rates. Teams with specialized skills may charge higher rates.</li>
+      <li><strong>Technology Stack:</strong> The choice of technology, programming languages, and tools can affect the cost. Some technologies require more resources or specialized knowledge.</li>
+      <li><strong>Project Duration:</strong> Longer projects generally incur higher costs due to prolonged resource engagement and potential changes in scope.</li>
+      <li><strong>Risk Management:</strong> Identifying potential risks and their mitigation strategies can add to the overall cost. Contingency funds are often included to address unforeseen issues.</li>
+      <li><strong>Quality Assurance:</strong> Costs associated with testing, bug fixing, and ensuring the software meets quality standards are also part of the estimation.</li>
+    </ul>
+
+    <div class="info-box">
+      <div class="icon">📱</div>
+      <div class="content">
+        <strong>Example:</strong> A company in Pakistan wants to develop a mobile application for online shopping.<br>
+        <strong>Scope:</strong> The app will include user registration, product listings, shopping cart, payment integration, and order tracking.
+      </div>
+    </div>
+
+    <div class="page-marker"><span>Page 15</span></div>
+    <p><strong>Project Team &amp; Stack:</strong></p>
+    <ul>
+      <li><strong>Development Team:</strong> 1 project manager, 2 frontend developers, 2 backend developers, 1 UI/UX designer, and 2 QA testers.</li>
+      <li><strong>Technology Stack:</strong> React Native for cross-platform compatibility, Node.js for the backend, and MongoDB for the database.</li>
+      <li><strong>Project Duration:</strong> Estimated duration is 6 months.</li>
+      <li><strong>Operational Costs:</strong> Costs include cloud hosting, development tools, and software licenses.</li>
+      <li><strong>Risk Management:</strong> Potential risks include scope changes and technology integration issues, with a contingency fund of 10% of total cost.</li>
+      <li><strong>Quality Assurance:</strong> Includes comprehensive testing phases to ensure functionality and performance.</li>
+    </ul>
+
+    <p><strong>Cost Breakdown:</strong></p>
+    <div class="formula-block">
+Project Manager:
+  PKR 5,000/hour × 20 hours/week × 24 weeks = PKR 2,400,000
+
+Frontend Developers:
+  2 developers × PKR 3,500/hour × 30 hours/week × 24 weeks = PKR 5,040,000
+
+Backend Developers:
+  2 developers × PKR 4,000/hour × 30 hours/week × 24 weeks = PKR 5,760,000
+
+UI/UX Designer:
+  PKR 3,000/hour × 20 hours/week × 24 weeks = PKR 1,440,000
+
+QA Testers:
+  2 testers × PKR 2,500/hour × 20 hours/week × 24 weeks = PKR 2,400,000
+
+Operational Costs (Cloud services and tools): PKR 1,000,000
+
+Contingency Fund (10% of total estimated cost): PKR 1,604,000
+
+──────────────────────────────────────────────────────────
+Total Estimated Cost: PKR 19,644,000
+    </div>
+    <p>The total estimated cost of PKR 19,644,000 includes all aspects of development, from planning and design to implementation and testing. This example illustrates how different factors contribute to the overall cost and the importance of detailed planning in cost estimation.</p>
+    <div class="tip-box">You don't need to know programming to start a software development project! You can post your idea on freelancing platforms where developers can bid on your project. With the help of your family, you can also seek out investors to fund your idea.</div>
+
+    <!-- Risk — Page 19 -->
+    <div class="page-marker"><span>Page 16</span></div>
+    <h3 class="section-title" id="risk">1.4.4 Risk Assessment and Management</h3>
+    <p>Risk assessment and management are crucial aspects of any software project. They involve identifying potential risks that could impact the project's success, analysing the likelihood and impact of these risks, and developing strategies to manage them. Effective risk management helps ensure that projects stay on track, within budget, and meet quality standards.</p>
+    <p><strong>Steps in Risk Assessment and Management:</strong></p>
+    <ol>
+      <li><strong>Identify Risks:</strong> List all potential risks that could affect the project. These could be technical risks, such as technology changes; operational risks, like resource shortages; or external risks, such as market fluctuations.</li>
+      <li><strong>Analyze Risks:</strong> Evaluate the likelihood of each risk occurring and its potential impact on the project. This helps in prioritizing which risks need more attention.</li>
+      <li><strong>Develop Mitigation Strategies:</strong> For each significant risk, develop a plan to reduce its likelihood or minimize its impact. This could involve adding buffers to the schedule, securing backup resources, or conducting additional testing.</li>
+      <li><strong>Monitor and Review:</strong> Continuously monitor the project for new risks and review existing risks to adjust strategies as necessary.</li>
+    </ol>
+    <div class="info-box">
+      <div class="icon">⚠️</div>
+      <div class="content">
+        <strong>Example:</strong> A project is using a new, untested technology. The risk is that the technology may not work as expected, causing delays and additional costs.<br><br>
+        <strong>Mitigation Strategy:</strong> Conduct a small-scale pilot project to test the technology before fully integrating it into the main project. This can help identify potential issues early.
+      </div>
+    </div>
+    <p>Figure 1.8 illustrates the risk management process, showing the steps from identifying risks to monitoring and reviewing them.</p>
+    <span class="figure-caption">Figure 1.8: Risk Management Process</span>
+
+    <!-- Quality Assurance — Page 19 -->
+    <h3 class="section-title" id="qa">1.4.5 Quality Assurance</h3>
+    <p>Quality assurance ensures that a project meets set standards and works correctly. It involves methods such as testing, reviewing code, getting feedback from stakeholders, and regularly checking the project's progress.</p>
+    <div class="info-box">
+      <div class="icon">✅</div>
+      <div class="content"><strong>Example:</strong> In a software project, this involves ensuring that the code is both accurately written and functions as expected.</div>
+    </div>
+
+    <!-- UML — Pages 19–24 -->
+    <h2 class="section-title" id="uml">1.2 Graphical Representation of Software Systems</h2>
+    <p>Graphical representation of software systems involves using visual diagrams to depict various aspects of a software system's structure and behavior. This approach helps in simplifying complex systems, making it easier for developers and stakeholders to understand, communicate, and manage the system. Diagrams, like Unified Modeling Language (UML) diagrams, are widely used to illustrate various components, their relationships, and interactions within software.</p>
+
+    <div class="page-marker"><span>Page 17</span></div>
+    <h3 class="section-title">1.2.1 Introduction to UML</h3>
+    <p>Unified Modeling Language (UML) is a standardized way to visualize the design of a software system. It helps developers understand how a system works and communicates. UML is important because it makes complex systems easier to understand and manage.</p>
+    <div class="info-box">
+      <div class="icon">🎓</div>
+      <div class="content">UML was created by three software engineers: Grady Booch, James Rumbaugh, and Ivar Jacobson. They are often called the <strong>"Three Amigos"</strong> of UML.</div>
+    </div>
+
+    <h3 class="section-title">1.1.1 Types of UML Diagrams</h3>
+    <p>In this section, we will discuss four types of UML diagrams.</p>
+
+    <!-- Use Case — Pages 20–21 -->
+    <h4 class="section-title" id="use-case">Use Case Diagrams</h4>
+    <p>Use Case Diagrams are a fundamental component in UML used to depict the various ways in which users, referred to as actors, interact with a system. These diagrams provide a visual representation of the system's functionality from the user's perspective, helping to identify the requirements and the interactions between the users and the system.</p>
+    <p><strong>Definition and Purpose:</strong> A use case is a description of a set of interactions between a user (actor) and a system to achieve a specific goal. Use cases are identified based on the functionalities that the system must support to meet the user's needs. Each use case represents a complete workflow from the user's perspective, detailing the steps involved in accomplishing a particular task.</p>
+    <p><strong>Use Case Diagrams are used for several purposes:</strong></p>
+    <ol>
+      <li><strong>Capturing Functional Requirements:</strong> They help in identifying and documenting the functional requirements of the system.</li>
+      <li><strong>Understanding User Interactions:</strong> They illustrate how different users will interact with the system.</li>
+      <li><strong>Planning and Testing:</strong> They aid in planning the development process and in designing test cases for validating system functionalities.</li>
+    </ol>
+    <p><strong>Identifying Use Cases — Steps:</strong></p>
+    <ol>
+      <li><strong>Identify Actors:</strong> Determine the different types of users who will interact with the system. Actors can be human users or other systems.</li>
+      <li><strong>Define Goals:</strong> For each actor, identify their goals or what they need to accomplish using the system.</li>
+      <li><strong>Outline Interactions:</strong> Describe the interactions between the actors and the system to achieve these goals. Each interaction that results in a significant outcome is a potential use case.</li>
+      <li><strong>Validate Use Cases:</strong> Review the identified use cases with stakeholders to ensure they accurately capture the required functionalities and interactions.</li>
+    </ol>
+    <span class="figure-caption">Figure 1.9: Example Use Case Diagram for a Library System</span>
+
+    <!-- Class Activity — Page 21–22 -->
+    <div class="page-marker"><span>Page 18</span></div>
+    <div class="activity-box">
+      <div class="activity-header">Class Activity — Use Case Identification</div>
+      <p><strong>Objective:</strong> Learn to identify actors and use cases from a given statement describing a system.</p>
+      <p><strong>Instructions:</strong></p>
+      <ol>
+        <li>Read the following statement carefully.</li>
+        <li>Identify the actors involved in the system.</li>
+        <li>Identify the use cases that describe the interactions between the actors and the system.</li>
+        <li>Write down your findings and be prepared to discuss them with the class.</li>
+      </ol>
+      <p><strong>Statement:</strong> Imagine you are designing an online shopping platform. The platform allows customers to browse products, add items to their cart, and make purchases. Additionally, the platform includes features for administrators to manage product listings, process orders, and handle customer inquiries. There is also a feature for delivery personnel to update the status of deliveries.</p>
+      <p><strong>Findings / Answer Key:</strong></p>
+      <ul>
+        <li><strong>Actors:</strong>
+          <ul>
+            <li>Customer</li>
+            <li>Administrator</li>
+            <li>Delivery Personnel</li>
+          </ul>
+        </li>
+        <li><strong>Use Cases:</strong>
+          <ul>
+            <li>Browse Products</li>
+            <li>Add Items to Cart</li>
+            <li>Make Purchase</li>
+            <li>Manage Product Listings</li>
+            <li>Process Orders</li>
+            <li>Handle Customer Inquiries</li>
+            <li>Update Delivery Status</li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Class Diagram — Page 22 -->
+    <div class="page-marker"><span>Page 19</span></div>
+    <h4 class="section-title" id="class-diagram">What is a Class Diagram?</h4>
+    <p>A class diagram is like a map that shows how things are organized in a system, just like how you organize your room. It helps us see what's in each box (like your toys, books, or clothes) and how these boxes are related.</p>
+    <div class="info-box">
+      <div class="icon">🗂️</div>
+      <div class="content">
+        <strong>Example — Organizing Your Room:</strong>
+        <ul style="margin-top:8px; margin-left:18px;">
+          <li><strong>Room:</strong> Represents the overall space encompassing all other elements, analogous to the main structure in a class diagram.</li>
+          <li><strong>Box:</strong> Serves as a container within the room, akin to a class in a diagram.</li>
+          <li><strong>Attributes:</strong> Each box contains specific items, such as a 'ToyBox' holding toys or a 'BookBox' containing books.</li>
+          <li><strong>Methods:</strong> Boxes can perform actions like 'open' or 'close,' similar to methods in a class diagram that define what the box can do.</li>
+          <li><strong>Specific Boxes:</strong> Examples include a 'ToyBox' for toys, a 'BookBox' for books, and a 'ClothesBox' for clothes, representing distinct instances of the general 'Box' class.</li>
+        </ul>
+      </div>
+    </div>
+    <p>So, a class diagram is simply a way to organize and show how different parts of a system (like your room) work together, making it easier to understand everything at a glance as shown in Figure 1.10.</p>
+
+    <!-- Sequence Diagrams — Page 23 -->
+    <div class="page-marker"><span>Page 20</span></div>
+    <span class="figure-caption">Figure 1.10: Class Diagram for Organizing Your Room</span>
+
+    <h4 class="section-title" id="sequence">Sequence Diagrams</h4>
+    <p>Sequence Diagrams show how objects in a system interact with each other in a particular sequence. They help in understanding the flow of messages between objects over time.</p>
+    <p><strong>Interactions (Example — User Organizing Items into Labeled Boxes):</strong></p>
+    <ul>
+      <li><strong>open():</strong> User opens each box.</li>
+      <li><strong>put toys/books/clothes inside:</strong> User puts the respective items into the boxes.</li>
+      <li><strong>close():</strong> User closes each box.</li>
+    </ul>
+    <span class="figure-caption">Figure 1.11: Sequence diagram of the user organizing items into labeled boxes</span>
+
+    <!-- Activity Diagrams — Page 24 -->
+    <div class="page-marker"><span>Page 21</span></div>
+    <h4 class="section-title" id="activity-diagram">Activity Diagrams</h4>
+    <p>Activity Diagrams illustrate the flow of activities or steps in a process. They are useful for modeling the logic of complex operations.</p>
+    <div class="info-box">
+      <div class="icon">🍽️</div>
+      <div class="content"><strong>Example:</strong> In a restaurant management system, an activity diagram can represent the process from 'Order Placement' to 'Food Preparation' and finally to 'Order Delivery'.</div>
+    </div>
+    <span class="figure-caption">Figure 1.12: Activity Diagram with Decision and Connector Symbol</span>
+    <p>The above activity diagram shows how a process flows from start to finish. In the restaurant management system example, the process begins with 'Start', moves to 'Order Placement,' then to 'Food Preparation,' and finally to 'Order Delivery.' The 'End' node concludes the process. Arrows indicate the sequence of these steps, making it easy to follow how an order progresses.</p>
+
+    <h3 class="section-title">1.5.3 Using UML to Represent Software Systems</h3>
+    <p>UML can be used in various stages of software development to improve understanding and communication. Here are some practical applications:</p>
+    <ul>
+      <li><strong>Planning:</strong> Use UML diagrams to map out the system's requirements and design before writing any code.</li>
+      <li><strong>Development:</strong> Developers refer to UML diagrams to understand the structure and relationships within the system.</li>
+      <li><strong>Communication:</strong> UML diagrams help team members, including non-technical stakeholders, to understand how the system works.</li>
+    </ul>
+
+    <!-- DESIGN PATTERNS — Pages 25–26 -->
+    <div class="page-marker"><span>Page 22</span></div>
+    <h2 class="section-title" id="design-patterns">1.6 Introduction to Design Patterns</h2>
+    <p>Design patterns are a fundamental concept in software development, providing proven solutions to common problems that arise during software development. They serve as blueprints or templates that can be adapted to solve various design challenges, making the development process more efficient and consistent.</p>
+    <div class="info-box">
+      <div class="icon">📘</div>
+      <div class="content">The concept of design patterns was popularized by the book <em>'Design Patterns: Elements of Reusable Object-Oriented Software'</em> by Erich Gamma, Richard Helm, Ralph Johnson, and John Vlissides, also known as the <strong>"Gang of Four"</strong>.</div>
+    </div>
+
+    <h3 class="section-title">1.6.1 Commonly Used Design Patterns</h3>
+    <p>There are numerous design patterns, but some are more commonly used due to their versatility and effectiveness in solving a wide range of problems.</p>
+
+    <h4 class="section-title">1.6.1.1 Singleton Pattern</h4>
+    <p>The Singleton Design Pattern is a way to make sure that a specific object or resource is created only once in a program and reused whenever needed. Think of it like having just one key to a special room, and no matter who needs to get into the room, they all have to use that same key. No new keys are made, and everyone shares that one key.</p>
+
+    <h4 class="section-title">1.6.1.2 Factory Pattern</h4>
+    <p>The Factory Design Pattern is like having a special workshop that knows how to create different products, but you don't need to worry about the details of how those products are made. Instead, you just tell the factory what you need, and it gives you the finished product.</p>
+
+    <h4 class="section-title">1.6.1.3 Observer Pattern</h4>
+    <p>The Observer Design Pattern is like having a group of people who are interested in getting updates from one particular source. Whenever something important happens, the source automatically notifies all the interested people. It's a way to keep things in sync without everyone constantly checking for updates.</p>
+
+    <h4 class="section-title">1.6.1.4 Strategy Pattern</h4>
+    <p>The Strategy Design Pattern is like having a toolbox full of different tools, each designed for a specific job. When you face a problem, you can pick the right tool from the box based on the task at hand. In other words, you have "multiple ways" to solve a problem, and you can switch between them easily without changing much else.</p>
+
+    <div class="activity-box">
+      <div class="activity-header">Class Activity — Design Patterns</div>
+      <p>Identify a real-world scenario around you where you can apply one of these design patterns. Share your examples in the next class.</p>
+    </div>
+
+    <!-- Page 26 -->
+    <div class="page-marker"><span>Page 23</span></div>
+    <h3 class="section-title">1.6.2 Applications of Design Patterns in Software Design</h3>
+    <p>Design patterns are widely used in software development to solve common problems and create robust and maintainable code. They help in:</p>
+    <ul>
+      <li>Reducing code complexity by providing a clear structure.</li>
+      <li>Enhancing code reusability by using proven solutions.</li>
+      <li>Improving communication among developers by providing a common vocabulary.</li>
+    </ul>
+    <p>Design patterns help create systems that are flexible, maintainable, and easy to understand.</p>
+    <div class="info-box">
+      <div class="icon">🔧</div>
+      <div class="content">Many popular software frameworks and libraries are built using design patterns. For example, the <strong>Model-View-Controller (MVC)</strong> pattern is used in web development frameworks like Ruby on Rails and Angular.</div>
+    </div>
+
+    <!-- DEBUGGING & TESTING — Pages 26–28 -->
+    <h2 class="section-title" id="debugging">1.7 Software Debugging and Testing</h2>
+    <p>Software debugging and testing are critical stages in the software development process that ensure the quality and reliability of a software product. Effective debugging and testing help developers to confirm that the software meets the required specifications, functions as intended, and is free of critical errors.</p>
+
+    <h3 class="section-title">1.7.1 Debugging</h3>
+    <p>Debugging is the process of finding and fixing bugs or errors in software. Bugs are errors or mistakes in the software that cause it to behave unexpectedly. Identifying bugs involves observing the software's behavior and finding the source of the problem. Once identified, solving bugs requires making changes to the code to correct the error.</p>
+    <div class="info-box">
+      <div class="icon">🐛</div>
+      <div class="content">Debugging was named after an incident in 1947 when a real bug (a moth) was found inside a computer!</div>
+    </div>
+    <p><strong>Tools and Best Practices for Debugging:</strong></p>
+    <ul>
+      <li><strong>Debuggers:</strong> Software tools that help programmers find bugs by allowing them to step through code, inspect variables, and monitor program execution.</li>
+      <li><strong>Print Statements:</strong> Adding print statements in the code to display the values of variables at different points in the program.</li>
+      <li><strong>Code Reviews:</strong> Having other developers review your code to spot potential errors.</li>
+    </ul>
+
+    <!-- Page 27 -->
+    <div class="page-marker"><span>Page 24</span></div>
+    <h3 class="section-title">1.7.1 Testing</h3>
+    <p>Testing is the process of evaluating the software to ensure it meets the requirements and works as expected. The testing process typically follows a hierarchy that begins with smaller components and gradually progresses to the entire system, including user acceptance. The main types of testing in this hierarchy are given below.</p>
+
+    <h4 class="section-title">1.7.2.1 Unit Testing</h4>
+    <p>Unit Testing is the first level of testing, where individual components or modules of the software are tested in isolation. Each "unit" is a small, testable part of the software, such as a function or method. The primary goal of unit testing is to verify that each component works correctly according to its design and performs as expected.</p>
+    <div class="activity-box">
+      <div class="activity-header">Class Activity — Unit Testing</div>
+      <p>Try writing a unit test for a simple function in your favorite programming language.</p>
+    </div>
+
+    <h4 class="section-title">1.7.2.2 Integration Testing</h4>
+    <p>After unit testing, Integration Testing is performed to evaluate the interaction between different components or modules. While unit testing focuses on isolated units, integration testing ensures that these units work together correctly when combined. This type of testing checks for interface errors, data flow between modules, and other integration-related issues. It helps identify problems that may not arise during unit testing, such as mismatches in module communication or data handling.</p>
+
+    <h4 class="section-title">1.7.2.3 System Testing</h4>
+    <p>System Testing is a higher level of testing where the entire software system is tested as a whole. At this stage, the software is treated as a complete entity, and testers evaluate its overall functionality, performance, security, and compliance with specified requirements. System testing involves testing the software in an environment that closely resembles the production environment to ensure that it functions correctly under real-world conditions. This level of testing helps identify defects that may arise from the interaction of various system components and verifies that the software meets its intended purpose.</p>
+
+    <h4 class="section-title">1.7.2.4 Acceptance Testing</h4>
+    <p>Acceptance Testing is the final level of testing conducted to determine whether the software is ready for release. It is often performed by the end-users or clients to ensure that the software meets their expectations and requirements. Acceptance testing can be formal or informal and typically includes scenarios that mimic real-world usage to validate the software's usability, reliability, and performance.</p>
+
+    <!-- Page 28 -->
+    <div class="page-marker"><span>Page 25</span></div>
+    <div class="info-box">
+      <div class="icon">ℹ️</div>
+      <div class="content">Acceptance testing is sometimes called <strong>User Acceptance Testing (UAT)</strong> because it is often done by the end-users of the software.</div>
+    </div>
+
+    <!-- SOFTWARE TOOLS — Pages 28–30 -->
+    <h2 class="section-title" id="tools">1.8 Software Development Tools</h2>
+    <p>Software development tools are essential for creating, testing, and maintaining software applications. These tools help developers write code, find and fix errors, and manage software projects effectively.</p>
+
+    <h3 class="section-title">1.8.1 Definitions and Usage</h3>
+    <p>Software development tools are programs or applications that assist in various stages of software creation. They are used to write, edit, test, debug, and manage code, ensuring that software functions correctly and efficiently.</p>
+
+    <div class="page-marker"><span>Page 26</span></div>
+    <h3 class="section-title">1.8.2 Language Editors</h3>
+    <p>Language editors, also known as code editors, are tools that help developers write and edit code in different programming languages. The purpose of language editors is to provide a user-friendly interface for writing code. Examples include:</p>
+    <ul>
+      <li><strong>Notepad++:</strong> A simple yet powerful code editor.</li>
+      <li><strong>Sublime Text:</strong> Known for its speed and ease of use.</li>
+      <li><strong>VS Code:</strong> A popular editor with many extensions.</li>
+    </ul>
+
+    <h3 class="section-title">1.8.3 Translators</h3>
+    <p>Translators are tools that convert code written in one programming language into another language that the computer can understand. Translators convert high-level programming languages (like Python) into machine language (binary code) that computers can execute.</p>
+    <ul>
+      <li><strong>Interpreters:</strong> Translate code line-by-line (e.g., Python interpreter).</li>
+      <li><strong>Compilers:</strong> Translate the entire code at once (e.g., GCC for C/C++).</li>
+    </ul>
+
+    <h3 class="section-title">1.8.4 Compilers</h3>
+    <p>Compilers are a type of translator that converts entire programs from high-level languages into machine code before execution. The purpose of compilers is to optimize and convert code into efficient machine code. Examples include:</p>
+    <ul>
+      <li><strong>GCC:</strong> GNU Compiler Collection for C and C++.</li>
+      <li><strong>Javac:</strong> Compiler for Java programs.</li>
+    </ul>
+
+    <h3 class="section-title">1.8.5 Debuggers</h3>
+    <p>Debuggers are tools that help developers find and fix errors (bugs) in their code. The purpose of debuggers is to allow developers to test their code and identify where errors occur. Examples include:</p>
+    <ul>
+      <li><strong>GDB:</strong> GNU Debugger for C/C++.</li>
+      <li><strong>Visual Studio Debugger:</strong> Integrated with Visual Studio IDE.</li>
+    </ul>
+
+    <h3 class="section-title">1.8.6 Integrated Development Environments (IDEs)</h3>
+    <p>IDEs are comprehensive software suites that provide all the tools needed for software development in one place. IDEs integrate various development tools like editors, compilers, debuggers, and version control systems to streamline the development process. An IDE offers a unified interface where developers can write, test, and debug their code efficiently.</p>
+    <p><strong>Common IDEs:</strong></p>
+    <ul>
+      <li><strong>Eclipse:</strong> Widely used for Java development.</li>
+      <li><strong>Visual Studio:</strong> Popular for .NET and C++ development.</li>
+      <li><strong>PyCharm:</strong> Preferred for Python development.</li>
+    </ul>
+
+    <!-- Page 30 -->
+    <div class="page-marker"><span>Page 27</span></div>
+    <h3 class="section-title">1.8.7 Online and Offline Computing Platforms</h3>
+    <p>These platforms provide environments where developers can write, run, and test their code.</p>
+    <ul>
+      <li><strong>Online Platforms:</strong> Cloud-based platforms accessible via the internet (e.g., Repl.it, Gitpod).</li>
+      <li><strong>Offline Platforms:</strong> Local development environments on a computer (e.g., local installations of IDEs).</li>
+    </ul>
+
+    <h3 class="section-title">1.8.8 Source Code Repositories</h3>
+    <p>Source code repositories are platforms where developers can store, manage, and track changes to their code. Repositories help in version control, allowing multiple developers to work on the same project without conflicts. Repositories keep track of code changes and maintain a history of all modifications.</p>
+    <ul>
+      <li><strong>GitHub:</strong> Popular platform for open-source projects.</li>
+      <li><strong>Bitbucket:</strong> Used for both private and public repositories.</li>
+    </ul>
+
+    <!-- SUMMARY — Page 30 -->
+    <div class="summary-box" id="summary">
+      <h2>📝 Summary</h2>
+      <p>In this chapter, you were introduced to the essential aspects of software development, from the fundamental concepts and key terminology to the detailed stages of the Software Development Life Cycle (SDLC). You explored different software development methodologies, including the Waterfall model and Agile methodology, and learned how to plan and manage a software project effectively. The chapter also covered quality assurance techniques, the use of UML for graphical representation, and the importance of design patterns in software design. Finally, you were introduced to debugging techniques, testing strategies, and various software development tools that aid in the efficient development of high-quality software products.</p>
+    </div>
+
+    <!-- EXERCISE — Pages 30–32 -->
+    <div class="page-marker"><span>Page 28</span></div>
+    <div class="exercise-section" id="exercise">
+      <h2>📋 Exercise</h2>
+
+      <h3>Q.1: Multiple Choice Questions</h3>
+
+      <div class="mcq-item">
+        <p class="question">1. What is the primary purpose of the Software Development Life Cycle (SDLC)?</p>
+        <ol class="options" type="a">
+          <li>To design websites</li>
+          <li>To deliver high-quality software within time and cost estimates</li>
+          <li>To manage database systems</li>
+          <li>To create hardware components</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">2. Which type of requirement specifies how the system should perform?</p>
+        <ol class="options" type="a">
+          <li>Functional Requirements</li>
+          <li>Non-Functional Requirements</li>
+          <li>Technical Requirements</li>
+          <li>Operational Requirements</li>
+        </ol>
+      </div>
+
+      <div class="page-marker"><span>Page 29</span></div>
+      <div class="mcq-item">
+        <p class="question">3. In the context of SDLC, what is the role of a framework?</p>
+        <ol class="options" type="a">
+          <li>To write code from scratch</li>
+          <li>To provide a structured foundation with predefined components and architectures</li>
+          <li>To manage hardware</li>
+          <li>To perform manual testing</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">4. Which software development model involves working in short cycles or sprints?</p>
+        <ol class="options" type="a">
+          <li>Waterfall Model</li>
+          <li>Agile Methodology</li>
+          <li>Lean Software Development</li>
+          <li>Scrum</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">5. Which role is responsible for removing obstacles and facilitating Scrum practices?</p>
+        <ol class="options" type="a">
+          <li>Product Owner</li>
+          <li>Scrum Master</li>
+          <li>Development Team</li>
+          <li>Project Manager</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">6. Which of the following is NOT a benefit of DevOps?</p>
+        <ol class="options" type="a">
+          <li>Improved collaboration</li>
+          <li>Enhanced quality</li>
+          <li>Increased project scope creep</li>
+          <li>Faster time-to-market</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">7. What is a crucial aspect of comprehensive project planning?</p>
+        <ol class="options" type="a">
+          <li>Understanding the project scope and tasks</li>
+          <li>Deciding the project's colour scheme</li>
+          <li>Hiring a large development team</li>
+          <li>Ignoring potential risks</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">8. Which factor does NOT influence the cost estimation of a software project?</p>
+        <ol class="options" type="a">
+          <li>Scope of the project</li>
+          <li>Technology stack</li>
+          <li>Number of meetings held</li>
+          <li>Operational costs</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">9. What is the purpose of a contingency fund in cost estimation?</p>
+        <ol class="options" type="a">
+          <li>To cover unexpected costs</li>
+          <li>To pay for marketing expenses</li>
+          <li>To hire additional developers</li>
+          <li>To purchase new hardware</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">10. Which of the following is a purpose of Use Case Diagrams?</p>
+        <ol class="options" type="a">
+          <li>To document the system's architecture.</li>
+          <li>To identify and document the system's functional requirements.</li>
+          <li>To illustrate the database schema.</li>
+          <li>To define the system's user interface design.</li>
+        </ol>
+      </div>
+
+      <div class="page-marker"><span>Page 30</span></div>
+      <h3>Short Questions</h3>
+      <ol class="sq-item" style="margin-left:20px; color:#37474f; font-size:14px;">
+        <li class="sq-item">Differentiate between functional and non-functional requirements.</li>
+        <li class="sq-item">Explain why the testing phase is important in the Software Development Life Cycle (SDLC), and provide two reasons for its significance.</li>
+        <li class="sq-item">Illustrate the concept of continuous integration in Agile Methodology and discuss its importance in software development.</li>
+        <li class="sq-item">Identify the key components of the Scrum framework and analyze how each contributes to effective project management.</li>
+        <li class="sq-item">Evaluate the main steps involved in risk assessment and management, and assess their importance in a software project.</li>
+        <li class="sq-item">Explain the purpose of a Use Case Diagram in software development.</li>
+        <li class="sq-item">Compare and contrast a Sequence Diagram with an Activity Diagram, highlighting the key differences.</li>
+        <li class="sq-item">Describe the Factory Pattern and explain how it differs from directly creating objects, with an example.</li>
+      </ol>
+
+      <h3>Long Questions</h3>
+      <ol class="lq-item" style="margin-left:20px; color:#37474f; font-size:14px;">
+        <li class="lq-item">Design a flowchart for a user registration process in a software application. Outline its key steps.</li>
+        <li class="lq-item">Imagine you are managing a project to develop a simple mobile application. Describe how you would use the Agile Methodology to handle this project.</li>
+        <li class="lq-item">You are working on a project that requires extensive documentation and has very specific regulatory requirements. Discuss why the Scrum methodology might not be suitable for this project and suggest an alternative methodology.</li>
+        <li class="lq-item">Consider an online banking system. Create a Use Case Diagram to show the interactions between customers, bank staff, and the system.</li>
+        <li class="lq-item">You are developing a food delivery application. Create a Sequence Diagram to show the process of placing an order, from the customer selecting items to the delivery of the order.</li>
+        <li class="lq-item">Discuss the importance of software development tools in the software development process.
+          <ol type="a" style="margin-top:6px;">
+            <li>Explain the role of language editors, translators, and debuggers in creating and maintaining software.</li>
+            <li>Provide examples of each tool and describe how they contribute to the efficiency and accuracy of software development.</li>
+          </ol>
+        </li>
+      </ol>
+    </div><!-- end exercise-section -->
+
+  </main>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Unit 6 – Emerging Technologies | Computer Science Class 11</title>
+  <style>
+    /* ── Base ─────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.75;
+      color: #1a1a2e;
+      background: #f4f6fb;
+    }
+
+    /* ── Layout ───────────────────────────────────────────── */
+    .wrapper {
+      max-width: 1260px;
+      margin: 0 auto;
+      padding: 0;
+    }
+    main {
+      flex: 1;
+      min-width: 0;
+      padding: 32px 48px 80px 48px;
+      background: #fff;
+      box-shadow: 0 0 40px rgba(0,0,0,.08);
+    }
+
+    /* ── Cover ────────────────────────────────────────────── */
+    .cover {
+      background: linear-gradient(135deg, #0f3460 0%, #16213e 60%, #0d0d2b 100%);
+      color: #fff;
+      padding: 60px 40px;
+      margin: -32px -48px 48px -48px;
+      position: relative;
+      overflow: hidden;
+    }
+    .cover::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 70% 30%, rgba(100,255,218,.12), transparent 60%);
+    }
+    .cover .badge {
+      display: inline-block;
+      background: #64ffda;
+      color: #0d0d2b;
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+    }
+    .cover h1 {
+      font-size: 2.4rem;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 10px;
+      position: relative;
+    }
+    .cover .subtitle {
+      font-size: 1.05rem;
+      color: #a8d8ea;
+      margin-bottom: 32px;
+    }
+    .cover .subject-tag {
+      font-size: 12px;
+      color: #64ffda;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* ── Page marker ──────────────────────────────────────── */
+    .page-marker {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 36px 0 10px;
+      color: #8892b0;
+      font-size: 11.5px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .page-marker::before, .page-marker::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #e0e7ff;
+    }
+    .page-marker span { white-space: nowrap; }
+
+    /* ── Typography ───────────────────────────────────────── */
+    h1.section-title { font-size: 1.7rem; color: #0f3460; margin: 32px 0 12px; border-left: 5px solid #64ffda; padding-left: 14px; }
+    h2.section-title { font-size: 1.35rem; color: #16213e; margin: 28px 0 10px; border-left: 4px solid #4fc3f7; padding-left: 12px; }
+    h3.section-title { font-size: 1.1rem; color: #1a237e; margin: 22px 0 8px; border-left: 3px solid #a5d6a7; padding-left: 10px; }
+    h4.section-title { font-size: 1rem; color: #37474f; margin: 18px 0 6px; padding-left: 10px; border-left: 3px solid #ffcc80; }
+    p { margin-bottom: 14px; }
+    ul, ol { margin: 10px 0 14px 28px; }
+    li { margin-bottom: 6px; }
+    strong { color: #0f3460; }
+
+    /* ── SLO Box ──────────────────────────────────────────── */
+    .slo-box {
+      background: linear-gradient(120deg, #e8f5e9, #f1f8ff);
+      border: 1.5px solid #81c784;
+      border-radius: 12px;
+      padding: 24px 28px;
+      margin: 24px 0 32px;
+    }
+    .slo-box h3 { color: #2e7d32; font-size: 1rem; margin-bottom: 12px; letter-spacing: .5px; }
+    .slo-box ul { margin-left: 20px; }
+    .slo-box li { margin-bottom: 8px; color: #1b5e20; font-size: 14px; }
+
+    /* ── Info / Tip box ───────────────────────────────────── */
+    .info-box {
+      display: flex;
+      gap: 14px;
+      background: #fff8e1;
+      border-left: 5px solid #ffd54f;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 20px 0;
+    }
+    .info-box .icon { font-size: 1.6rem; flex-shrink: 0; line-height: 1; }
+    .info-box .content { font-size: 13.5px; color: #5d4037; }
+    .tip-box {
+      background: #e8f4fd;
+      border-left: 5px solid #42a5f5;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 20px 0;
+      font-size: 13.5px;
+      color: #0d47a1;
+    }
+    .tip-box strong { color: #0d47a1; }
+
+    /* ── Did You Know box ─────────────────────────────────── */
+    .dyk-box {
+      display: flex;
+      gap: 14px;
+      background: #f3e5f5;
+      border-left: 5px solid #8e24aa;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 20px 0;
+    }
+    .dyk-box .icon { font-size: 1.6rem; flex-shrink: 0; line-height: 1; }
+    .dyk-box .content { font-size: 13.5px; color: #4a148c; }
+    .dyk-box .content strong { color: #4a148c; }
+
+    /* ── Amazing Fact / Top Tip box ──────────────────────── */
+    .amazingfact-box {
+      background: #e8f5e9;
+      border-left: 5px solid #43a047;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 20px 0;
+      font-size: 13.5px;
+      color: #1b5e20;
+    }
+    .amazingfact-box strong { color: #1b5e20; }
+
+    /* ── Class Activity ───────────────────────────────────── */
+    .activity-box {
+      background: linear-gradient(135deg, #fce4ec, #fff9c4);
+      border: 1.5px dashed #e91e63;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin: 24px 0;
+    }
+    .activity-box .activity-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #880e4f;
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+    .activity-box .activity-header::before { content: '🎯'; font-size: 1.2rem; }
+
+    /* ── Comparison bullet block ──────────────────────────── */
+    .comparison-box {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 16px 0;
+      font-size: 13.5px;
+      color: #212529;
+    }
+    .comparison-box ul { margin-left: 20px; }
+
+    /* ── Table ────────────────────────────────────────────── */
+    .table-wrap { overflow-x: auto; margin: 20px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    thead { background: #0f3460; color: #fff; }
+    thead th { padding: 10px 14px; text-align: left; }
+    tbody tr:nth-child(even) { background: #f0f4ff; }
+    tbody td { padding: 9px 14px; border-bottom: 1px solid #e0e7ff; vertical-align: top; }
+    .table-caption { font-size: 12.5px; color: #6a7899; text-align: center; margin-top: 6px; font-style: italic; }
+
+    /* ── Figure ───────────────────────────────────────────── */
+    .figure-caption {
+      display: block;
+      text-align: center;
+      font-size: 12.5px;
+      color: #5c6bc0;
+      font-style: italic;
+      background: #e8eaf6;
+      border-radius: 6px;
+      padding: 8px 16px;
+      margin: 8px 0 20px;
+    }
+
+    /* ── Formula block ────────────────────────────────────── */
+    .formula-block {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 16px 0;
+      font-family: 'Courier New', monospace;
+      font-size: 13.5px;
+      color: #212529;
+    }
+
+    /* ── Exercise ─────────────────────────────────────────── */
+    .exercise-section {
+      background: #f3e5f5;
+      border-top: 4px solid #7b1fa2;
+      border-radius: 12px;
+      padding: 28px 32px;
+      margin: 40px 0 0;
+    }
+    .exercise-section h2 { color: #4a148c; margin-bottom: 20px; border: none; padding: 0; font-size: 1.3rem; }
+    .exercise-section h3 { color: #6a1b9a; margin: 22px 0 12px; font-size: 1rem; border: none; padding: 0; }
+    .mcq-item { margin-bottom: 18px; }
+    .mcq-item .question { font-weight: 600; color: #1a1a2e; margin-bottom: 6px; }
+    .mcq-item .options { list-style: lower-alpha; margin-left: 20px; color: #37474f; font-size: 14px; }
+    .mcq-item .options li { margin-bottom: 3px; }
+    .sq-item, .lq-item { margin-bottom: 12px; font-size: 14px; color: #37474f; }
+
+    /* ── Summary ──────────────────────────────────────────── */
+    .summary-box {
+      background: linear-gradient(135deg, #e3f2fd, #e8eaf6);
+      border-left: 5px solid #1565c0;
+      border-radius: 10px;
+      padding: 24px 28px;
+      margin: 32px 0;
+    }
+    .summary-box h2 { color: #0d47a1; font-size: 1.1rem; margin-bottom: 12px; border: none; padding: 0; }
+
+    /* ── Responsive ───────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .wrapper { display: block; }
+      main { padding: 24px 20px 60px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="wrapper">
+<!-- ── Main Content ────────────────────────────────────── -->
+  <main>
+
+    <!-- COVER — Page 150 -->
+    <div class="cover" id="cover">
+      <div class="badge">Unit 6</div>
+      <h1>Emerging Technologies</h1>
+      <p class="subtitle">Computer Science | Class 11 | Punjab Curriculum &amp; Textbook Board</p>
+      <p class="subject-tag">Single National Curriculum 2022</p>
+    </div>
+
+    <!-- STUDENT LEARNING OUTCOMES — Page 150 -->
+    <div class="page-marker"><span>Page 150</span></div>
+    <div class="slo-box" id="slo">
+      <h3>🎓 Student Learning Outcomes</h3>
+      <p><strong>By the end of this chapter, students will be able to:</strong></p>
+      <ul>
+        <li>Understand the basic concepts of cloud computing, including virtualization, scalability, and on-demand access.</li>
+        <li>Identify and explain the different types of cloud services: Infrastructure as a Service (IaaS), Platform as a Service (PaaS), and Software as a Service (SaaS).</li>
+        <li>Describe various cloud deployment models, such as public, private, hybrid, and multi-cloud, and compare their features.</li>
+        <li>Recognize the core principles of blockchain technology and the role of peer-to-peer networks in its functioning.</li>
+        <li>Explain the applications of blockchain in real-world scenarios, including cryptocurrencies, smart contracts, and product tracking.</li>
+        <li>Discuss the implications of cloud computing and blockchain, especially in areas like data security and resource management.</li>
+        <li>Explore future trends and innovations in cloud computing and blockchain, including edge computing and Blockchain 2.0.</li>
+      </ul>
+    </div>
+
+    <!-- INTRODUCTION — Page 151 -->
+    <div class="page-marker"><span>Page 151</span></div>
+    <h1 class="section-title" id="intro">Introduction</h1>
+    <p>In the rapidly evolving landscape of technology, new paradigms and innovations are continuously reshaping the way we interact with the digital world. This chapter explores two of the most transformative technologies of our time: Cloud Computing and Blockchain.</p>
+    <p>We begin by exploring the fundamentals of Cloud Computing, including its core concepts such as virtualization, scalability, and on-demand access. We will also examine the various types of cloud services like Infrastructure as a Service (IaaS), Platform as a Service (PaaS), and Software as a Service (SaaS), as well as different cloud deployment models including public, private, hybrid, and multi-cloud environments. Understanding these foundational elements will provide insights into the practical applications and implications of cloud computing in various industries.</p>
+    <p>Following this, we shift our focus to Blockchain Technology, starting with its basic principles and components, such as the peer-to-peer network that forms the backbone of blockchain's decentralized architecture. We will explore the use cases of blockchain, including its role in cryptocurrencies and smart contracts, and discuss the applications and implications of blockchain in areas like product tracking, financial services, and data security.</p>
+    <p>The chapter concludes with a look into future trends and innovations within these technologies, including edge computing, serverless architectures, and the next generation of blockchain, often referred to as Blockchain 2.0 and beyond.</p>
+
+    <!-- 6.1 Definition and Overview — Page 151 -->
+    <h2 class="section-title" id="s6_1">6.1 Definition and Overview of Emerging Technologies</h2>
+    <p>Emerging technologies are new tools, systems, and methods that are currently being developed or have just started to be used. These technologies have the potential to change the way we live, work, and interact with the world. Here are some of the key emerging technologies:</p>
+    <ul>
+      <li><strong>Artificial Intelligence (AI):</strong> AI refers to machines and software that can think and learn like humans. AI can help with tasks like recognizing faces, understanding speech, and making decisions. It's used in everything from smart assistants like Siri to self-driving cars.</li>
+      <li><strong>Cloud Computing:</strong> Cloud computing allows people to store and access data and applications over the internet instead of on a local computer or server. This makes it easier to share information, collaborate on projects, and scale up services without needing expensive hardware. Examples include services like Google Drive, Dropbox, and Amazon Web Services (AWS).</li>
+      <li><strong>Blockchain:</strong> Blockchain is a secure way to record and share information across many computers, making it almost impossible to change or hack. It's best known for being the technology behind cryptocurrencies like Bitcoin, but it's also used in other areas</li>
+    </ul>
+
+    <!-- Page 152 -->
+    <div class="page-marker"><span>Page 152</span></div>
+    <ul>
+      <li>like supply chains and contracts.</li>
+      <li><strong>Internet of Things (IoT):</strong> IoT connects everyday objects, like refrigerators, cars, and even clothes, to the internet. This allows them to send and receive data, making our lives more convenient. For example, a smart thermostat can learn your schedule and adjust the temperature in your home automatically.</li>
+      <li><strong>Augmented Reality (AR) and Virtual Reality (VR):</strong> AR adds digital elements to the real world using devices like smartphones or glasses. VR creates a completely virtual environment that you can interact with using special equipment. These technologies are used in gaming, education, and training.</li>
+      <li><strong>5G Technology:</strong> 5G is the next generation of wireless technology, offering much faster internet speeds and more reliable connections. This will enable better performance for mobile phones, smart devices, and even new technologies like augmented reality (AR) and virtual reality (VR).</li>
+      <li><strong>Quantum Computing:</strong> Quantum computers use the principles of quantum physics to process information much faster than traditional computers. They have the potential to solve very complex problems that are currently impossible for regular computers to handle.</li>
+      <li><strong>Biotechnology:</strong> Biotechnology involves using living organisms, like bacteria and plants, to create new products or solve problems. For example, scientists are using biotechnology to develop new medicines, improve crops, and even create environmentally friendly materials.</li>
+    </ul>
+
+    <!-- 6.2 Cloud Computing — Page 152 -->
+    <h2 class="section-title" id="s6_2">6.2 Cloud Computing</h2>
+    <p>Cloud computing is a model that allows easy and convenient access to computing resources like servers, storage, and applications over the internet. These resources can be quickly provided and released with minimal management effort or service provider interaction. Cloud computing is like having a powerful computer that you can access over the internet. Instead of buying and maintaining your own expensive computers and storage devices, you can use cloud services to store data, run applications, and manage your computing needs. This makes it easier and cheaper to get things done, as you can use as much or as little of the service as you need, and you only pay for what you use. It's like renting a supercomputer that you can use whenever you need it, from anywhere in the world.</p>
+
+    <!-- 6.2.1 Basic Concepts — Page 152 -->
+    <h3 class="section-title" id="s6_2_1">6.2.1 Basic Concepts of Cloud Computing</h3>
+    <p>Cloud computing encompasses several basic concepts that are foundational to its functionality and benefits.</p>
+
+    <!-- 6.2.1.1 Virtualization — Page 152 -->
+    <h4 class="section-title" id="virtualization">6.2.1.1 Virtualization</h4>
+    <p>Virtualization is a technology that allows a single physical machine to run multiple virtual machines. It is like having a magic trick that lets one physical computer act like</p>
+
+    <!-- Page 153 -->
+    <div class="page-marker"><span>Page 153</span></div>
+    <p>many separate computers. Imagine you have a single powerful computer, but with virtualization, you can create several "virtual" computers inside it. Each of these virtual computers can run its own operating system and applications as if they were independent machines. This helps make better use of the hardware, reduces costs, and allows for easier management and flexibility.</p>
+    <p>It's like turning one computer into many, making it possible to do more with less.</p>
+
+    <!-- 6.2.1.2 Scalability and Elasticity — Page 153 -->
+    <h4 class="section-title" id="scalability">6.2.1.2 Scalability and Elasticity</h4>
+    <p>Scalability and elasticity are important concepts in cloud computing that help manage resources efficiently.</p>
+    <p>Scalability means you can add more resources when you need them. For example, imagine you run an online store that usually has a steady number of visitors. However, during busy times like Eid or 14th August sales, you get a huge spike in traffic. With scalability, you can add more servers to handle this increased traffic, ensuring your website runs smoothly without slowing down or crashing.</p>
+    <p>Elasticity takes this a step further by allowing the system to automatically adjust resources based on the current demand. For instance, using the same online store example, if your website starts getting a lot of traffic, the cloud service can automatically add more servers to handle the load. When the traffic decreases after the sale, the system can reduce the number of servers, so you're not paying for resources you don't need. This automatic adjustment helps keep your website running efficiently and cost-effectively.</p>
+
+    <!-- 6.2.1.3 On-Demand Access — Page 153 -->
+    <h4 class="section-title" id="ondemand">6.2.1.3 On-Demand Access</h4>
+    <p>On-demand access means that you can use computing resources whenever you need them, without waiting for a long setup process. This is like being able to turn on a tap to get water whenever you want, instead of having to dig a well first.</p>
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content"><strong>Example:</strong> Imagine you are working on a school project and suddenly need extra storage space to save your files. With on-demand access, you can instantly rent additional storage from a cloud provider and start using it right away. This saves time and effort, allowing you to focus on your project instead of worrying about storage.</div>
+    </div>
+    <p><strong>Difference with Elasticity:</strong></p>
+    <ul>
+      <li><strong>On-Demand Access:</strong> Focuses on the ability to obtain and use resources instantly whenever needed.</li>
+      <li><strong>Elasticity:</strong> Focuses on the automatic adjustment of resources based on real-time demand to maintain performance and efficiency.</li>
+    </ul>
+
+    <!-- 6.2.2 Types of Cloud Services — Page 153 -->
+    <h3 class="section-title" id="s6_2_2">6.2.2 Types of Cloud Services</h3>
+    <p>There are different types of cloud services that cater to various needs. Cloud services are typically categorized into three main types: Infrastructure as a Service (IaaS), Platform as a Service (PaaS), and Software as a Service (SaaS). Each type offers different levels of</p>
+
+    <!-- Page 154 -->
+    <div class="page-marker"><span>Page 154</span></div>
+    <p>control, flexibility, and management, catering to various needs and use cases.</p>
+
+    <!-- 6.2.2.1 IaaS — Page 154 -->
+    <h4 class="section-title" id="iaas">6.2.2.1 Infrastructure as a Service (IaaS)</h4>
+    <p>IaaS offers basic computing infrastructure such as servers, storage, and networking on a pay-as-you-go basis. Users have control over the operating systems, applications, and storage, but not the underlying physical infrastructure.</p>
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content"><strong>Example:</strong> Amazon Web Services (AWS) allows users to rent virtual servers to run their applications. Microsoft Azure and Google Compute Engine are other popular IaaS providers.</div>
+    </div>
+
+    <!-- 6.2.2.2 PaaS — Page 154 -->
+    <h4 class="section-title" id="paas">6.2.2.2 Platform as a Service (PaaS)</h4>
+    <p>PaaS offers a complete development and deployment environment in the cloud. It includes infrastructure (servers, storage, and networking), middleware, development tools, and management services. Developers can focus on coding and deploying applications without managing the hardware and software layers.</p>
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content"><strong>Example:</strong> Google App Engine allows developers to build and deploy applications using a variety of programming languages. Other examples include Microsoft Azure App Services and Heroku.</div>
+    </div>
+
+    <!-- 6.2.2.3 SaaS — Page 154 -->
+    <h4 class="section-title" id="saas">6.2.2.3 Software as a Service (SaaS)</h4>
+    <p>SaaS provides access to software applications that are hosted and managed by the service provider. Users simply subscribe to the service and use it over the internet. This model is convenient for end-users as it requires no hardware management or software updates.</p>
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content"><strong>Example:</strong> Google Workspace (formerly G Suite) includes applications like Gmail, Google Docs, and Google Drive. Other examples are Microsoft Office 365 and Salesforce.</div>
+    </div>
+
+    <span class="figure-caption">Figure 6.1: Types of Cloud Services — Google Cloud Platform Services diagram showing Compute Services, Networking, Management Tools, Storage Services, Cloud AI, Big Data, IoT (Internet of Things), Security and Identity Management at the centre</span>
+
+    <!-- Page 155 -->
+    <div class="page-marker"><span>Page 155</span></div>
+
+    <!-- 6.2.3 Cloud Deployment Models — Page 155 -->
+    <h3 class="section-title" id="s6_2_3">6.2.3 Cloud Deployment Models</h3>
+    <p>Cloud deployment models define how cloud services are made available and used. Each model offers different levels of control, security, and flexibility. The main cloud deployment models are Public, Private, Hybrid, and Multi-Cloud.</p>
+
+    <!-- 6.2.3.1 Public Cloud — Page 155 -->
+    <h4 class="section-title" id="public">6.2.3.1 Public Cloud</h4>
+    <p>A public cloud is a cloud service offered over the internet that is shared among multiple organizations. It is managed by a third-party cloud service provider.</p>
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content"><strong>Example:</strong> Amazon Web Services (AWS) is a popular public cloud provider. Businesses of all sizes can use AWS to access computing resources like virtual servers and storage without having to manage the physical hardware themselves.</div>
+    </div>
+
+    <!-- 6.2.3.2 Private Cloud — Page 155 -->
+    <h4 class="section-title" id="private">6.2.3.2 Private Cloud</h4>
+    <p>A private cloud is a cloud environment used exclusively by one organization. It can be hosted on-premises or by a third-party provider, but it is not shared with other organizations.</p>
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content"><strong>Example:</strong> A large bank may use a private cloud to handle sensitive customer data securely. This private cloud can be hosted within the bank's own data centers or managed by a third-party provider, but only the bank has access to it.</div>
+    </div>
+
+    <!-- 6.2.3.3 Hybrid Cloud — Page 155 -->
+    <h4 class="section-title" id="hybrid">6.2.3.3 Hybrid Cloud</h4>
+    <p>A hybrid cloud combines public and private clouds, allowing data and applications to be shared between them. This model provides greater flexibility and control.</p>
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content"><strong>Example:</strong> A company may use a public cloud for everyday operations and a private cloud for sensitive data. During busy periods, they can move less sensitive data and</div>
+    </div>
+
+    <div class="dyk-box">
+      <div class="icon">💡</div>
+      <div class="content">Salesforce is one of the leading SaaS providers, known for its customer relationship management (CRM) platform. It helps businesses manage customer data, track sales, and automate marketing tasks. Over 150,000 companies use Salesforce to streamline their business processes and improve customer satisfaction.</div>
+    </div>
+
+    <div class="tip-box">Cloud computing services are priced based on usage. This pay-as-you-go model allows businesses to scale their resources according to their needs, making it cost-effective and flexible.</div>
+
+    <div class="activity-box">
+      <div class="activity-header">Class Activity</div>
+      <p>Research and identify a cloud service provider (e.g., AWS, Azure, Google Cloud) and describe how its services are used in a real-world scenario. Present your findings to the class.</p>
+    </div>
+
+    <!-- Page 156 -->
+    <div class="page-marker"><span>Page 156</span></div>
+    <p>applications to the public cloud to handle increased load, while keeping critical data secure in the private cloud.</p>
+
+    <!-- 6.2.3.4 Multi-Cloud — Page 156 -->
+    <h4 class="section-title" id="multicloud">6.2.3.4 Multi-Cloud</h4>
+    <p>A multi-cloud approach uses multiple cloud services from different providers. This model helps avoid dependency on a single provider and can enhance reliability and performance.</p>
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content"><strong>Example:</strong> A company might use Google Cloud Platform for its data analytics, Microsoft Azure for its enterprise applications, and Amazon Web Services for its backup and disaster recovery. This ensures that if one provider experiences issues, the company can still rely on other services.</div>
+    </div>
+
+    <!-- 6.2.4 Comparing Deployment Models — Page 156 -->
+    <h3 class="section-title" id="s6_2_4">6.2.4 Comparing Deployment Models</h3>
+    <p>Each cloud deployment model has its own advantages and disadvantages, depending on the specific needs and goals of the organization.</p>
+    <div class="comparison-box">
+      <ul>
+        <li><strong>Comparison:</strong> Public clouds are cost-effective but less secure. Private clouds are more secure but expensive. Hybrid clouds offer flexibility, while multi-clouds provide resilience.</li>
+      </ul>
+    </div>
+
+    <!-- 6.3 Applications and Implications of Cloud Computing — Page 156 -->
+    <h2 class="section-title" id="s6_3">6.3 Applications and Implications of Cloud Computing</h2>
+    <p>This section explores key applications of cloud computing and discusses its implications.</p>
+
+    <!-- 6.3.1 Applications — Page 156 -->
+    <h3 class="section-title" id="s6_3_1">6.3.1 Applications of Cloud Computing</h3>
+    <p>Cloud computing has revolutionized the way businesses and individuals manage, process, and store data. Its diverse applications span various sectors, offering scalable and cost-effective solutions that enhance efficiency and innovation.</p>
+    <p>From hosting websites and running applications to providing data storage and facilitating collaboration, cloud computing supports a wide array of functions that are essential in today's digital age. By leveraging the power of the cloud, organizations can streamline operations, reduce IT costs, and rapidly respond to changing demands. This subsection explores the multifaceted applications of cloud computing and how they are transforming industries and everyday life.</p>
+
+    <!-- 6.3.1.1 Data Storage — Page 156 -->
+    <h4 class="section-title" id="datastorage">6.3.1.1 Data Storage</h4>
+    <p>Cloud storage allows users to save data on remote servers rather than on local devices. This makes it easier to access data from anywhere and share it with others.</p>
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content"><strong>Example:</strong> Services like Google Drive and Dropbox provide cloud storage solutions that let users store and share files online. Businesses can use cloud storage to keep backups of their data, ensuring it is safe from local hardware failures or other issues.</div>
+    </div>
+
+    <!-- 6.3.1.2 Web Hosting and Content Delivery — Page 156 -->
+    <h4 class="section-title" id="webhosting">6.3.1.2 Web Hosting and Content Delivery</h4>
+    <p>Cloud computing provides the infrastructure needed to host websites and deliver content efficiently to users around the world.</p>
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content"><strong>Example:</strong> Platforms like Amazon Web Services (AWS) and Microsoft Azure offer web</div>
+    </div>
+
+    <!-- Page 157 -->
+    <div class="page-marker"><span>Page 157</span></div>
+    <p>hosting services that allow businesses to run their websites on cloud servers. Content delivery networks (CDNs) such as Cloudflare help deliver website content quickly by caching it on servers close to the end-users.</p>
+
+    <!-- 6.3.1.3 Machine Learning and AI in the Cloud — Page 157 -->
+    <h4 class="section-title" id="mlcloud">6.3.1.3 Machine Learning and AI in the Cloud</h4>
+    <p>Cloud computing offers powerful tools for developing and running machine learning models and artificial intelligence applications.</p>
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content"><strong>Example:</strong> Google Cloud AI and AWS SageMaker provide cloud-based platforms for building, training, and deploying machine learning models. These services make it easier for data scientists and developers to create AI solutions without needing extensive local computing resources.</div>
+    </div>
+
+    <!-- 6.3.2 Implications of Cloud Computing — Page 157 -->
+    <h3 class="section-title" id="s6_3_2">6.3.2 Implications of Cloud Computing</h3>
+    <p>While cloud computing offers numerous benefits, it also brings various implications that need to be considered.</p>
+
+    <!-- 6.3.2.1 Data Security — Page 157 -->
+    <h4 class="section-title" id="datasecurity">6.3.2.1 Data Security</h4>
+    <p>Security is a significant concern in cloud computing. Storing sensitive data on remote servers introduces risks such as data breaches and loss.</p>
+    <ul>
+      <li><strong>Security Challenges:</strong> Cloud providers implement robust security measures, but users must also take steps to protect their data. Issues such as data breaches, unauthorized access, and loss of data can occur.</li>
+      <li><strong>Security Measures:</strong> To mitigate risks, users should use encryption, strong authentication methods, and regularly review their security policies. Providers often offer tools to help manage and secure data.</li>
+    </ul>
+
+    <!-- 6.3.2.2 Scalability and Resource Management — Page 157 -->
+    <h4 class="section-title" id="scaleresource">6.3.2.2 Scalability and Resource Management</h4>
+    <p>Cloud computing allows for scalability, meaning resources can be adjusted according to demand. However, effective resource management is essential to avoid unnecessary costs and ensure optimal performance.</p>
+    <ul>
+      <li><strong>Scalability:</strong> Cloud services can automatically scale resources up or down based on demand, such as adding more servers during peak times and reducing them when demand decreases.</li>
+      <li><strong>Resource Management:</strong> Proper management practices, such as monitoring resource usage and optimizing performance, help control costs and ensure efficient use of cloud resources.</li>
+    </ul>
+
+    <!-- 6.3.2.3 Cost Considerations — Page 157 -->
+    <h4 class="section-title" id="cost">6.3.2.3 Cost Considerations</h4>
+    <p>While cloud computing can be cost-effective, it requires careful financial management. Users pay for what they use, and costs can quickly add up if not monitored.</p>
+    <ul>
+      <li><strong>Cost Management:</strong> To manage costs, users should regularly review their cloud usage and spending, optimize resource allocation, and take advantage of pricing plans that fit their needs.</li>
+    </ul>
+
+    <!-- Page 158 -->
+    <div class="page-marker"><span>Page 158</span></div>
+
+    <!-- 6.3.2.4 Compliance and Regulatory Issues — Page 158 -->
+    <h4 class="section-title" id="compliance">6.3.2.4 Compliance and Regulatory Issues</h4>
+    <p>Organizations must ensure that their use of cloud services complies with legal and regulatory requirements, which can vary by region and industry.</p>
+    <ul>
+      <li><strong>Compliance:</strong> Organizations need to adhere to regulations related to data privacy, security, and industry-specific standards. Cloud providers often offer tools and features to help meet these requirements.</li>
+    </ul>
+
+    <div class="tip-box">Cloud computing can significantly reduce the cost of IT infrastructure by allowing organizations to pay only for the resources they use, rather than investing in expensive hardware and maintenance.</div>
+
+    <div class="activity-box">
+      <div class="activity-header">Class Activity</div>
+      <p>Create a list of cloud-based services you use or are familiar with. For each service, describe how it benefits you or your organization and any security measures you use to protect your data.</p>
+    </div>
+
+    <!-- 6.4 Introduction to Blockchain Technology — Page 158 -->
+    <h2 class="section-title" id="s6_4">6.4 Introduction to Blockchain Technology</h2>
+    <p>Blockchain technology is a revolutionary concept that enables secure and transparent transactions through a distributed ledger system. This section introduces the fundamentals of blockchain technology, including its core principles and key components.</p>
+
+    <!-- 6.4.1 Fundamentals of Blockchain — Page 158 -->
+    <h3 class="section-title" id="s6_4_1">6.4.1 Fundamentals of Blockchain</h3>
+    <p>Blockchain is like a digital notebook that's shared with everyone in a group. Imagine a group of friends keeping track of who owes whom money. Instead of writing it down on a piece of paper that one person keeps, they all write it down in a notebook that everyone has a copy of. Every time someone makes a change, like paying back money, it gets recorded in all the notebooks at the same time. The notebook as a blockchain network is shown in Figure 6.2.</p>
+    <p>Now, this digital notebook, or blockchain, has some special features:</p>
+    <ul>
+      <li><strong>Transparency:</strong> Everyone in the group can see what's written in the notebook, so it's hard for anyone to cheat or change the information without others noticing.</li>
+      <li><strong>Security:</strong> Once something is written in the notebook, it's almost impossible to erase or change it. This is because it's protected by a special kind of math called cryptography, which locks the information in place.</li>
+      <li><strong>Decentralization:</strong> There's no single person or computer in-charge of the notebook. Instead, everyone has an equal copy, and changes are only made when the majority agree, making it fair and trustworthy.</li>
+    </ul>
+
+    <!-- Page 159 -->
+    <div class="page-marker"><span>Page 159</span></div>
+    <p>In simple terms, blockchain is a secure and transparent way for people to share and keep track of information without needing to rely on one person or company to keep it safe.</p>
+
+    <!-- 6.4.1.1 Core Principles — Page 159 -->
+    <h4 class="section-title" id="coreprinciples">6.4.1.1 Core Principles</h4>
+    <p>Blockchain technology is built on several core principles that ensure its functionality and security: <strong>Decentralization:</strong> Unlike traditional databases that are controlled by a central authority, a blockchain is maintained by a network of computers (nodes) that work together to validate and record transactions. This decentralized nature reduces the risk of a single point of failure and enhances security.</p>
+    <ul>
+      <li><strong>Immutability:</strong> Once a block is added to the blockchain, it cannot be altered or deleted. This immutability ensures that the transaction history is permanent and tamper-proof, providing a reliable and unchangeable record of all transactions.</li>
+      <li><strong>Consensus Mechanisms:</strong> Blockchain networks use consensus mechanisms to agree on the validity of transactions. These mechanisms ensure that all nodes in the network reach a unanimous decision before adding a new block to the chain. Common consensus mechanisms include Proof of Work (PoW) and Proof of Stake (PoS).</li>
+    </ul>
+
+    <span class="figure-caption">Figure 6.2: Example of Blockchain — Top diagram shows a Blockchain network with six interconnected Blockchain nodes (computers) all linked to each other in a mesh network. Bottom diagram shows the Blockchain database structure: three linked blocks (Block 0, Block n-1, Block n), each containing a Timestamp and Transaction field, with arrows showing each block referencing the previous one.</span>
+
+    <!-- 6.4.1.2 Blockchain Components — Page 160 -->
+    <div class="page-marker"><span>Page 160</span></div>
+    <h4 class="section-title" id="components">6.4.1.2 Blockchain Components</h4>
+    <p>Several key components make up a blockchain system:</p>
+    <ul>
+      <li><strong>Node:</strong> A node is a computer that participates in the blockchain network. Each node maintains a copy of the blockchain and helps validate transactions and blocks.</li>
+      <li><strong>Ledger:</strong> The ledger is a digital record of all transactions that have occurred on the blockchain. It is distributed across all nodes, ensuring that everyone in the network has access to the same information.</li>
+      <li><strong>Block:</strong> A block is a collection of transactions that are bundled together. Each block contains a unique identifier (hash), a reference to the previous block (parent hash), and a list of transactions.</li>
+      <li><strong>Transaction:</strong> A transaction is an individual entry in the blockchain. It represents the transfer of assets or information between participants in the network.</li>
+      <li><strong>Blockchain Protocol:</strong> The blockchain protocol defines the rules and procedures for how transactions are validated, how blocks are added to the chain, and how consensus is achieved. It ensures the integrity and security of the blockchain network.</li>
+    </ul>
+
+    <!-- 6.4.1.3 Peer-to-Peer Network — Page 160 -->
+    <h4 class="section-title" id="p2p">6.4.1.3 Peer-to-Peer Network and Its Usage in Blockchain</h4>
+    <p>A peer-to-peer (P2P) network is a system where computers, called nodes, communicate and share resources directly with each other without relying on a central server. Each node in the network can act as both a client and a server, making the network more robust and decentralized.</p>
+    <p>For example, in a file-sharing network, users can download files directly from each other's computers rather than from a single central server. This makes the process faster and more efficient, as multiple users can share parts of the file simultaneously.</p>
+
+    <!-- 6.4.2 Use Cases of Blockchain Technology — Page 160 -->
+    <h3 class="section-title" id="s6_4_2">6.4.2 Use Cases of Blockchain Technology</h3>
+    <p>Blockchain technology has a wide range of applications beyond cryptocurrency. Some notable use cases include:</p>
+    <ul>
+      <li><strong>Cryptocurrencies:</strong> Blockchain is the underlying technology for cryptocurrencies like Bitcoin and Ethereum. It enables secure, decentralised digital transactions without the need for intermediaries.</li>
+      <li><strong>Supply Chain Management:</strong> Blockchain can be used to track and verify the movement of goods through the supply chain. This transparency helps prevent fraud, reduce errors, and ensure the authenticity of products.</li>
+      <li><strong>Healthcare:</strong> In healthcare, blockchain can securely store patient records, manage medical data, and ensure that only authorised individuals have access to sensitive information.</li>
+      <li><strong>Voting Systems:</strong> Blockchain can be used to create secure and transparent voting</li>
+    </ul>
+
+    <!-- Page 161 -->
+    <div class="page-marker"><span>Page 161</span></div>
+    <ul>
+      <li>systems, ensuring that votes are accurately recorded and counted, and reducing the risk of election fraud.</li>
+    </ul>
+
+    <div class="dyk-box">
+      <div class="icon">💡</div>
+      <div class="content">Blockchain technology is often compared to a digital ledger or a notebook that everyone in the network can see and agree upon. Once a page is added, it cannot be changed, ensuring that everyone has the same record of events.</div>
+    </div>
+
+    <!-- 6.4.3 Cryptocurrencies and Smart Contracts — Page 161 -->
+    <h3 class="section-title" id="s6_4_3">6.4.3 Cryptocurrencies and Smart Contracts</h3>
+    <p>Cryptocurrencies and smart contracts have brought major changes to digital finance and decentralized applications. Cryptocurrencies are digital currencies that work without traditional banks, allowing direct transactions between people worldwide. Smart contracts are automated agreements written in code that execute themselves when certain conditions are met. These technologies together provide secure, transparent, and efficient ways to handle financial transactions and agreements.</p>
+
+    <!-- 6.4.3.1 Role of Cryptocurrencies — Page 161 -->
+    <h4 class="section-title">6.4.3.1 Role of Cryptocurrencies</h4>
+    <p>Cryptocurrencies are important in the digital economy because they offer a secure and decentralized way to exchange money. Unlike traditional money issued by banks, cryptocurrencies use blockchain technology to keep transactions safe and transparent. This technology ensures that transactions are recorded in a way that cannot be changed, without needing middlemen.</p>
+    <p>Cryptocurrencies like Bitcoin, Ethereum, and others allow people to send money quickly and cheaply, even across borders. They also help people who don't have access to traditional banking services to take part in the global economy. Transactions made with cryptocurrencies are private and secure because they don't require personal information and are protected by cryptography.</p>
+
+    <!-- 6.4.3.2 Smart Contracts — Page 161 -->
+    <h4 class="section-title">6.4.3.2 Smart Contracts</h4>
+    <p>Smart contracts are digital agreements that automatically carry out the terms written into them when specific conditions are met. These contracts run on blockchain technology, removing the need for intermediaries and reducing the risk of errors and fraud.</p>
+    <p>Platforms like Ethereum enable developers to create decentralized applications (DApps) using smart contracts. These contracts can be used in many areas, such as finance, supply chain management, real estate, and insurance. For instance, an insurance smart contract can automatically pay out if a flight is delayed, based on pre-set conditions.</p>
+    <p>Smart contracts offer benefits like transparency, because everyone involved can see the contract's terms, and security, because the contract execution is guaranteed by the blockchain. However, they also have challenges, such as the need for error-free code and legal systems to resolve disputes related to these contracts.</p>
+
+    <!-- 6.5 Applications and Implications of Blockchain — Page 162 -->
+    <div class="page-marker"><span>Page 162</span></div>
+    <h2 class="section-title" id="s6_5">6.5 Applications and Implications of Blockchain</h2>
+    <p>Blockchain is a special kind of technology that helps keep information safe and secure. It's like a digital notebook that everyone can see, but no one can change. Let's explore how it's used in the real world.</p>
+
+    <!-- 6.5.1 Tracking the Origin of Products — Page 162 -->
+    <h3 class="section-title" id="s6_5_1">6.5.1 Tracking the Origin of Products</h3>
+    <p>Blockchain technology offers a transparent and secure method to track the origin and journey of products through various stages of the supply chain. By recording every transaction on a decentralized ledger, blockchain ensures that each step, from the raw material supplier to the final customer, is traceable and immutable. This traceability helps in verifying the authenticity of products, ensuring quality, and identifying the source of any issues that may arise.</p>
+
+    <span class="figure-caption">Figure 6.3: Tracking the origin of chocolate using blockchain — Circular supply chain diagram showing six entities in sequence: Supplier (top), Manufacturer (right), Fabricator (bottom-right), Intermediary (bottom), Retailer (bottom-left), and Customer / End User-Consumer (left), each represented by an icon with a coloured background, connected by arrows forming a cycle.</span>
+
+    <p>In Figure 6.3, the connections between different entities in a supply chain are illustrated. The blockchain records interactions between suppliers, manufacturers, fabricators, intermediaries, retailers, and customers. Each transaction is securely logged on the blockchain, making it possible to track the journey of a product from its origin to the end consumer. For instance, when a supplier delivers raw materials to a manufacturer, a record is created and added to the blockchain. This process continues at each stage, with the fabricator, intermediary, and retailer all contributing to a transparent and verifiable history of the product. Ultimately, the customer can access this data to confirm the product's origin and ensure it meets the expected standards.</p>
+
+    <!-- Page 163 -->
+    <div class="page-marker"><span>Page 163</span></div>
+
+    <!-- 6.5.2 Blockchain in Financial Services — Page 163 -->
+    <h3 class="section-title" id="s6_5_2">6.5.2 Blockchain in Financial Services</h3>
+    <p>Banks and financial services use blockchain to make transactions faster and safer. For example, sending money abroad can be slow and expensive. Blockchain makes it quicker and cheaper.</p>
+
+    <div class="dyk-box">
+      <div class="icon">💡</div>
+      <div class="content">Some artists use blockchain to sell digital art. Each piece of art has a unique digital signature that proves it's the original.</div>
+    </div>
+
+    <span class="figure-caption">Figure 6.4: Blockchain in banking for faster and safer transactions — Diagram showing identity flow: Identity Issuer(s) on the left issues attestations to a User (centre, with ID APP), who presents and verifies attestations to Identity Verifier(s) on the right. The Identity Hub (bottom-left) stores encrypted attestations. The User registers identity and the Verifier looks up identity on a shared blockchain (shown as two linked hexagonal chain icons at the bottom-right).</span>
+
+    <div class="activity-box">
+      <div class="activity-header">Class Activity</div>
+      <p>In this activity, students will explore how blockchain technology can be applied to verify certificates issued by the Board of Intermediate and Secondary Education (BISE) and compare it to the traditional manual verification process.</p>
+      <p>Students, imagine how academic certificates are traditionally verified. Typically, you would need to submit a request to the issuing authority, which then manually verifies the certificate and confirms its authenticity. This process can be time-consuming, prone to errors, and susceptible to fraud. Now, let's think about how blockchain can revolutionize this process. With blockchain, the issuing authority records the certificate details on a decentralized ledger. This record is immutable and transparent, allowing anyone to verify the certificate's authenticity quickly and securely by checking the blockchain.</p>
+      <p>For this activity, work in groups and use a blockchain simulation tool to record example certificate details. Then, demonstrate how to verify these certificates by accessing the blockchain record. Discuss the differences between the blockchain-based verification process and the manual process. Consider the efficiency, security, accuracy, and scalability of each method. By the end of the activity, you'll understand how blockchain can make certificate verification faster, more secure, and less prone to fraud compared to traditional methods.</p>
+    </div>
+
+    <!-- Page 164 -->
+    <div class="page-marker"><span>Page 164</span></div>
+
+    <!-- 6.5.3 Data Security in Blockchain — Page 164 -->
+    <h3 class="section-title" id="s6_5_3">6.5.3 Data Security in Blockchain</h3>
+    <p>Data security in blockchain ensures that information stored in a blockchain is protected from unauthorized access, tampering, or loss. To explain this in simple terms, let's use an example that relates to something we encounter daily: sending a letter through the mail.</p>
+    <p><strong>Example: Sending a Secure Letter</strong></p>
+    <p>Imagine you want to send a letter containing important information to a friend. You want to make sure that no one else can read or change the letter while it's being delivered.</p>
+    <ul>
+      <li><strong>Sealing the Letter (Encryption):</strong> Before sending the letter, you place it in a special envelope that can only be opened by your friend. This is like encryption in blockchain, where the data is turned into a code that only the intended recipient (or those with the right key) can understand as shown in Figure 6.5.</li>
+      <li><strong>Signing the Letter (Digital Signature):</strong> You then sign the envelope with your unique signature. This signature is known to your friend, so they can be sure the letter came from you and hasn't been altered. In blockchain, this is called a digital signature, which ensures that the data comes from a legitimate source and hasn't been tampered with.</li>
+    </ul>
+
+    <span class="figure-caption">Figure 6.5: Cryptography keeps data secure in blockchain — Diagram showing three stages: Plain Text on the left (showing "XYZ" document), then Encryption using a Secret key in the middle producing Cipher Text (showing "12ne" encoded document), then Decryption producing Plain Text again on the right (showing "XYZ" document). Arrows show the direction of data flow from left to right.</span>
+
+    <ul>
+      <li><strong>Sending the Letter through a Trusted System (Blockchain Network):</strong> Instead of using just any mail service, you use a trusted, secure delivery service where every step of the delivery is recorded. If anyone tries to change the route or tamper with the letter, the system will detect it, and the attempt will be rejected. This is similar to the blockchain network, where each piece of data is recorded in a block, and any change to this block will be noticed by the network.</li>
+      <li><strong>Multiple Copies of the Letter (Decentralization):</strong> To make sure the letter isn't lost, you send copies of it through different trusted delivery services to multiple locations. Even if one letter is lost, others will reach safely. In blockchain, this is called decentralization, where the data is stored across multiple computers (nodes), so even if one is compromised, the data remains safe.</li>
+    </ul>
+
+    <!-- Page 165 -->
+    <div class="page-marker"><span>Page 165</span></div>
+
+    <h4 class="section-title">How It Works in Blockchain</h4>
+    <ul>
+      <li><strong>Encryption</strong> protects the data, so only those with permission can read it.</li>
+      <li><strong>Digital Signatures</strong> ensure that the data hasn't been changed and comes from a trusted source.</li>
+      <li><strong>The Blockchain Network</strong> records every action, so any attempt to tamper with the data is easily detected.</li>
+      <li><strong>Decentralization</strong> means the data is stored in many places, making it very hard for hackers to attack or change the data.</li>
+    </ul>
+    <p>By combining these techniques, blockchain provides a very secure way to store and transfer data, making it almost impossible for unauthorized people to access or tamper with the information.</p>
+
+    <div class="activity-box">
+      <div class="activity-header">Class Activity</div>
+      <p>Class Activity! Imagine you have a secret code. Write a message to a friend using your code and see if they can decode it.</p>
+    </div>
+
+    <div class="dyk-box">
+      <div class="icon">💡</div>
+      <div class="content">Do you know? Big companies like Amazon and Microsoft use their powerful computers to help run blockchain networks.</div>
+    </div>
+
+    <!-- 6.6 Future Trends and Innovations — Page 165 -->
+    <h2 class="section-title" id="s6_6">6.6 Future Trends and Innovations</h2>
+    <p>Emerging technologies continue to evolve, with future trends and innovations shaping the landscape of cloud computing and blockchain. This section explores some of the most promising advancements in these fields, highlighting how they are transforming our technological ecosystem.</p>
+
+    <!-- 6.6.1 Evolving Technologies in Cloud Computing — Page 165 -->
+    <h3 class="section-title" id="s6_6_1">6.6.1 Evolving Technologies in Cloud Computing</h3>
+    <p>Cloud computing is advancing with new technologies that enhance its capabilities and applications, making it more efficient, scalable, and accessible.</p>
+
+    <!-- 6.6.1.1 Edge Computing — Page 165 -->
+    <h4 class="section-title" id="edge">6.6.1.1 Edge Computing</h4>
+    <p>Edge computing brings processing power closer to data sources, reducing latency and improving efficiency. Instead of relying solely on centralized data centers, edge computing processes data at the "edge" of the network, near the data source. This approach minimizes the time it takes for data to travel, leading to faster decision-making and real-time data processing.</p>
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content"><strong>Example:</strong> In autonomous vehicles, edge computing allows data from sensors and cameras to be processed locally in the vehicle, enabling quick responses to changing road conditions and enhancing safety.</div>
+    </div>
+
+    <!-- Page 166 -->
+    <div class="page-marker"><span>Page 166</span></div>
+
+    <!-- 6.6.1.2 Serverless Architectures — Page 166 -->
+    <h4 class="section-title" id="serverless">6.6.1.2 Serverless Architectures</h4>
+    <p>Serverless architectures allow developers to build and deploy applications without managing servers, enhancing scalability and reducing operational complexity. In a serverless model, cloud providers automatically allocate resources as needed, and developers only pay for the actual usage of computing resources.</p>
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content"><strong>Example:</strong> Amazon Web Services (AWS) Lambda is a serverless computing service that lets developers run code without provisioning or managing servers. This enables developers to focus on writing code and building applications rather than managing infrastructure.</div>
+    </div>
+
+    <div class="tip-box"><strong>Top Tip:</strong> Edge computing is especially beneficial for applications requiring real-time processing and low latency, such as smart cities, healthcare monitoring, and industrial automation.</div>
+
+    <div class="amazingfact-box"><strong>Amazing Fact:</strong> With serverless architectures, you can scale your application automatically in response to demand, ensuring that you only use and pay for the resources you need!</div>
+
+    <!-- 6.6.2 Innovations in Blockchain — Page 166 -->
+    <h3 class="section-title" id="s6_6_2">6.6.2 Innovations in Blockchain</h3>
+    <p>Blockchain technology is evolving, integrating with other emerging technologies and expanding its applications beyond cryptocurrency.</p>
+
+    <!-- 6.6.2.1 Blockchain 2.0 and Beyond — Page 166 -->
+    <h4 class="section-title" id="blockchain2">6.6.2.1 Blockchain 2.0 and Beyond</h4>
+    <p>Innovations in blockchain technology, known as Blockchain 2.0, introduce advanced features and capabilities beyond basic cryptocurrency applications. Blockchain 2.0 includes smart contracts, decentralized applications (dApps), and enhanced scalability.</p>
+    <p><strong>Smart Contracts:</strong></p>
+    <p>Smart contracts are self-executing contracts with the terms of the agreement directly written into code. They automatically execute and enforce the contract terms when predefined conditions are met, reducing the need for intermediaries.</p>
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content"><strong>Example:</strong> In real estate, smart contracts can automate property transactions. When all conditions, such as payment and ownership verification, are met, the contract executes automatically, transferring ownership to the buyer and funds to the seller.</div>
+    </div>
+
+    <!-- 6.6.2.2 Integration with Other Emerging Technologies — Page 166 -->
+    <h4 class="section-title" id="integration">6.6.2.2 Integration with Other Emerging Technologies</h4>
+    <p>Blockchain is being integrated with other emerging technologies, such as AI and IoT, creating new opportunities and synergies. This integration enhances the capabilities of both technologies and opens up new possibilities for innovation.</p>
+
+    <!-- Page 167 -->
+    <div class="page-marker"><span>Page 167</span></div>
+
+    <p><strong>AI and Blockchain:</strong></p>
+    <p>Combining AI and blockchain can enhance data security and transparency. AI algorithms can analyze data stored on the blockchain, ensuring the data's integrity and providing valuable insights without compromising privacy.</p>
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content"><strong>Example:</strong> In supply chain management, AI can predict demand and optimize logistics based on secure and transparent data stored on the blockchain, ensuring efficient and reliable supply chains.</div>
+    </div>
+
+    <p><strong>IoT and Blockchain:</strong></p>
+    <p>Integrating IoT with blockchain ensures secure and transparent data exchange between IoT devices. Blockchain's decentralized nature provides a tamper-proof ledger for recording IoT data, enhancing trust and security.</p>
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content"><strong>Example:</strong> In agriculture, IoT sensors can monitor soil conditions and crop health, with data recorded on the blockchain. This ensures the authenticity of the data, enabling farmers to make informed decisions and improve crop yields.</div>
+    </div>
+
+    <div class="activity-box">
+      <div class="activity-header">Class Activity</div>
+      <p>Think about how integrating blockchain with AI or IoT could benefit your community. Discuss with your classmates and propose a project that leverages these technologies to solve a local problem.</p>
+    </div>
+
+    <div class="tip-box">In conclusion, the future trends and innovations in cloud computing and blockchain are driving significant advancements in technology. Edge computing and serverless architectures are enhancing the efficiency and scalability of cloud computing, while Blockchain 2.0 and the integration of blockchain with other technologies are expanding its applications and capabilities. These emerging trends are set to revolutionize various industries, offering new opportunities for innovation and growth.</div>
+
+    <!-- SUMMARY — Page 167 -->
+    <div class="summary-box" id="summary">
+      <h2>📝 Summary</h2>
+      <ul>
+        <li>Emerging technologies are new tools, systems, and methods that are currently being developed or have just started to be used.</li>
+        <li>AI refers to machines and software that can think and learn like humans.</li>
+        <li>Cloud computing allows people to store and access data and applications over the internet instead of on a local computer or server.</li>
+        <li>Blockchain is a secure way to record and share information across many computers, making it almost impossible to change or hack.</li>
+        <li>IoT connects everyday objects, like refrigerators, cars, and even clothes, to the internet. This allows them to send and receive data, making our lives more convenient.</li>
+      </ul>
+
+      <!-- Page 168 -->
+      <div class="page-marker" style="margin:16px 0 10px;"><span>Page 168</span></div>
+      <ul>
+        <li>AR adds digital elements to the real world using devices like smartphones or glasses.</li>
+        <li>VR creates a completely virtual environment that you can interact with using special equipment.</li>
+        <li>Quantum computers use the principles of quantum physics to process information much faster than traditional computers.</li>
+        <li>Biotechnology involves using living organisms, like bacteria and plants, to create new products or solve problems.</li>
+        <li>Virtualization is a technology that allows a single physical machine to run multiple virtual machines.</li>
+        <li>Scalability means you can add more resources when you need them.</li>
+        <li>On-demand access means that you can use computing resources whenever you need them, without waiting for a long setup process.</li>
+        <li>IaaS offers basic computing infrastructure such as servers, storage, and networking on a pay-as-you-go basis.</li>
+        <li>PaaS offers a complete development and deployment environment in the cloud. It includes infrastructure (servers, storage, and networking), middleware, development tools, and management services.</li>
+        <li>A peer-to-peer (P2P) network is a system where computers, called nodes, communicate and share resources directly with each other without relying on a central server.</li>
+      </ul>
+    </div>
+
+    <!-- EXERCISE — Pages 168–171 -->
+    <div class="exercise-section" id="exercise">
+      <h2>📋 Exercise</h2>
+
+      <h3>Multiple Choice Questions (MCQs)</h3>
+
+      <div class="mcq-item">
+        <p class="question">1. What is the main benefit of edge computing?</p>
+        <ol class="options">
+          <li>Lower cost</li>
+          <li>Reduced latency</li>
+          <li>Increased complexity</li>
+          <li>Enhanced security</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">2. Which cloud deployment model is characterized by resources being shared among multiple organizations with common concerns?</p>
+        <ol class="options">
+          <li>Public Cloud</li>
+          <li>Private Cloud</li>
+          <li>Community Cloud</li>
+          <li>Hybrid Cloud</li>
+        </ol>
+      </div>
+
+      <!-- Page 169 -->
+      <div class="page-marker"><span>Page 169</span></div>
+
+      <div class="mcq-item">
+        <p class="question">3. In what way does a private cloud differ from a public cloud?</p>
+        <ol class="options">
+          <li>A private cloud is owned and used by multiple organizations</li>
+          <li>A private cloud offers less control over data and resources</li>
+          <li>A private cloud is dedicated to a single organization and offers more control over data and security</li>
+          <li>A private cloud is cheaper and less secure than a public cloud</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">4. What is a key advantage of using a distributed ledger in blockchain technology?</p>
+        <ol class="options">
+          <li>Centralized control for quick decision-making</li>
+          <li>The ability to easily alter transaction histories</li>
+          <li>Enhanced transparency and security due to decentralized verification</li>
+          <li>Reduced computational power needed for maintaining the ledger</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">5. Which of the following is NOT a type of cloud service?</p>
+        <ol class="options">
+          <li>Infrastructure as a Service (IaaS)</li>
+          <li>Platform as a Service (PaaS)</li>
+          <li>Software as a Service (SaaS)</li>
+          <li>Blockchain as a Service (BaaS)</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">6. Which cloud deployment model combines public and private cloud features?</p>
+        <ol class="options">
+          <li>Public Cloud</li>
+          <li>Hybrid Cloud</li>
+          <li>Community Cloud</li>
+          <li>Multi-Cloud</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">7. In the context of blockchain, what is the purpose of using a distributed ledger?</p>
+        <ol class="options">
+          <li>To allow only one central authority to manage the blockchain</li>
+          <li>To enable multiple participants to share and verify data in a secure and transparent manner</li>
+          <li>To reduce the number of participants needed to maintain the network</li>
+          <li>To keep the data hidden from all participants except the central authority</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">8. Which type of cloud service provides a platform allowing customers to develop, run, and manage applications without dealing with the underlying infrastructure?</p>
+        <ol class="options">
+          <li>Infrastructure as a Service (IaaS)</li>
+          <li>Platform as a Service (PaaS)</li>
+          <li>Software as a Service (SaaS)</li>
+          <li>Data as a Service (DaaS)</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">9. Which service model allows developers to build and deploy applications without managing servers?</p>
+        <ol class="options">
+          <li>Infrastructure as a Service (IaaS)</li>
+        </ol>
+      </div>
+
+      <!-- Page 170 -->
+      <div class="page-marker"><span>Page 170</span></div>
+
+      <div class="mcq-item">
+        <p class="question" style="font-weight:400;color:#37474f;font-size:14px;">(continued from Q9)</p>
+        <ol class="options">
+          <li value="2">Platform as a Service (PaaS)</li>
+          <li>Software as a Service (SaaS)</li>
+          <li>Serverless Architecture</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">10. What does Blockchain 2.0 introduce beyond basic cryptocurrency applications?</p>
+        <ol class="options">
+          <li>Enhanced mining techniques</li>
+          <li>Decentralized applications and smart contracts</li>
+          <li>Better graphics</li>
+          <li>Faster internet speeds</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">11. What is a primary advantage of serverless architectures?</p>
+        <ol class="options">
+          <li>Cost savings</li>
+          <li>Need for constant server management</li>
+          <li>Increased hardware requirements</li>
+          <li>Manual scaling</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">12. How does integrating AI with blockchain benefit data management?</p>
+        <ol class="options">
+          <li>Increases data redundancy</li>
+          <li>Enhances data security and transparency</li>
+          <li>Slows down processing</li>
+          <li>Increases complexity without benefits</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">13. Which of the following best describes immutability in blockchain?</p>
+        <ol class="options">
+          <li>The ability to modify records with administrator privileges</li>
+          <li>The feature that allows data to be changed only under specific conditions</li>
+          <li>The characteristic of data being unalterable once added to the blockchain</li>
+          <li>The capability to remove data from the blockchain when no longer needed</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">14. Which of the following is an example of edge computing in use?</p>
+        <ol class="options">
+          <li>Cloud storage services</li>
+          <li>Autonomous vehicles</li>
+          <li>Social media platforms</li>
+          <li>Online shopping websites</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">15. What is one of the environmental concerns related to blockchain technology?</p>
+        <ol class="options">
+          <li>Low energy consumption</li>
+          <li>High energy consumption</li>
+          <li>Minimal hardware use</li>
+          <li>Lack of data storage</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">16. What is the primary function of a Peer-to-Peer (P2P) network in blockchain technology?</p>
+        <ol class="options">
+          <li>To increase the speed of transactions</li>
+          <li>To allow central authorities to control the network</li>
+        </ol>
+      </div>
+
+      <!-- Page 171 -->
+      <div class="page-marker"><span>Page 171</span></div>
+
+      <div class="mcq-item">
+        <p class="question" style="font-weight:400;color:#37474f;font-size:14px;">(continued from Q16)</p>
+        <ol class="options">
+          <li value="3">To enable direct data sharing between nodes without a central server</li>
+          <li>To reduce the need for encryption in the network</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">17. Which technology benefits from processing data at the "edge" of the network?</p>
+        <ol class="options">
+          <li>Edge computing</li>
+          <li>Cloud computing</li>
+          <li>Centralized computing</li>
+          <li>Distributed computing</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">18. What is a smart contract in the context of Blockchain 2.0?</p>
+        <ol class="options">
+          <li>A legal document</li>
+          <li>A self-executing contract with terms directly written into code</li>
+          <li>A contract managed by a third party</li>
+          <li>A manual agreement</li>
+        </ol>
+      </div>
+
+      <h3>Short Questions</h3>
+      <ol>
+        <li class="sq-item">Analyze the role of Peer-to-Peer Networks in Blockchain. How do they function and why are they essential?</li>
+        <li class="sq-item">Describe the concept of immutability in blockchain. Why is it a critical feature?</li>
+        <li class="sq-item">What is edge computing and how does it benefit data processing?</li>
+        <li class="sq-item">Describe the concept of serverless architectures.</li>
+        <li class="sq-item">What are smart contracts in Blockchain 2.0?</li>
+        <li class="sq-item">How does integrating blockchain with IoT improve supply chain management?</li>
+        <li class="sq-item">What advantages do serverless architectures offer to developers?</li>
+        <li class="sq-item">How does edge computing improve the efficiency of autonomous vehicles?</li>
+        <li class="sq-item">Differentiate between Elasticity and On-Demand access in cloud computing.</li>
+      </ol>
+
+      <h3>Long Questions</h3>
+      <ol>
+        <li class="lq-item">Explain the structure of a distributed ledger and evaluate the rationale behind its decentralization.</li>
+        <li class="lq-item">Define cloud deployment models and assess the differences among them.</li>
+        <li class="lq-item">Classify the various types of cloud services and compare them, highlighting key distinctions.</li>
+        <li class="lq-item">Discuss the advancements and benefits of edge computing in modern technology.</li>
+        <li class="lq-item">Explain the concept of serverless architectures and their impact on application development.</li>
+        <li class="lq-item">Describe Blockchain 2.0 and its advanced features.</li>
+        <li class="lq-item">How does integrating blockchain with AI and IoT create new opportunities and synergies?</li>
+        <li class="lq-item">Describe "Cloud Deployment Models" with examples.</li>
+      </ol>
+
+    </div><!-- end exercise -->
+
+  </main>
+</div>
+</body>
+</html>

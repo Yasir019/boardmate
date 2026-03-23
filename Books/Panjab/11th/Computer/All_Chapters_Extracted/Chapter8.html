@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Unit 8 – Online Research and Digital Literacy | Computer Science Class 11</title>
+  <style>
+    /* ── Base ─────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.75;
+      color: #1a1a2e;
+      background: #f4f6fb;
+    }
+
+    /* ── Layout ───────────────────────────────────────────── */
+    .wrapper {
+      max-width: 1260px;
+      margin: 0 auto;
+      padding: 0;
+    }
+    main {
+      width: 100%;
+      min-width: 0;
+      padding: 32px 48px 80px 48px;
+      background: #fff;
+      box-shadow: 0 0 40px rgba(0,0,0,.08);
+    }
+
+    /* ── Cover ────────────────────────────────────────────── */
+    .cover {
+      background: linear-gradient(135deg, #0f3460 0%, #16213e 60%, #0d0d2b 100%);
+      color: #fff;
+      padding: 60px 40px;
+      margin: -32px -48px 48px -48px;
+      position: relative;
+      overflow: hidden;
+    }
+    .cover::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 70% 30%, rgba(100,255,218,.12), transparent 60%);
+    }
+    .cover .badge {
+      display: inline-block;
+      background: #64ffda;
+      color: #0d0d2b;
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+    }
+    .cover h1 {
+      font-size: 2.4rem;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 10px;
+      position: relative;
+    }
+    .cover .subtitle {
+      font-size: 1.05rem;
+      color: #a8d8ea;
+      margin-bottom: 32px;
+    }
+    .cover .subject-tag {
+      font-size: 12px;
+      color: #64ffda;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* ── Page marker ──────────────────────────────────────── */
+    .page-marker {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 36px 0 10px;
+      color: #8892b0;
+      font-size: 11.5px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .page-marker::before, .page-marker::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #e0e7ff;
+    }
+    .page-marker span { white-space: nowrap; }
+
+    /* ── Typography ───────────────────────────────────────── */
+    h1.section-title { font-size: 1.7rem; color: #0f3460; margin: 32px 0 12px; border-left: 5px solid #64ffda; padding-left: 14px; }
+    h2.section-title { font-size: 1.35rem; color: #16213e; margin: 28px 0 10px; border-left: 4px solid #4fc3f7; padding-left: 12px; }
+    h3.section-title { font-size: 1.1rem; color: #1a237e; margin: 22px 0 8px; border-left: 3px solid #a5d6a7; padding-left: 10px; }
+    h4.section-title { font-size: 1rem; color: #37474f; margin: 18px 0 6px; padding-left: 10px; border-left: 3px solid #ffcc80; }
+    p { margin-bottom: 14px; }
+    ul, ol { margin: 10px 0 14px 28px; }
+    li { margin-bottom: 6px; }
+    strong { color: #0f3460; }
+
+    /* ── SLO Box ──────────────────────────────────────────── */
+    .slo-box {
+      background: linear-gradient(120deg, #e8f5e9, #f1f8ff);
+      border: 1.5px solid #81c784;
+      border-radius: 12px;
+      padding: 24px 28px;
+      margin: 24px 0 32px;
+    }
+    .slo-box h3 { color: #2e7d32; font-size: 1rem; margin-bottom: 12px; letter-spacing: .5px; }
+    .slo-box ul { margin-left: 20px; }
+    .slo-box li { margin-bottom: 8px; color: #1b5e20; font-size: 14px; }
+
+    /* ── Info / Tip box ───────────────────────────────────── */
+    .info-box {
+      display: flex;
+      gap: 14px;
+      background: #fff8e1;
+      border-left: 5px solid #ffd54f;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 20px 0;
+    }
+    .info-box .icon { font-size: 1.6rem; flex-shrink: 0; line-height: 1; }
+    .info-box .content { font-size: 13.5px; color: #5d4037; }
+    .tip-box {
+      background: #e8f4fd;
+      border-left: 5px solid #42a5f5;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 20px 0;
+      font-size: 13.5px;
+      color: #0d47a1;
+    }
+    .tip-box strong { color: #0d47a1; }
+
+    /* ── Did You Know box ─────────────────────────────────── */
+    .dyk-box {
+      display: flex;
+      gap: 14px;
+      background: #f3e5f5;
+      border-left: 5px solid #8e24aa;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 20px 0;
+    }
+    .dyk-box .icon { font-size: 1.6rem; flex-shrink: 0; line-height: 1; }
+    .dyk-box .content { font-size: 13.5px; color: #4a148c; }
+    .dyk-box .content strong { color: #4a148c; }
+
+    /* ── Note box ─────────────────────────────────────────── */
+    .note-box {
+      background: #e8f5e9;
+      border-left: 5px solid #43a047;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 20px 0;
+      font-size: 13.5px;
+      color: #1b5e20;
+    }
+    .note-box strong { color: #1b5e20; }
+
+    /* ── Class Activity ───────────────────────────────────── */
+    .activity-box {
+      background: linear-gradient(135deg, #fce4ec, #fff9c4);
+      border: 1.5px dashed #e91e63;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin: 24px 0;
+    }
+    .activity-box .activity-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #880e4f;
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+    .activity-box .activity-header::before { content: '🎯'; font-size: 1.2rem; }
+
+    /* ── Boolean block ────────────────────────────────────── */
+    .boolean-block {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 16px 0;
+      font-size: 13.5px;
+      color: #212529;
+    }
+    .boolean-block ul { margin-left: 20px; }
+
+    /* ── Table ────────────────────────────────────────────── */
+    .table-wrap { overflow-x: auto; margin: 20px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    thead { background: #0f3460; color: #fff; }
+    thead th { padding: 10px 14px; text-align: left; }
+    tbody tr:nth-child(even) { background: #f0f4ff; }
+    tbody td { padding: 9px 14px; border-bottom: 1px solid #e0e7ff; vertical-align: top; }
+    .table-caption { font-size: 12.5px; color: #6a7899; text-align: center; margin-top: 6px; font-style: italic; }
+
+    /* ── Figure ───────────────────────────────────────────── */
+    .figure-caption {
+      display: block;
+      text-align: center;
+      font-size: 12.5px;
+      color: #5c6bc0;
+      font-style: italic;
+      background: #e8eaf6;
+      border-radius: 6px;
+      padding: 8px 16px;
+      margin: 8px 0 20px;
+    }
+
+    /* ── Formula block ────────────────────────────────────── */
+    .formula-block {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 16px 0;
+      font-family: 'Courier New', monospace;
+      font-size: 13.5px;
+      color: #212529;
+    }
+
+    /* ── Exercise ─────────────────────────────────────────── */
+    .exercise-section {
+      background: #f3e5f5;
+      border-top: 4px solid #7b1fa2;
+      border-radius: 12px;
+      padding: 28px 32px;
+      margin: 40px 0 0;
+    }
+    .exercise-section h2 { color: #4a148c; margin-bottom: 20px; border: none; padding: 0; font-size: 1.3rem; }
+    .exercise-section h3 { color: #6a1b9a; margin: 22px 0 12px; font-size: 1rem; border: none; padding: 0; }
+    .mcq-item { margin-bottom: 18px; }
+    .mcq-item .question { font-weight: 600; color: #1a1a2e; margin-bottom: 6px; }
+    .mcq-item .options { list-style: lower-alpha; margin-left: 20px; color: #37474f; font-size: 14px; }
+    .mcq-item .options li { margin-bottom: 3px; }
+    .sq-item, .lq-item { margin-bottom: 12px; font-size: 14px; color: #37474f; }
+
+    /* ── Summary ──────────────────────────────────────────── */
+    .summary-box {
+      background: linear-gradient(135deg, #e3f2fd, #e8eaf6);
+      border-left: 5px solid #1565c0;
+      border-radius: 10px;
+      padding: 24px 28px;
+      margin: 32px 0;
+    }
+    .summary-box h2 { color: #0d47a1; font-size: 1.1rem; margin-bottom: 12px; border: none; padding: 0; }
+
+    /* ── Scrollbar ────────────────────────────────────────── */
+    aside::-webkit-scrollbar { width: 4px; }
+    aside::-webkit-scrollbar-thumb { background: #233554; border-radius: 4px; }
+
+    /* ── Responsive ───────────────────────────────────────── */
+    @media (max-width: 900px) {
+      main { padding: 24px 20px 60px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="wrapper">
+<!-- ── Main Content ────────────────────────────────────── -->
+  <main>
+
+    <!-- COVER — Page 191 -->
+    <div class="cover" id="cover">
+      <div class="badge">Unit 8</div>
+      <h1>Online Research and Digital Literacy</h1>
+      <p class="subtitle">Computer Science | Class 11 | Punjab Curriculum &amp; Textbook Board</p>
+      <p class="subject-tag">Single National Curriculum 2022</p>
+    </div>
+
+    <!-- STUDENT LEARNING OUTCOMES — Page 191 -->
+    <div class="page-marker"><span>Page 191</span></div>
+    <div class="slo-box" id="slo">
+      <h3>🎓 Student Learning Outcomes</h3>
+      <p><strong>By the end of this chapter, students will be able to:</strong></p>
+      <ul>
+        <li>Explain the importance of online research and its impact on academic and professional work.</li>
+        <li>Recognize different types of online research and their applications.</li>
+        <li>Apply digital literacy skills, including using technology, searching for information, evaluating sources, creating digital content, and ensuring online safety and privacy.</li>
+        <li>Use advanced search techniques, including Boolean operators and search filters, to find relevant information effectively.</li>
+        <li>Develop clear research questions and hypotheses and understand the effect of research design on inquiries.</li>
+        <li>Navigate online libraries and research databases to manage digital resources efficiently.</li>
+        <li>Identify key principles of research ethics and their importance in research.</li>
+        <li>Define intellectual property, its types, and understand how to protect intellectual property rights.</li>
+      </ul>
+    </div>
+
+    <!-- INTRODUCTION — Page 192 -->
+    <div class="page-marker"><span>Page 192</span></div>
+    <h1 class="section-title" id="intro">Introduction</h1>
+    <p>This chapter illustrates the fundamental aspects of online research and digital literacy, which are essential for effectively navigating and utilizing the vast array of information available on the internet. It introduces key concepts related to conducting online research, including advanced search techniques and effective management of digital resources. Additionally, the chapter covers the importance of formulating clear research inquiries, understanding research ethics, and recognizing intellectual property rights. Mastering these skills will enable students and researchers to perform rigorous and ethical research while ensuring proper use and protection of digital content.</p>
+
+    <!-- 8.1 Introduction to Online Research and Digital Literacy — Page 192 -->
+    <h2 class="section-title" id="s8_1">8.1 Introduction to Online Research and Digital Literacy</h2>
+    <p>Online research is the activity of finding information on the internet about a particular topic. It involves using various online sources, such as articles, reports, or videos, to gather knowledge. The goal of online research is to collect correct, trustworthy, and current information that helps in understanding a topic or solving a problem. When conducting online research, it is essential to check if the information comes from a reliable source. This can include official government websites, educational institutions, or well-known newspapers. By comparing information from multiple sources, one can ensure the accuracy of the findings.</p>
+
+    <!-- 8.1.1 Importance of Online Research — Page 192 -->
+    <h3 class="section-title" id="s8_1_1">8.1.1 Importance of Online Research</h3>
+    <p>Online research is important because it allows people to access a wide range of information quickly and easily. In today's world, where almost everything is connected to the internet, knowing how to search for and use online information is a valuable skill. It helps students to complete their homework, allows professionals to stay updated in their fields, and assists everyone in making informed decisions. However, not all information on the internet is correct. Some websites may provide false or misleading details. It is necessary to know how to find information from reliable sources to ensure that the facts you gather are accurate and useful.</p>
+
+    <!-- 8.1.2 Types of Online Research — Page 192 -->
+    <h3 class="section-title" id="s8_1_2">8.1.2 Types of Online Research</h3>
+    <p>Online research can be categorized into different types based on the purpose and the kind of information needed. The most common types of online research are:</p>
+    <ol>
+      <li><strong>General Information Research:</strong> It involves finding basic information on a topic. It is useful for gaining an overview or understanding the main points. One can use search engines like Google to find articles, blog posts, or videos that provide general knowledge.</li>
+      <li><strong>Academic Research:</strong> This type of research focuses on finding scholarly information for educational purposes. It involves searching for books, research</li>
+    </ol>
+
+    <!-- Page 193 -->
+    <div class="page-marker"><span>Page 193</span></div>
+    <ol start="2">
+      <li style="list-style:none; margin-left:-4px;">papers, or articles from educational websites, libraries, or databases. Academic research provides detailed and reliable information that is often written by experts.</li>
+      <li><strong>Market Research:</strong> This type is used by businesses and entrepreneurs to understand market trends, customer behavior, and competition. Market research helps businesses make informed decisions about launching new products or services.</li>
+      <li><strong>Fact-Checking Research:</strong> This type is used to verify if the information is accurate. It involves checking multiple reliable sources to confirm the correctness of facts.</li>
+      <li><strong>Health Research:</strong> This type involves finding information related to health issues, medical treatments, or healthcare services. It helps people learn about symptoms, treatments, and ways to stay healthy by using reliable health websites and medical journals.</li>
+    </ol>
+
+    <!-- 8.1.3 Digital Literacy — Page 193 -->
+    <h3 class="section-title" id="s8_1_3">8.1.3 Digital Literacy</h3>
+    <p>Digital literacy is the ability to use digital tools, such as computers, smartphones, and the internet, to find, understand, create, and share information. It involves several skills, including using search engines to look up information, assessing whether online sources are reliable or not, and protecting personal information while using digital platforms.</p>
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content"><strong>Example:</strong> If a student needs to gather information for a science project. The student uses a search engine to find articles and videos related to the topic. Digital literacy helps the student decide whether the sources found are trustworthy, such as checking if an article is from a reputable source like a university or a well-known organization.</div>
+    </div>
+
+    <!-- 8.1.4 Key Components of Digital Literacy — Page 193 -->
+    <h3 class="section-title" id="s8_1_4">8.1.4 Key Components of Digital Literacy</h3>
+    <p>Digital literacy includes several important skills that help people use technology effectively. The key components of digital literacy are explained below.</p>
+
+    <!-- Using Technology — Page 193 -->
+    <h4 class="section-title" id="tech">Using Technology</h4>
+    <p>Using technology involves operating devices like computers, tablets, and smartphones. It includes knowing how to open programs, use applications, and navigate websites.</p>
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content"><strong>Example:</strong> If a student uses a computer to write a report for school. They need to know how to use word processing software to type and format their report.</div>
+    </div>
+
+    <!-- Searching for Information — Page 193 -->
+    <h4 class="section-title" id="searching">Searching for Information</h4>
+    <p>Searching for information means using search engines to find data on the internet. This skill includes entering relevant keywords and refining search results to locate useful information.</p>
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content"><strong>Example:</strong> A farmer in Punjab wants to learn about new crop irrigation methods. They use Google to search for terms like "modern irrigation techniques for wheat".</div>
+    </div>
+
+    <!-- Page 194 -->
+    <div class="page-marker"><span>Page 194</span></div>
+
+    <!-- Evaluating Sources — Page 194 -->
+    <h4 class="section-title" id="evaluating">Evaluating Sources</h4>
+    <p>Evaluating sources involves checking if the information you find online is reliable. This includes looking at who created the content and whether it comes from a trustworthy source.</p>
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content"><strong>Example:</strong> A teacher in Lahore finds a website claiming to have the latest educational methods. They check if the website is run by an educational institution or a credible organization before using its information.</div>
+    </div>
+
+    <!-- Creating Digital Content — Page 194 -->
+    <h4 class="section-title" id="creating">Creating Digital Content</h4>
+    <p>Creating digital content involves making your own materials, such as writing articles, creating presentations, or editing photos. It requires knowledge of different software and tools.</p>
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content"><strong>Example:</strong> A student in Karachi creates a PowerPoint presentation for a class project. They use presentation software to add slides, text, and images.</div>
+    </div>
+
+    <!-- Online Safety and Privacy — Page 194 -->
+    <h4 class="section-title" id="safety">Online Safety and Privacy</h4>
+    <p>Online safety and privacy involve protecting personal information and staying safe on the internet. This includes using strong passwords and recognizing potential online threats.</p>
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content"><strong>Example:</strong> A person in Islamabad uses social media and sets their privacy settings to control who can see their personal information. They also avoid clicking on suspicious links to protect their online security.</div>
+    </div>
+
+    <!-- 8.1.5 Advanced Information Retrieval Techniques — Page 194 -->
+    <h3 class="section-title" id="s8_1_5">8.1.5 Advanced Information Retrieval Techniques</h3>
+    <p>Finding information online can be more effective if you use advanced techniques. These techniques help you get better results from search engines and find exactly what you need.</p>
+
+    <!-- Effective Use of Search Engines — Page 194 -->
+    <h4 class="section-title" id="search-engines">Effective Use of Search Engines</h4>
+    <p>Search engines like Google are powerful tools for finding information. To use them effectively, you need to know how to enter your search queries in a way that gives you the best results.</p>
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content"><strong>Example:</strong> If a female needs information on traditional pakistani recipes. Instead of just typing "recipes", the student can type "traditional pakistani recipes" to get more specific results.</div>
+    </div>
+
+    <!-- Choosing Effective Keywords — Page 194 -->
+    <h4 class="section-title" id="keywords">Choosing Effective Keywords</h4>
+    <p>Keywords are the words you type into a search engine. Choosing the right keywords helps you find relevant information quickly. Think about the most important words related to your topic and use them in your search.</p>
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content"><strong>Example:</strong> A farmer in Punjab wants to learn about "organic farming techniques". By</div>
+    </div>
+
+    <!-- Page 195 -->
+    <div class="page-marker"><span>Page 195</span></div>
+
+    <div class="activity-box">
+      <div class="activity-header">Class Activity</div>
+      <ol>
+        <li>Choose a topic that interests you (e.g., renewable energy, artificial intelligence, or a historical event).</li>
+        <li>Use specific keywords to search for information online.</li>
+        <li>Find at least three sources of information and evaluate their reliability.</li>
+        <li>Write a short summary of what you found and include the links to your sources.</li>
+      </ol>
+    </div>
+
+    <p>using the keywords "organic farming" instead of just "farming", the farmer will find more relevant information.</p>
+
+    <!-- Using Boolean Operators — Page 195 -->
+    <h4 class="section-title" id="boolean">Using Boolean Operators ("AND", "OR", "NOT")</h4>
+    <p>Boolean operators are special words that help you refine your search. They are "AND", "OR", and "NOT".</p>
+    <div class="boolean-block">
+      <ul>
+        <li><strong>AND</strong> is used to include multiple terms in your search.<br>
+          <strong>Example:</strong> If you search for "agriculture AND irrigation", you will get results that include both terms.</li>
+        <li><strong>OR</strong> is used to find results that include either of the terms.<br>
+          <strong>Example:</strong> "Crops OR vegetables", will show results that include either word.</li>
+        <li><strong>NOT</strong> is used to exclude certain terms from your search.<br>
+          <strong>Example:</strong> "Farming NOT pesticides" will show results about farming that do not mention pesticides.</li>
+      </ul>
+    </div>
+
+    <!-- Advanced Search Features — Page 195 -->
+    <h4 class="section-title" id="advsearch">Advanced Search Features</h4>
+    <p>Many search engines offer advanced search features that allow you to filter results by date, location, and more. These features help you find the most relevant and recent information.</p>
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content"><strong>Example:</strong> If a student in wants to find the latest news on "Pakistan's education policy", They can use the advanced search feature to filter results by the past year to find the most recent articles.</div>
+    </div>
+
+    <div class="dyk-box">
+      <div class="icon">💡</div>
+      <div class="content">Did you know that more than half of the world's population uses the internet? With so much information available, learning how to research effectively online is a powerful tool for your education and beyond.</div>
+    </div>
+
+    <!-- 8.2 Formulating Research Inquiries — Page 195 -->
+    <h2 class="section-title" id="s8_2">8.2 Formulating Research Inquiries</h2>
+    <p>Formulating research inquiries is the process of creating questions that guide your research. These questions help you focus on what you want to learn and find answers to. There are different types of research questions, and knowing how to create clear and effective questions is essential for good research.</p>
+
+    <!-- Page 196 -->
+    <div class="page-marker"><span>Page 196</span></div>
+
+    <div class="activity-box">
+      <div class="activity-header">Class Activity</div>
+      <p><strong>Objective:</strong> Help students practice formulating research questions and hypotheses.</p>
+      <ol>
+        <li>Choose a topic you are curious about (e.g., the impact of diet on student energy levels, the influence of extracurricular activities on grades, etc.).</li>
+        <li>Write a specific research question related to your topic.</li>
+        <li>Based on your question, develop a hypothesis that you could test through research.</li>
+        <li>Share your question and hypothesis with the class and discuss how you might design a study to answer it.</li>
+      </ol>
+    </div>
+
+    <div class="dyk-box">
+      <div class="icon">💡</div>
+      <div class="content">Did you know that formulating good research questions is the first step to a successful research project? A well-thought-out question sets the direction for your entire study and helps you focus on finding the right answers.</div>
+    </div>
+
+    <div class="note-box">
+      <strong>Note</strong> that by learning how to ask the right questions and making informed guesses, you can design meaningful research projects that contribute to our understanding of the world!
+    </div>
+
+    <!-- 8.3 Utilizing Digital Resources — Page 196 -->
+    <h2 class="section-title" id="s8_3">8.3 Utilizing Digital Resources</h2>
+    <p>Utilizing digital resources means effectively using tools and information available on the internet to support your work or learning. It involves finding and using online materials, such as articles, videos, and websites, that can help you achieve your goals.</p>
+
+    <!-- 8.3.1 Online Libraries and Research Databases — Page 196 -->
+    <h3 class="section-title" id="s8_3_1">8.3.1 Online Libraries and Research Databases</h3>
+    <p>In today's digital age, many libraries and research databases are available online, providing access to a wealth of academic resources. These digital tools can help you find reliable and scholarly information for your research projects.</p>
+
+    <!-- Accessing Academic Journals — Page 196 -->
+    <h4 class="section-title" id="academic-journals">Accessing Academic Journals</h4>
+    <p>Academic journals are collections of articles written by experts in various fields. These articles are usually peer-reviewed, meaning they have been checked by other experts before being published, making them trustworthy sources of information. As a student, you can access many academic journals online through school libraries, university portals, or open-access websites.</p>
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content"><strong>Example:</strong> If you are researching the effects of pollution on local ecosystems, you might search for academic journals that publish studies on environmental science. Many universities in Pakistan provide access to online libraries where you can find such journals. Additionally, websites like Google Scholar or ResearchGate offer free access to some academic papers.</div>
+    </div>
+
+    <!-- 8.3.2 Effective Navigation and Managing Digital Information — Page 197 -->
+    <div class="page-marker"><span>Page 197</span></div>
+    <h3 class="section-title" id="s8_3_2">8.3.2 Effective Navigation and Managing Digital Information</h3>
+    <p>When looking for information online, knowing how to search effectively is important. Start by using specific keywords related to your topic. You can also use advanced search options to narrow your results. Many online libraries and databases offer filters to help you search by date, author, or subject. Once you have found useful resources, managing the information is crucial. Save and organize digital copies of articles, take notes on key points, and keep track of your sources for future reference. Using digital folders, note-taking apps, or reference managers helps you stay organized and makes the research process smoother.</p>
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content"><strong>Example:</strong> Create a folder on your computer. Inside the folder, save PDFs of articles you find and keep a document with important quotes or ideas.</div>
+    </div>
+
+    <div class="activity-box">
+      <div class="activity-header">Class Activity</div>
+      <ol>
+        <li>Choose a topic for research and use an online library or open-access repository to find at least three academic articles related to your topic.</li>
+        <li>Download the articles and save them in a designated folder.</li>
+        <li>Write a summary of each article, noting down key points and any useful quotes.</li>
+        <li>Share your findings with the class, explaining how you found the articles and how you organized your research.</li>
+      </ol>
+    </div>
+
+    <div class="dyk-box">
+      <div class="icon">💡</div>
+      <div class="content">Did you know that many universities around the world, including in Pakistan, provide free access to thousands of academic journals and research papers online? By learning how to navigate these digital resources, you can find high-quality information for your studies without leaving home!</div>
+    </div>
+
+    <div class="note-box">
+      <strong>Note</strong> that by effectively using digital resources and managing your information, you can make your research process more efficient and organized, leading to better results in your assignments and projects.
+    </div>
+
+    <!-- 8.4 Research Ethics — Page 197 -->
+    <h2 class="section-title" id="s8_4">8.4 Research Ethics</h2>
+    <p>Research ethics are the principles and guidelines that researchers follow to ensure that their work is honest, respectful, and fair. These ethics help maintain the integrity of research and protect the rights and well-being of anyone involved in the study, including the participants, the research community, and society at large.</p>
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content"><strong>Example:</strong> Imagine you're conducting a survey on how social media affects your classmates' study habits. Research ethics would require you to ask for their permission before collecting any personal information and to ensure that their responses are kept confidential.</div>
+    </div>
+
+    <!-- 8.4.1 Importance of Research Ethics — Page 197 -->
+    <h3 class="section-title" id="s8_4_1">8.4.1 Importance of Research Ethics</h3>
+    <p>Ethical research is important because it ensures that the findings are trustworthy and that the</p>
+
+    <!-- Page 198 -->
+    <div class="page-marker"><span>Page 198</span></div>
+    <p>rights of those involved are respected. By following ethical guidelines, researchers can avoid causing harm, spreading misinformation, or being unfair to the people or communities they study. Ethical research also contributes to the credibility and reliability of the results, making sure that the research is valuable to others.</p>
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content"><strong>Example:</strong> If you were to falsify data or copy someone else's work without giving them credit (plagiarism), it would be unethical. Not only could this lead to wrong conclusions, but it would also damage your reputation as a researcher.</div>
+    </div>
+
+    <!-- 8.4.2 Key Principles of Research Ethics — Page 198 -->
+    <h3 class="section-title" id="s8_4_2">8.4.2 Key Principles of Research Ethics</h3>
+    <ol>
+      <li><strong>Informed Consent:</strong> Always inform participants about the purpose of your research and obtain their permission before involving them in your study.</li>
+      <li><strong>Confidentiality:</strong> Keep personal information and responses of participants private and do not share them without permission.</li>
+      <li><strong>Integrity:</strong> Be honest and transparent in your research. Do not falsify data, plagiarize, or misrepresent your findings.</li>
+      <li><strong>Respect for Participants:</strong> Treat all participants with respect and ensure that your research does not harm them in any way.</li>
+    </ol>
+    <p><strong>Avoiding Bias:</strong> Conduct your research in a fair and unbiased manner, and make sure your conclusions are based on the evidence you gather.</p>
+
+    <div class="activity-box">
+      <div class="activity-header">Class Activity</div>
+      <ol>
+        <li>Read a case study about a research project where ethical guidelines were not followed (e.g., a study where participants' privacy was not respected).</li>
+        <li>Discuss in groups what went wrong and how it could have been done ethically.</li>
+        <li>Write down your group's conclusions and share them with the class.</li>
+      </ol>
+    </div>
+
+    <div class="dyk-box">
+      <div class="icon">💡</div>
+      <div class="content">Did you know that ethical guidelines in research have been developed over many years to protect participants and ensure that research contributes positively to society? By following these guidelines, you can help build trust in your work and contribute to the greater good. Remember, being an ethical researcher means more than just following rules—it's about being honest, fair, and respectful in all your research activities.</div>
+    </div>
+
+    <!-- 8.5 Understanding Intellectual Property — Page 198 -->
+    <h2 class="section-title" id="s8_5">8.5 Understanding Intellectual Property</h2>
+    <p>Intellectual Property (IP) refers to the legal rights that protect creations of the mind, such as inventions, literary and artistic works, designs, symbols, names, and images used in commerce. These rights allow creators to control and profit from their work, ensuring they are recognized and rewarded for their creativity and innovation.</p>
+
+    <!-- Page 199 -->
+    <div class="page-marker"><span>Page 199</span></div>
+
+    <!-- 8.4.1 Types of Intellectual Property — Page 199 -->
+    <h3 class="section-title" id="s8_5_1">8.4.1 Types of Intellectual Property</h3>
+    <p>This section covers the different types of intellectual property, including patents, trademarks, copyrights, industrial designs, and trade secrets.</p>
+
+    <!-- Patents — Page 199 -->
+    <h4 class="section-title" id="patents">Patents</h4>
+    <p>A patent is an exclusive right granted for an invention, which is a product or process that provides a new way of doing something or offers a new technical solution to a problem. A patent prevents others from making, using, or selling the invention without the inventor's permission.</p>
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content"><strong>Example:</strong> A Pakistani engineer invents a new type of solar panel that is more efficient in converting sunlight into energy. By obtaining a patent, the engineer ensures that only they can manufacture and sell this solar panel in Pakistan for a certain number of years.</div>
+    </div>
+
+    <!-- Trademarks — Page 199 -->
+    <h4 class="section-title" id="trademarks">Trademarks</h4>
+    <p>A trademark is a sign, logo, or name that distinguishes the goods or services of one company from those of others. Trademarks help consumers identify the source of a product or service and are essential for building brand recognition.</p>
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content"><strong>Example:</strong> The logo of National Foods is a trademark that helps customers recognize the brand instantly when they see it on products like spices and sauces.</div>
+    </div>
+
+    <!-- Copyrights — Page 199 -->
+    <h4 class="section-title" id="copyrights">Copyrights</h4>
+    <p>Copyright protects literary and artistic works, such as books, music, films, paintings, and software. It gives the creator the exclusive right to use, distribute, and license their work, as well as the ability to prevent others from copying or using it without permission.</p>
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content"><strong>Example:</strong> A Pakistani author writes a novel. Copyright law ensures that only the author has the right to publish, sell, or adapt the novel into a movie.</div>
+    </div>
+
+    <!-- Industrial Designs — Page 199 -->
+    <h4 class="section-title" id="industrial">Industrial Designs</h4>
+    <p>Industrial design rights protect the visual design of objects that are not purely utilitarian. This includes the shape, configuration, and aesthetic aspects of a product that make it unique and appealing.</p>
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content"><strong>Example:</strong> A designer in Karachi creates a unique and stylish bottle shape for a new brand of mineral water. By protecting the design, no other company can use the same bottle shape for their products.</div>
+    </div>
+
+    <!-- Trade Secrets — Page 199 -->
+    <h4 class="section-title" id="tradesecrets">Trade Secrets</h4>
+    <p>A trade secret is confidential information that provides a business with a competitive edge. Unlike patents, trade secrets are not disclosed to the public. Companies protect trade secrets through confidentiality agreements and other legal means.</p>
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content"><strong>Example:</strong> The recipe for a famous Pakistani soft drink, Pakola, is a trade secret. Only a few people in the company know the exact ingredients and proportions used in making the drink.</div>
+    </div>
+
+    <!-- 8.4.2 Why is Intellectual Property Important? — Page 200 -->
+    <div class="page-marker"><span>Page 200</span></div>
+    <h3 class="section-title" id="s8_5_2">8.4.2 Why is Intellectual Property Important?</h3>
+    <p>Intellectual property is important because it helps people protect their ideas and creations. When someone invents something new or creates a piece of art, intellectual property laws make sure that only they can profit from it. This protection encourages people to keep coming up with new ideas and innovations, knowing they will be rewarded for their efforts. In short, intellectual property supports creativity and helps drive progress by making sure that creators get the benefits of their hard work.</p>
+
+    <div class="activity-box">
+      <div class="activity-header">Class Activity</div>
+      <p><strong>Objective:</strong> Help students identify different types of intellectual property in their daily lives.</p>
+      <ol>
+        <li>Ask students to bring to class a product they use regularly, such as a mobile phone, a book, or a piece of clothing.</li>
+        <li>Have each student identify at least one type of intellectual property associated with their product (e.g., the brand name, the design, or the content).</li>
+        <li>Discuss how intellectual property rights protect these elements and why it is important for the creators or companies.</li>
+      </ol>
+    </div>
+
+    <div class="dyk-box">
+      <div class="icon">💡</div>
+      <div class="content">Did you know that Pakistan has its own Intellectual Property Organization (IPO)? This organization is responsible for registering and protecting intellectual property rights in the country, helping to ensure that creators and businesses are rewarded for their innovation.</div>
+    </div>
+
+    <!-- 8.5.3 How to Protect Your Intellectual Property — Page 200 -->
+    <h3 class="section-title" id="s8_5_3">8.5.3 How to Protect Your Intellectual Property</h3>
+    <ol>
+      <li><strong>Patents:</strong> If you invent something new, apply for a patent through the Intellectual Property Organization of Pakistan (IPO Pakistan).</li>
+      <li><strong>Trademarks:</strong> Register your brand name, logo, or slogan as a trademark to prevent others from using it.</li>
+      <li><strong>Copyrights:</strong> Ensure your creative works are protected by registering them with the appropriate authority.</li>
+      <li><strong>Trade Secrets:</strong> Keep valuable business information confidential and use legal agreements to protect it.</li>
+    </ol>
+
+    <!-- SUMMARY — Page 201 -->
+    <div class="page-marker"><span>Page 201</span></div>
+    <div class="summary-box" id="summary">
+      <h2>📝 Summary</h2>
+      <p>This chapter provides a comprehensive overview of online research, digital literacy, and intellectual property, focusing on essential skills and concepts in these areas. It begins by highlighting the significance of online research and the various research methods available. It then addresses digital literacy, covering key aspects such as technology use, information retrieval, source evaluation, digital content creation, and maintaining online safety and privacy. The chapter also explores advanced information retrieval techniques and the formulation of research inquiries, including research questions and hypotheses. Furthermore, it examines the use of digital resources, research ethics, and the different types of intellectual property: patents, trademarks, copyrights, industrial designs, and trade secrets emphasizing their importance in protecting creative and innovative works.</p>
+    </div>
+
+    <!-- EXERCISE — Pages 201–203 -->
+    <div class="exercise-section" id="exercise">
+      <h2>📋 Exercise</h2>
+
+      <h3>Multiple Choice Questions</h3>
+
+      <div class="mcq-item">
+        <p class="question">1. Which of the following is a key component of digital literacy?</p>
+        <ol class="options">
+          <li>Writing poetry</li>
+          <li>Understanding agricultural methods</li>
+          <li>Using digital tools effectively</li>
+          <li>Practicing public speaking</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">2. Which Boolean operator would you use to exclude a term from search results?</p>
+        <ol class="options">
+          <li>OR</li>
+          <li>AND</li>
+          <li>NOT</li>
+          <li>NEITHER</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">3. Which skill is essential for evaluating online sources effectively?</p>
+        <ol class="options">
+          <li>Guessing the source's credibility</li>
+          <li>Knowing the content creator's name</li>
+          <li>Checking if the content is from a trusted entity</li>
+          <li>Reading the content multiple times</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">4. Why is it important to be specific when formulating a research question?</p>
+        <ol class="options">
+          <li>To ensure it covers a wide range of topics</li>
+          <li>To clearly define what you want to find out and avoid vague questions</li>
+          <li>To include as much information as possible</li>
+          <li>To make the research more generalizable</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">5. What does it mean when an article is "peer-reviewed"?</p>
+        <ol class="options">
+          <li>It is edited by a single expert</li>
+          <li>It is published in a magazine</li>
+        </ol>
+      </div>
+
+      <!-- Page 202 -->
+      <div class="page-marker"><span>Page 202</span></div>
+
+      <div class="mcq-item">
+        <p class="question" style="font-weight:400;color:#37474f;font-size:14px;">(continued from Q5)</p>
+        <ol class="options">
+          <li value="3">It is reviewed by other experts in the field</li>
+          <li>It is freely available online</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">6. Which of the following is a key purpose of online libraries?</p>
+        <ol class="options">
+          <li>Providing access to entertainment</li>
+          <li>Offering a variety of academic resources</li>
+          <li>Promoting social media interaction</li>
+          <li>Selling digital books and materials</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">7. Which of the following is an essential component of ethical research?</p>
+        <ol class="options">
+          <li>Collecting as much data as possible regardless of participants' privacy</li>
+          <li>Avoiding plagiarism and providing proper credit</li>
+          <li>Publishing results only if they are positive</li>
+          <li>Ignoring participant consent if the research is important</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">8. Which principle of research ethics focuses on being truthful and transparent in reporting findings?</p>
+        <ol class="options">
+          <li>Confidentiality</li>
+          <li>Integrity</li>
+          <li>Informed Consent</li>
+          <li>Avoiding Bias</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">9. Which of the following is NOT a type of intellectual property?</p>
+        <ol class="options">
+          <li>Patents</li>
+          <li>Trademarks</li>
+          <li>Copyrights</li>
+          <li>Physical Properties</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">10. How can a company protect a trade secret?</p>
+        <ol class="options">
+          <li>By registering it with the IPO</li>
+          <li>By applying for a trademark</li>
+          <li>By keeping the information confidential and using legal agreements</li>
+          <li>By publishing it in a scientific journal</li>
+        </ol>
+      </div>
+
+      <h3>Short Questions</h3>
+      <ol>
+        <li class="sq-item">How can one ensure the reliability of information found through online research?</li>
+        <li class="sq-item">Why is it important to evaluate the reliability of online sources?</li>
+        <li class="sq-item">Explain the difference between exploratory and explanatory research questions.</li>
+        <li class="sq-item">Explain the importance of hypothesis in research process.</li>
+        <li class="sq-item">Why is it important to use specific keywords when searching for information online?</li>
+      </ol>
+
+      <!-- Page 203 -->
+      <div class="page-marker"><span>Page 203</span></div>
+      <ol start="6">
+        <li class="sq-item">How can a researcher avoid bias in their study?</li>
+        <li class="sq-item">Describe the purpose of a trademark.</li>
+        <li class="sq-item">How does copyright differ from patent protection?</li>
+      </ol>
+
+      <h3>Long Questions</h3>
+      <ol>
+        <li class="lq-item">Discuss the different types of online research and their purposes, providing examples for each type.</li>
+        <li class="lq-item">Explain the concept of digital literacy and its key components. How does it contribute to effective use of digital tools and resources?</li>
+        <li class="lq-item">Explain the process of developing a clear and focused research question. Illustrate your answer with examples of well-formulated and poorly-formulated research questions.</li>
+        <li class="lq-item">Discuss the importance of research ethics in maintaining the credibility and reliability of research findings. Explain how unethical practices could affect the research community and society.</li>
+        <li class="lq-item">Discuss the various types of intellectual property and provide examples of each. Explain how each type helps in protecting different kinds of creations and innovations.</li>
+      </ol>
+
+    </div><!-- end exercise -->
+
+  </main>
+</div>
+</body>
+</html>

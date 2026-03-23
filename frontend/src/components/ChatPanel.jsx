@@ -9,14 +9,15 @@ function ChatPanel({
   selectedChapter, 
   messages, 
   onSendMessage,
-  onToggleChapters,
   isLoading = false,
   chatEnabled = false
 }) {
-  const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
   };
 
   useEffect(() => {
@@ -25,11 +26,6 @@ function ChatPanel({
 
   return (
     <main className="chat-panel">
-      {/* Mobile Chapter Toggle */}
-      <button className="mobile-chapter-toggle" onClick={onToggleChapters}>
-        ☰ {selectedChapter ? selectedChapter.name : 'Select Chapter'}
-      </button>
-
       {/* Chat Header */}
       <div className="chat-header">
         <div className="chat-header-info">
@@ -47,7 +43,7 @@ function ChatPanel({
       </div>
 
       {/* Messages */}
-      <div className="messages-container">
+      <div className="messages-container" ref={messagesContainerRef}>
         {messages.map((message) => (
           <MessageBubble key={message.id} message={message} />
         ))}
@@ -62,7 +58,6 @@ function ChatPanel({
             </div>
           </div>
         )}
-        <div ref={messagesEndRef} />
       </div>
 
       {/* Input */}

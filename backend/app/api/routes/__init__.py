@@ -1,1 +1,1 @@
-# Routes module
+"""API route modules."""

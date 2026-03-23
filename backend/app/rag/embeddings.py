@@ -1,48 +1,32 @@
-from sentence_transformers import SentenceTransformer
+"""Embedding model wrapper using sentence-transformers."""
+
+import logging
 from typing import List
-import torch
+
+from sentence_transformers import SentenceTransformer
+
+logger = logging.getLogger(__name__)
+
 
 class EmbeddingModel:
-    """Wrapper for sentence-transformers embedding model"""
-    
+    """Wrapper for sentence-transformers embedding model."""
+
     def __init__(self, model_name: str = "sentence-transformers/all-MiniLM-L6-v2"):
-        print(f"📦 Loading embedding model: {model_name}")
-        # Force CPU usage
+        logger.info("Loading embedding model: %s", model_name)
         self.device = "cpu"
         self.model = SentenceTransformer(model_name, device=self.device)
-        print(f"✅ Model loaded on {self.device}")
-    
+        logger.info("Model loaded on %s", self.device)
+
     def embed_texts(self, texts: List[str]) -> List[List[float]]:
-        """
-        Generate embeddings for a list of texts.
-        
-        Args:
-            texts: List of text strings
-        
-        Returns:
-            List of embedding vectors
-        """
+        """Generate embeddings for a list of texts."""
         if not texts:
             return []
-        
-        # Generate embeddings
         embeddings = self.model.encode(
-            texts,
-            show_progress_bar=True,
-            convert_to_numpy=True
+            texts, show_progress_bar=True, convert_to_numpy=True
         )
-        
         return embeddings.tolist()
-    
+
     def embed_query(self, query: str) -> List[float]:
-        """
-        Generate embedding for a single query.
-        
-        Args:
-            query: Query string
-        
-        Returns:
-            Embedding vector
-        """
+        """Generate an embedding for a single query string."""
         embedding = self.model.encode(query, convert_to_numpy=True)
         return embedding.tolist()

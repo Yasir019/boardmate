@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Unit 5 – Data Analytics | Computer Science Class 11</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.75;
+      color: #1a1a2e;
+      background: #f4f6fb;
+    }
+
+    .wrapper { display: block; max-width: 1200px; margin: 0 auto; padding: 0 16px; }
+    main { width: 100%; padding: 32px 20px 80px 20px; background: #fff; box-shadow: 0 0 40px rgba(0,0,0,.08); }
+
+    /* Cover */
+    .cover {
+      background: linear-gradient(135deg, #bf360c 0%, #e65100 60%, #ff6d00 100%);
+      color: #fff; padding: 60px 40px; margin: -32px -40px 48px -40px;
+      position: relative; overflow: hidden;
+    }
+    .cover::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 70% 30%, rgba(255,183,77,.18), transparent 60%);
+    }
+    .cover .badge { display: inline-block; background: #ffcc80; color: #bf360c; font-weight: 700; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; padding: 4px 14px; border-radius: 20px; margin-bottom: 20px; }
+    .cover h1 { font-size: 2.4rem; font-weight: 800; line-height: 1.2; margin-bottom: 10px; position: relative; }
+    .cover .subtitle { font-size: 1.05rem; color: #ffe0b2; margin-bottom: 8px; }
+    .cover .subject-tag { font-size: 12px; color: #ffcc80; letter-spacing: 1px; text-transform: uppercase; }
+
+    /* Page marker */
+    .page-marker { display: flex; align-items: center; gap: 10px; margin: 36px 0 10px; color: #8892b0; font-size: 11.5px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+    .page-marker::before, .page-marker::after { content: ''; flex: 1; height: 1px; background: #e0e7ff; }
+    .page-marker span { white-space: nowrap; }
+
+    /* Headings */
+    h1.section-title { font-size: 1.7rem; color: #bf360c; margin: 32px 0 12px; border-left: 5px solid #ffcc80; padding-left: 14px; }
+    h2.section-title { font-size: 1.35rem; color: #e65100; margin: 28px 0 10px; border-left: 4px solid #ff9800; padding-left: 12px; }
+    h3.section-title { font-size: 1.1rem; color: #4e342e; margin: 22px 0 8px; border-left: 3px solid #a5d6a7; padding-left: 10px; }
+    h4.section-title { font-size: 1rem; color: #37474f; margin: 18px 0 6px; padding-left: 10px; border-left: 3px solid #ffcc80; }
+    p { margin-bottom: 14px; }
+    ul, ol { margin: 10px 0 14px 28px; }
+    li { margin-bottom: 6px; }
+    strong { color: #bf360c; }
+    code { background: #fff3e0; padding: 1px 5px; border-radius: 3px; font-size: 13.5px; color: #e65100; }
+
+    /* SLO */
+    .slo-box { background: linear-gradient(120deg, #fff3e0, #fbe9e7); border: 1.5px solid #ff9800; border-radius: 12px; padding: 24px 28px; margin: 24px 0 32px; }
+    .slo-box h3 { color: #e65100; font-size: 1rem; margin-bottom: 12px; }
+    .slo-box ul { margin-left: 20px; }
+    .slo-box li { margin-bottom: 8px; color: #bf360c; font-size: 14px; }
+
+    /* Info box */
+    .info-box { display: flex; gap: 14px; background: #fff8e1; border-left: 5px solid #ffd54f; border-radius: 8px; padding: 16px 20px; margin: 20px 0; }
+    .info-box .icon { font-size: 1.6rem; flex-shrink: 0; line-height: 1; }
+    .info-box .content { font-size: 13.5px; color: #5d4037; }
+    .tip-box { background: #e8f4fd; border-left: 5px solid #42a5f5; border-radius: 8px; padding: 16px 20px; margin: 20px 0; font-size: 13.5px; color: #0d47a1; }
+    .tip-box strong { color: #0d47a1; }
+
+    /* Activity */
+    .activity-box { background: linear-gradient(135deg, #fce4ec, #fff9c4); border: 1.5px dashed #e91e63; border-radius: 12px; padding: 20px 24px; margin: 24px 0; }
+    .activity-box .activity-header { display: flex; align-items: center; gap: 10px; color: #880e4f; font-weight: 700; font-size: 14px; margin-bottom: 12px; }
+    .activity-box .activity-header::before { content: '🎯'; font-size: 1.2rem; }
+
+    /* Formula */
+    .formula-block { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 16px 20px; margin: 16px 0; font-family: 'Courier New', monospace; font-size: 13.5px; color: #212529; }
+    .formula-math { background: #fff3e0; border-left: 4px solid #e65100; border-radius: 8px; padding: 16px 22px; margin: 16px 0; font-size: 1.05rem; color: #bf360c; text-align: center; font-style: italic; }
+
+    /* Summary */
+    .summary-box { background: linear-gradient(135deg, #e3f2fd, #e8eaf6); border-left: 5px solid #1565c0; border-radius: 10px; padding: 24px 28px; margin: 32px 0; }
+    .summary-box h2 { color: #0d47a1; font-size: 1.1rem; margin-bottom: 12px; }
+
+    /* Exercise */
+    .exercise-section { background: #fff3e0; border-top: 4px solid #e65100; border-radius: 12px; padding: 28px 32px; margin: 40px 0 0; }
+    .exercise-section h2 { color: #bf360c; margin-bottom: 20px; font-size: 1.3rem; }
+    .exercise-section h3 { color: #e65100; margin: 22px 0 12px; font-size: 1rem; }
+    .mcq-item { margin-bottom: 20px; }
+    .mcq-item .question { font-weight: 600; color: #1a1a2e; margin-bottom: 6px; }
+    .mcq-item .options { list-style: lower-alpha; margin-left: 20px; color: #37474f; font-size: 14px; }
+    .mcq-item .options li { margin-bottom: 3px; }
+
+    /* Table */
+    .table-wrap { overflow-x: auto; margin: 20px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    thead { background: #bf360c; color: #fff; }
+    thead th { padding: 10px 14px; text-align: left; }
+    tbody tr:nth-child(even) { background: #fff3e0; }
+    tbody td { padding: 9px 14px; border-bottom: 1px solid #e0e7ff; vertical-align: top; }
+    .table-caption { font-size: 12.5px; color: #6a7899; text-align: center; margin-top: 6px; font-style: italic; }
+
+    /* Figure caption */
+    .figure-caption {
+      display: block; text-align: center; font-size: 12.5px; color: #5c6bc0;
+      font-style: italic; background: #e8eaf6; border-radius: 6px;
+      padding: 8px 16px; margin: 8px 0 20px;
+    }
+
+    /* Code block */
+    .code-block {
+      background: #0d1117; color: #e6edf3;
+      border-radius: 10px; padding: 20px 22px;
+      font-family: 'Courier New', Consolas, monospace;
+      font-size: 13px; line-height: 1.6;
+      margin: 16px 0; overflow-x: auto;
+      border-left: 4px solid #ffcc80;
+      white-space: pre;
+    }
+    .code-block .comment { color: #8b949e; }
+    .code-block .keyword { color: #ff7b72; }
+    .code-block .string { color: #a5d6ff; }
+    .code-block .output-line { color: #3fb950; }
+
+    @media (max-width: 900px) { .wrapper { display: block; } main { padding: 24px 20px 60px; } }
+  </style>
+</head>
+<body>
+
+<div class="wrapper">
+  <main>
+
+    <!-- COVER — Page 123 -->
+    <div class="cover" id="cover">
+      <div class="badge">Unit 5</div>
+      <h1>Data Analytics</h1>
+      <p class="subtitle">Computer Science | Class 11 | Punjab Curriculum &amp; Textbook Board</p>
+      <p class="subject-tag">Single National Curriculum 2022</p>
+    </div>
+
+    <!-- SLO — Page 123 -->
+    <div class="page-marker"><span>Page 123</span></div>
+    <div class="slo-box" id="slo">
+      <h3>🎓 Student Learning Outcomes</h3>
+      <p><strong>By the end of this chapter, students will be able to:</strong></p>
+      <ul>
+        <li>Understand the role and importance of model building and their real world applications</li>
+        <li>Build basic statistical models for real world problems and test their performance</li>
+        <li>Understand and explain experimental design in data science</li>
+        <li>Explain the types, uses, methods of data visualizations</li>
+        <li>Understand the benefits of visualizing data through descriptive statistics</li>
+        <li>Explain and create a data visualization using data visualization software (for example MS Excel, Google Sheets, Python, Tableau, or Matplotlib).</li>
+      </ul>
+    </div>
+
+    <!-- INTRODUCTION — Page 124 -->
+    <div class="page-marker"><span>Page 124</span></div>
+    <h1 class="section-title" id="intro">Introduction</h1>
+    <p>Model building is the process of creating simplified representations of complex problems. It helps in understanding, analyzing, and solving real-world issues by focusing on key elements.</p>
+
+    <h2 class="section-title" id="s5_1">5.1 Model Building</h2>
+
+    <h3 class="section-title" id="s5_1_1">5.1.1 Definition and Importance of Models</h3>
+    <p>In simple terms, a model is a simplified way of looking at a complex problem or situation. It helps to understand, explain, or predict how things work. Just like a map helps someone navigate a city by showing roads and landmarks, a model helps us understand a problem by focusing on the most important parts and leaving out unnecessary details.</p>
+    <p><strong>Example:</strong> Consider a student preparing for exams. To decide how much time to spend on each subject, the student creates a study plan. This plan is a model that simplifies their schedule by focusing on important subjects and ignoring less relevant tasks.</p>
+
+    <h3 class="section-title" id="s5_1_2">5.1.2 Role of Models in Decision-Making</h3>
+    <p>Models are useful because they give a structured way to think about a problem. They take complicated information and make it easier to work with. This is especially important in decision making, where models help us consider different outcomes before making a choice.</p>
+    <p><strong>Example:</strong> When a farmer uses a model to decide the best time to plant crops. By studying weather patterns and soil conditions, the model helps the farmer predict the right planting time, which increases the chances of a good harvest.</p>
+
+    <h3 class="section-title" id="s5_1_3">5.1.3 Applications of Models</h3>
+    <p>Models are tools that help us understand complex problems by simplifying them. They are widely used in various fields to make predictions and decisions based on available data. Some common fields where models are applied include weather forecasting, financial predictions, and scientific research.</p>
+
+    <h4 class="section-title">Weather Forecasting</h4>
+    <p>In weather forecasting, models are used to predict future weather conditions. Meteorologists collect data such as temperature, humidity, and wind speed, and then use models to analyze this data and forecast the weather.</p>
+
+    <h4 class="section-title">Financial Predictions</h4>
+    <p>Models are also very important in the financial world. Banks and companies use models to predict economic trends, stock prices, and even customer behavior.</p>
+
+    <h4 class="section-title">Scientific Research</h4>
+    <p>In scientific research, models help scientists test theories, explore new ideas, and make predictions based on data. With advancements in Machine Learning (ML) and Artificial Intelligence (AI), models have become even more powerful and accurate in analyzing large amounts of data.</p>
+
+    <!-- Page 125 -->
+    <div class="page-marker"><span>Page 125</span></div>
+    <h2 class="section-title" id="s5_2">5.2 Basic Statistical Concepts</h2>
+    <p>Statistics is a branch of mathematics that helps us understand and analyze data. By using statistics, we can summarize large sets of information in a simple way, making it easier to draw conclusions. Some basic statistical concepts are descriptive statistics, measures of central tendency, measures of dispersion, and probability.</p>
+
+    <h3 class="section-title" id="s5_2_1">5.2.1 Measures of Central Tendency</h3>
+    <p>Measures of central tendency help us find the "center" or typical value in a set of data. There are three main measures of central tendency: mean, median, and mode. These measures give us a sense of the average or most common values in a dataset.</p>
+
+    <h4 class="section-title">Mean</h4>
+    <p>The mean is the average of all the numbers in a data set. To find the mean, we add all the numbers together and divide by the total number of values.</p>
+    <p><strong>Example:</strong> Imagine 5 students scored 50, 60, 70, 80, and 90 in a test. The mean score is calculated by adding all the scores and then dividing by the number of students: This helps us understand the general performance level of the group.</p>
+
+    <h4 class="section-title">Median</h4>
+    <p>The median is the middle value when the numbers are arranged in order. If there is an odd number of values, the median is the exact middle number. If there is an even number of values, the median is the average of the two middle numbers.</p>
+    <p><strong>Example:</strong> Using the same test scores: 50, 60, 70, 80, and 90. When we arrange these scores in ascending order (which they already are), the middle value is 70. Therefore, the median score is 70.</p>
+    <p><strong>Example with Even Numbers:</strong> If the scores were 50, 60, 70, and 80, we would take the average of the two middle scores (60 and 70):</p>
+    <div class="formula-math">Median = (60 + 70) / 2 = 65</div>
+    <p>The median helps us understand the middle point of the data.</p>
+
+    <h4 class="section-title">Mode</h4>
+    <p>The mode is the number that appears most often in a data set. There can be more than one mode if multiple numbers appear with the same highest frequency.</p>
+    <p><strong>Example:</strong> If 5 students scored 50, 60, 70, 70, and 90, the number 70 appears twice, while all other numbers appear only once. Therefore, the mode is 70.</p>
+    <p><strong>Example with Multiple Modes:</strong> If the scores were 50, 60, 70, 70, 60, and 90, both 60 and 70 appear twice. So, there are two modes: 60 and 70.</p>
+    <p>The mode helps us identify the most frequent or common value in the data.</p>
+
+    <h3 class="section-title" id="s5_2_2">5.2.2 Descriptive Statistics</h3>
+    <p>Descriptive statistics are used to summarize and organize data. Instead of looking at every individual piece of data, descriptive statistics give us a way to see the overall picture.</p>
+    <p><strong>Example:</strong> Imagine a group of 10 college students takes a math exam, and their scores are: 50, 65, 75, 80, 85, 90, 95, 60, 70, and 88.</p>
+    <p>To summarize this data:</p>
+
+    <!-- Page 126 -->
+    <div class="page-marker"><span>Page 126</span></div>
+    <ul>
+      <li><strong>Mean (Average):</strong> The mean score is calculated by adding all the scores and dividing by the number of students.</li>
+      <li><strong>Mean = (50 + 65 + 75 + 80 + 85 + 90 + 95 + 60 + 70 + 88) / 10 = 75.5</strong></li>
+      <li><strong>Highest and Lowest Scores:</strong> The highest score is 95, and the lowest score is 50.</li>
+    </ul>
+    <p>These simple calculations give us a quick summary of how the students performed, without needing to look at each individual score in detail.</p>
+
+    <h3 class="section-title" id="s5_2_3">5.2.3 Measures of Dispersion</h3>
+    <p>Measures of dispersion tell us how spread out or scattered the data is. Two common measures of dispersion are variance and standard deviation. These help us understand whether the data points are close to the average (mean) or far from it.</p>
+
+    <h4 class="section-title">Variance</h4>
+    <p>The variance shows how much the numbers in a data set differ from the mean. A higher variance means that the numbers are more spread out, while a lower variance means that the numbers are closer to the mean. To calculate variance, we use the following mathematical formula:</p>
+    <div class="formula-math">σ² = (1/N) Σ (x<sub>i</sub> − μ)²</div>
+    <p>Where: x<sub>i</sub> represents each individual value in the data set, μ is the mean of the data set, N is the total number of values in the data set.</p>
+
+    <p><strong>Example:</strong> Imagine two classes, Class A and Class B, took the same exam.</p>
+    <ol>
+      <li>In Class A, the scores are: 50, 52, 55, 57, and 60.</li>
+      <li>In Class B, the scores are: 30, 45, 55, 75, and 90.</li>
+    </ol>
+
+    <p><strong>Step 1: Variance for Class A</strong></p>
+    <p>Given Scores = 50, 52, 55, 57, 60</p>
+    <p><strong>Step 1.1: Compute the Mean (μ)</strong></p>
+    <div class="formula-math">μ = (50 + 52 + 55 + 57 + 60) / 5 = 274 / 5 = 54.8</div>
+
+    <p><strong>Step 1.2: Compute Each Squared Deviation (x<sub>i</sub> − μ)²</strong></p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>x<sub>i</sub></th><th>x<sub>i</sub> − μ</th><th>(x<sub>i</sub> − μ)²</th></tr></thead>
+        <tbody>
+          <tr><td>50</td><td>50 − 54.8 = −4.8</td><td>23.04</td></tr>
+          <tr><td>52</td><td>52 − 54.8 = −2.8</td><td>7.84</td></tr>
+          <tr><td>55</td><td>55 − 54.8 = 0.2</td><td>0.04</td></tr>
+          <tr><td>57</td><td>57 − 54.8 = 2.2</td><td>4.84</td></tr>
+          <tr><td>60</td><td>60 − 54.8 = 5.2</td><td>27.04</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Page 127 -->
+    <div class="page-marker"><span>Page 127</span></div>
+    <p><strong>Step 1.3: Compute Variance</strong></p>
+    <div class="formula-math">σ² = (23.04 + 7.84 + 0.04 + 4.84 + 27.04) / 5 = 62.8 / 5 = 12.56</div>
+
+    <p><strong>Step 2: Variance for Class B</strong></p>
+    <p>Given Scores: 30, 45, 55, 75, 90</p>
+    <div class="formula-math">μ = (30 + 45 + 55 + 75 + 90) / 5 = 295 / 5 = 59</div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>x<sub>i</sub></th><th>x<sub>i</sub> − μ</th><th>(x<sub>i</sub> − μ)²</th></tr></thead>
+        <tbody>
+          <tr><td>30</td><td>30 − 59 = −29</td><td>841</td></tr>
+          <tr><td>45</td><td>45 − 59 = −14</td><td>196</td></tr>
+          <tr><td>55</td><td>55 − 59 = −4</td><td>16</td></tr>
+          <tr><td>75</td><td>75 − 59 = 16</td><td>256</td></tr>
+          <tr><td>90</td><td>90 − 59 = 31</td><td>961</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p><strong>Step 2.3: Compute Variance</strong></p>
+    <div class="formula-math">σ² = (841 + 196 + 16 + 256 + 961) / 5 = 2270 / 5 = 454</div>
+
+    <ul>
+      <li><strong>Variance of Class A:</strong> 12.56</li>
+      <li><strong>Variance of Class B:</strong> 454</li>
+    </ul>
+    <p>This confirms that Class B has a much higher variance, meaning the scores are more spread out compared to Class A.</p>
+
+    <h4 class="section-title">5.2.3.2 Standard Deviation</h4>
+    <p>The standard deviation is similar to variance but provides a more practical number. It tells us how spread out the numbers are in relation to the mean. The standard deviation is simply the square root of the variance. To calculate standard deviation, we use the following mathematical formula:</p>
+    <div class="formula-math">σ = √[ (1/N) Σ (x<sub>i</sub> − μ)² ]</div>
+    <p>Where: x<sub>i</sub> represents each individual value in the data set, μ is the mean of the data set, N is the total number of values in the data set.</p>
+
+    <p><strong>Calculating Standard Deviation:</strong></p>
+    <div class="formula-math">Class A: Standard Deviation = √12.56 ≈ 3.55</div>
+
+    <!-- Page 128 -->
+    <div class="page-marker"><span>Page 128</span></div>
+    <div class="formula-math">Class B: Standard Deviation = √454 ≈ 21.26</div>
+    <p>The standard deviation for Class A is approximately 3.55, while for Class B, it is about 21.26. This means that Class A's scores are closely packed around the mean, whereas Class B's scores are more widely scattered. The standard deviation helps us easily understand how much variation there is in the scores.</p>
+
+    <h3 class="section-title" id="s5_2_4">5.2.4 Introduction to Probability</h3>
+    <p>Probability is the study of how likely an event is to happen. It helps us predict outcomes based on what we know.</p>
+    <p><strong>Example:</strong> Consider flipping a coin. There are two possible outcomes: heads or tails. Since both outcomes are equally likely, the probability of getting heads is 50% (or 1/2), and the probability of getting tails is also 50%.</p>
+    <p>We can express this mathematically as:</p>
+    <div class="formula-math">Probability of heads = 1 favorable outcome / 2 total outcomes = 1/2</div>
+    <p>Probability is not just for coin flips. It is used in many areas, such as predicting the weather, making business decisions, or even playing cricket.</p>
+
+    <!-- Class Activity — Page 128 -->
+    <div class="activity-box">
+      <div class="activity-header">Class Activity</div>
+      <p><strong>Instructions:</strong> You will analyze a small dataset, calculate measures of central tendency (mean, median, mode), and measures of dispersion (variance and standard deviation).</p>
+      <ol>
+        <li><strong>Collect Data:</strong> Imagine you are surveying your classmates about the number of hours they spend on homework in a week. Gather data from 10 classmates. Record the number of hours (you can use any reasonable numbers, e.g., between 0 to 20 hours).</li>
+        <li><strong>Calculate Measures of Central Tendency:</strong>
+          <ul>
+            <li><strong>Mean:</strong> Calculate the average number of hours spent on homework.</li>
+            <li><strong>Median:</strong> Determine the middle value when the hours are arranged in order.</li>
+            <li><strong>Mode:</strong> Identify which number appears most frequently in your data.</li>
+          </ul>
+        </li>
+        <li><strong>Calculate Measures of Dispersion:</strong>
+          <ul>
+            <li><strong>Variance:</strong> Use the formula to calculate variance based on your data.</li>
+            <li><strong>Standard Deviation:</strong> Calculate the standard deviation using the variance you found.</li>
+          </ul>
+        </li>
+        <li><strong>Reflect:</strong> Write a brief reflection (3-4 sentences) about what these calculations tell you regarding your classmates' study habits.</li>
+      </ol>
+    </div>
+
+    <!-- Page 129 -->
+    <div class="page-marker"><span>Page 129</span></div>
+    <p>For illustration, you can use the following sample data: 3, 5, 8, 8, 10, 12, 15, 15, 16, 18. But if you are interested in collecting real data from your classmates, you are welcome to do so.</p>
+    <p>Statistics can help us understand patterns in data, leading to better decision-making in various fields, from healthcare to marketing!</p>
+
+    <div class="info-box">
+      <div class="icon">📊</div>
+      <div class="content">Statistics is used in many everyday activities, such as predicting weather patterns or analyzing sports performance.</div>
+    </div>
+
+    <h2 class="section-title" id="s5_3">5.3 Data Collection and Preparation</h2>
+    <p>In order to carry out any research or analysis, data collection and preparation are crucial steps. The quality and relevance of the data directly impact the results and insights drawn from the study. This section discusses various methods of data collection and how the collected data is prepared for further analysis.</p>
+
+    <h3 class="section-title" id="s5_3_1">5.3.1 Data Collection Methods</h3>
+    <p>Data collection refers to the process of gathering relevant information for a particular purpose. Depending on the nature of the research, different methods can be used for data collection. These methods include surveys, observations, and experiments, each having its own strengths and suitable contexts. Choosing the right method depends on the research objective and the type of data required.</p>
+
+    <h4 class="section-title">5.3.1.1 Surveys</h4>
+    <p>Surveys are a commonly used method for collecting large amounts of data in a structured way. These involve asking a predefined set of questions to a sample group. Surveys can be conducted using various means such as online forms, telephone calls, or face-to-face interviews.</p>
+    <p><strong>Example:</strong> A small local grocery store in Islamabad wants to know customer preferences regarding which products they would like to see more frequently. They create a short survey consisting of five questions and distribute it to 50 customers over a weekend. The collected responses are then analyzed to stock products that align with customer demand, improving business operations.</p>
+    <p><strong>Customer Preference Survey</strong></p>
+    <ol>
+      <li>Which product categories do you buy most often? (e.g., fruits, vegetables, dairy)</li>
+      <li>Are there any products you would like to see more often?</li>
+      <li>How often do you shop at this grocery store? (e.g., daily, weekly, monthly)</li>
+    </ol>
+
+    <!-- Page 130 -->
+    <div class="page-marker"><span>Page 130</span></div>
+    <ol start="4">
+      <li>What influences your purchasing decisions the most? (e.g., price, quality, availability)</li>
+      <li>Any additional comments or suggestions?</li>
+    </ol>
+    <p>Responses collected from 50 customers over the weekend.</p>
+
+    <h4 class="section-title">5.3.1.2 Observations</h4>
+    <p>Observation involves collecting data by watching or monitoring subjects in their natural environment. This method is useful when researchers want to gather data on behaviors or phenomena without interference.</p>
+    <p><strong>Example:</strong> A restaurant is interested in knowing which tables are most frequently chosen by customers during lunchtime. A staff member observes the seating choices over a period of one week. Based on this observation, the restaurant arranges its seating to optimize the comfort and flow of customer traffic, which helps in improving customer satisfaction and service efficiency.</p>
+
+    <h4 class="section-title">5.3.1.3 Experiments</h4>
+    <p>Experiments involve manipulating one or more variables to determine their effect on another variable. This method is particularly useful in scientific and engineering fields where controlled environments are necessary for accurate measurement.</p>
+    <p><strong>Example:</strong> A school teacher wants to test whether providing students with printed notes helps improve their performance in exams. The teacher conducts an experiment with two groups of students, one receiving printed notes and the other relying solely on lectures. After one month, both groups take the same test, and the teacher compares the results to see if printed notes had a positive impact on performance.</p>
+
+    <h3 class="section-title" id="s5_3_2">5.3.2 Data Preparation</h3>
+    <p>Once data has been collected, it is important to prepare it for analysis. This includes cleaning the data to remove errors or inconsistencies, organizing it in a meaningful way, and converting it into a format suitable for analysis. In cases where data is missing or incorrect, researchers may need to employ techniques such as interpolation or statistical adjustments to ensure accuracy.</p>
+    <p><strong>Example:</strong> If survey responses contain incomplete information, missing values can be estimated based on the available data. Proper data preparation ensures that the analysis leads to reliable and valid results.</p>
+
+    <h3 class="section-title" id="s5_3_3">5.3.3 Data Cleaning and Transformation</h3>
+    <p>Data cleaning and transformation are important steps to prepare data for analysis. Raw data often has errors, missing values, or may be in the wrong format. To ensure accurate results in analysis, it is important to fix these issues before moving forward.</p>
+
+    <h4 class="section-title">5.3.3.1 Data Cleaning</h4>
+    <p>Data cleaning means correcting or removing any problems in the data. These problems can include incorrect entries, missing values, or duplicate data. If these errors are not</p>
+
+    <!-- Page 131 -->
+    <div class="page-marker"><span>Page 131</span></div>
+    <p>fixed, the results of the analysis will be misleading.</p>
+    <p><strong>Example:</strong> Imagine a school collecting data on student grades. Some students may have entered their names incorrectly, or a few grades may be missing from the records. In this case, data cleaning would involve correcting any wrong names and finding the missing grades to complete the dataset. Figure 5.2 illustrates the data cleaning process for student grades in a school. It shows examples of common issues such as incorrect names, missing grades, and duplicate entries.</p>
+
+    <h4 class="section-title">5.3.3.2 Data Transformation</h4>
+    <p>Once the data is clean, it is often necessary to transform it into a format that is easy to work with. This transformation may include converting data into different formats, creating new columns, or organizing data in a different way. These changes help make the data more suitable for analysis or modeling.</p>
+    <p><strong>Example:</strong> After cleaning the student grade records, it may be necessary to transform this data for better analysis. For instance, instead of displaying grades for each individual student, the data</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th colspan="4">Original Data (with Errors)</th></tr></thead>
+        <thead><tr><th>Name</th><th>Grade</th><th>Class</th><th>Section</th></tr></thead>
+        <tbody>
+          <tr><td>Ali</td><td>85</td><td>10</td><td>A</td></tr>
+          <tr><td>Alie</td><td>90</td><td>10</td><td>A</td></tr>
+          <tr><td>Sara</td><td>&nbsp;</td><td>10</td><td>A</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th colspan="4">Cleaned Data (After Data Cleaning)</th></tr></thead>
+        <thead><tr><th>Name</th><th>Grade</th><th>Class</th><th>Section</th></tr></thead>
+        <tbody>
+          <tr><td>Ali</td><td>85</td><td>10</td><td>A</td></tr>
+          <tr><td>Ali</td><td>90</td><td>10</td><td>A</td></tr>
+          <tr><td>Sara</td><td>75</td><td>10</td><td>A</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="table-caption">Table 5.2: Graphical Representation of Data Cleaning for Student Grade Records</p>
+
+    <h4 class="section-title">5.3.1.1 Handling Missing Data</h4>
+    <p>Sometimes, data is incomplete or has missing values. There are different techniques to handle missing data. One option is to remove the rows with missing values if they are very few. Another option is to fill in the missing values with an average or with data from similar cases. The choice depends on the type of data and the amount of missing information.</p>
+    <p><strong>Example:</strong> In the dataset of student grades, if Sara's grade is missing, this creates a challenge in assessing her performance. To address this issue, several strategies can be employed:</p>
+
+    <!-- Page 132 -->
+    <div class="page-marker"><span>Page 132</span></div>
+    <ol>
+      <li><strong>Imputation:</strong> One common method is to estimate the missing value using existing data. Example: The school can calculate the average grade of all students in Sara's class. If the average grade is 82, the school may assign this value to Sara's record temporarily. This approach allows the school to maintain a complete dataset while making a reasonable assumption about Sara's performance.</li>
+      <li><strong>Flagging:</strong> The school can also keep track of Sara's missing grade by adding a note in the dataset. This method indicates that Sara's grade is not available, making analysts aware of the incomplete data. This approach ensures transparency while allowing the analysis to proceed without filling in the gap.</li>
+      <li><strong>Removal:</strong> If the number of missing entries is small, the school might choose to exclude Sara's record from specific analyses. This decision is acceptable if it does not significantly impact the overall understanding of student performance. However, it risks losing valuable information about Sara.</li>
+    </ol>
+
+    <h2 class="section-title" id="s5_4">5.4 Building Statistical Models</h2>
+    <p>In this section, we will explore the basic building blocks of statistical models, including different types of models, how they are developed, and how to evaluate their performance. We'll also look at real-world examples to make the concepts easy to understand.</p>
+
+    <h3 class="section-title" id="s5_4_1">5.4.1 Introduction to Statistical Modeling</h3>
+    <p>Statistical modeling is a way to use data to make sense of the world and predict what will happen in the future. Think of it like this: if you want to know how much money you'll spend on groceries next month, you can look at what you spent in the past. By analyzing that data, you can create a model to help you estimate your future grocery expenses.</p>
+    <p><strong>Example:</strong> If you usually spend around 10,000 rupees each month, but your expenses fluctuate, a statistical model can take into account factors like your family size or special occasions. This way, you can get a better idea of how much you may need to budget for your groceries of next month.</p>
+
+    <h4 class="section-title">5.4.1.1 Model Development</h4>
+    <p>Building a statistical model involves several steps. Let's break them down:</p>
+    <ul>
+      <li><strong>Step 1: Define the Problem</strong><br>First, we need to understand the problem. Example: If we are trying to predict grocery expenses, we need to know which factors will cause to increase our grocery expenses (e.g., family size, location, or income).</li>
+      <li><strong>Step 2: Collect Data</strong><br>Next, we gather data related to the problem. In our example, we will collect data on past spending habits, number of family members, and any other factors that may affect grocery costs.</li>
+    </ul>
+
+    <!-- Page 133 -->
+    <div class="page-marker"><span>Page 133</span></div>
+    <ul>
+      <li><strong>Step 3: Choose an Algorithm</strong><br>Based on the problem and the data, we choose an algorithm. Algorithms are methods that help us create a model. Some popular algorithms are linear regression and logistic regression, which we will discuss further in this section.</li>
+      <li><strong>Step 4: Train the Model</strong><br>The model is then trained using the data. This means the model learns from the data to make predictions.</li>
+      <li><strong>Step 5: Evaluate the Model</strong><br>Finally, we test the model to see how well it works by using new data. This step is very important to ensure the model makes good predictions.</li>
+    </ul>
+
+    <h4 class="section-title">5.4.1.2 Linear Regression</h4>
+    <p>Linear regression is a common statistical model used to understand the relationship between two variables. It is often used to predict one variable based on another. Let's go through a practical example to explain how it works.</p>
+    <p><strong>Example:</strong> Imagine you run a small fruit stall in your town, and you want to predict how much money you will make each day based on the number of customers who visit your stall. The number of customers is the independent variable (the cause), and the money you earn is the dependent variable (the effect). We will use linear regression to understand this relationship and help you predict future earnings.</p>
+
+    <p><strong>Step 1: Collecting Data</strong></p>
+    <p>To build a linear regression model, we need data. Let's assume you've recorded the number of customers and your daily earnings for the last 5 days:</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Number of Customers</th><th>Daily Earnings (in Rupees)</th></tr></thead>
+        <tbody>
+          <tr><td>10</td><td>500</td></tr>
+          <tr><td>15</td><td>700</td></tr>
+          <tr><td>20</td><td>900</td></tr>
+          <tr><td>25</td><td>1,100</td></tr>
+          <tr><td>30</td><td>1,300</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Here, the number of customers is our independent variable (X), and the daily earnings are the dependent variable (Y).</p>
+
+    <p><strong>Step 2: Understanding the Linear Regression Formula</strong></p>
+    <p>The formula for simple linear regression is:</p>
+    <div class="formula-math">Y = β₀ + β₁X + ε</div>
+    <p>Where:</p>
+    <ul>
+      <li>Y is the dependent variable (in our case, daily earnings),</li>
+      <li>X is the independent variable (the number of customers),</li>
+      <li>β₀ is the intercept, which is the starting value of Y when X = 0,</li>
+    </ul>
+
+    <!-- Page 134 -->
+    <div class="page-marker"><span>Page 134</span></div>
+    <ul>
+      <li>β₁ is the slope, which shows how much Y changes with each unit increase in X,</li>
+      <li>ε is the error term, which accounts for the difference between the predicted and actual values.</li>
+    </ul>
+
+    <p><strong>Step 3: Building the Linear Regression Model</strong></p>
+    <p>When building a linear regression model, our goal is to find the best line that explains how two things are related — in this case, the number of customers and daily earnings. Here's how we get the values for the slope (40) and intercept (100):</p>
+
+    <p><strong>Understanding the Slope (β₁ = 40)</strong></p>
+    <p>The slope shows how much extra money we make for every new customer. Let's use our data to figure it out:</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Customers</th><th>Earnings (Rupees)</th></tr></thead>
+        <tbody>
+          <tr><td>10</td><td>500</td></tr>
+          <tr><td>15</td><td>700</td></tr>
+          <tr><td>20</td><td>900</td></tr>
+          <tr><td>25</td><td>1,100</td></tr>
+          <tr><td>30</td><td>1,300</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>If you notice, for every 5 extra customers, earnings go up by 200 rupees. So, for each new customer:</p>
+    <div class="formula-math">β₁ = 200 / 5 = 40</div>
+    <p>This means every new customer adds 40 rupees to our earnings.</p>
+
+    <p><strong>Understanding the Intercept (β₀ = 100)</strong></p>
+    <p>The intercept (β₀) represents the earnings when no customers visit. To find this value, we look at where the line crosses the vertical axis when the number of customers is zero. In simpler terms, it tells us what the base earnings are, even if no one shows up.</p>
+    <p>Let's look at the data:</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Customers</th><th>Earnings (Rupees)</th></tr></thead>
+        <tbody>
+          <tr><td>10</td><td>500</td></tr>
+          <tr><td>15</td><td>700</td></tr>
+          <tr><td>20</td><td>900</td></tr>
+          <tr><td>25</td><td>1,100</td></tr>
+          <tr><td>30</td><td>1,300</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Page 135 -->
+    <div class="page-marker"><span>Page 135</span></div>
+    <p>Using this data, we calculate the slope (β₁ = 40) means for every additional customer, earnings increase by 40 rupees. Now, to find the intercept, we need to consider how much we earn when there are no customers.</p>
+    <p>We can use the equation:</p>
+    <div class="formula-math">Earnings = β₀ + β₁ × Customers</div>
+    <p>If we take any data point, say when there are 10 customers, the earnings are 500 rupees. Substituting these values into the equation:</p>
+    <div class="formula-math">500 = β₀ + (40 × 10)<br>500 = β₀ + 400<br>β₀ = 500 − 400 = 100</div>
+    <p>This means that, based on the data, if no customers show up, you'd still expect to make 100 rupees, maybe from regular customers or other fixed earnings. So, the intercept value of 100 rupees represents the minimum amount you'd make on a day with zero customers.</p>
+
+    <p><strong>Final Equation:</strong></p>
+    <div class="formula-math">Earnings = 100 + 40 × Customers</div>
+    <p>This equation means:</p>
+    <ul>
+      <li>You'll always earn 100 rupees, even if no one comes.</li>
+      <li>Each new customer adds 40 rupees to your total.</li>
+    </ul>
+
+    <p><strong>Step 4: Interpreting the Model</strong></p>
+    <p>Once the model is built, we can use it to predict future earnings. For example, if you expect 22 customers tomorrow, the predicted earnings would be:</p>
+    <div class="formula-math">Earnings = 100 + (40 × 22) = 100 + 880 = 980 rupees</div>
+    <p>This means that with 22 customers, you can expect to earn around 980 rupees.</p>
+
+    <p><strong>Step 5: Testing the Model</strong></p>
+    <p>After building the model, it's important to test it using new data. Let's say on the 6th day, 28 customers visited your stall, and you earned 1,250 rupees. Using the model, we can predict the earnings for 28 customers:</p>
+    <div class="formula-math">Predicted Earnings = 100 + (40 × 28) = 100 + 1,120 = 1,220 rupees</div>
+    <p>However, you actually earned 1,250 rupees. The difference between the predicted and actual earnings is called the error:</p>
+    <div class="formula-math">Error = 1,220 − 1,250 = −30 rupees</div>
+    <p>While the prediction was close, it's not perfect, showing that real-world data often has some variation.</p>
+
+    <!-- Page 136 -->
+    <div class="page-marker"><span>Page 136</span></div>
+    <h4 class="section-title">5.4.2.2 Logistic Regression</h4>
+    <p>Logistic regression is a powerful tool used when we want to predict an outcome that can be categorized as "yes" or "no".</p>
+    <p><strong>Example:</strong> Let's say we want to determine whether a student will pass or fail an exam based on the number of hours they study. Instead of giving a specific score, logistic regression helps us find the probability of passing.</p>
+
+    <p><strong>Understanding Logistic Regression</strong></p>
+    <p>Logistic regression is different from linear regression because it doesn't predict exact numbers. Instead, it provides a probability value between 0 and 1. This means it tells us how likely something is to happen.</p>
+    <p><strong>Example:</strong> If the model predicts a probability of 0.85 for passing the exam, it means there's an 85% chance the student will pass based on their study hours.</p>
+
+    <p><strong>Step-by-Step Example</strong></p>
+    <p>Let's walk through an example with some real data:</p>
+    <p>Suppose we have the following data on students and their study hours:</p>
+
+    <div class="tip-box"><strong>Tip:</strong> To improve your statistical model, consider these suggestions:
+      <ol>
+        <li>Use more data points for better accuracy.</li>
+        <li>Include relevant factors like family size or special events that may affect spendings.</li>
+        <li>Regularly update your model with new data to keep it relevant.</li>
+        <li>Test your predictions against actual spending to refine your approach.</li>
+      </ol>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Hours Studied</th><th>Passed (1) / Failed (0)</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>0</td></tr>
+          <tr><td>2</td><td>0</td></tr>
+          <tr><td>3</td><td>0</td></tr>
+          <tr><td>4</td><td>1</td></tr>
+          <tr><td>5</td><td>1</td></tr>
+          <tr><td>6</td><td>1</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="table-caption">Table 5.1: Study Hours vs. Exam Outcomes</p>
+
+    <ul>
+      <li><strong>Building the Model:</strong> To create a logistic regression model, we first need to understand our data. Here, the independent variable is the Hours Studied, and the dependent variable is whether the student Passed or Failed.</li>
+      <li><strong>Creating the Logistic Function:</strong> The logistic regression model gives us an equation like this:</li>
+    </ul>
+
+    <!-- Page 137 -->
+    <div class="page-marker"><span>Page 137</span></div>
+    <div class="formula-math">P(Pass) = 1 / (1 + e<sup>−(β₀ + β₁X)</sup>)</div>
+    <p>In this equation:</p>
+    <ul>
+      <li>P(Pass) is the probability of passing the exam.</li>
+      <li>e is the base of the natural logarithm.</li>
+      <li>β₀ is the intercept of the model, which represents the log-odds of passing when no hours are studied.</li>
+      <li>β₁ is the coefficient for the number of hours studied, showing how much the log-odds of passing changes with each additional hour.</li>
+    </ul>
+
+    <p><strong>Interpreting the Coefficients:</strong></p>
+    <p>After fitting the model to our data, suppose we find:</p>
+    <p>Here, β₀ = 1 and β₁ = 0.6. This means that for each hour studied, the likelihood of passing the exam increases. If a student studies for 5 hours, we can calculate their passing probability:</p>
+    <div class="formula-math">P(Pass) = 1 / (1 + e<sup>−(1 + 0.6 × 5)</sup>) ≈ 0.83</div>
+    <p>This means there is an 83% chance that the student will pass after studying for 5 hours.</p>
+
+    <p><strong>Testing the Model:</strong></p>
+    <p>Once the model is built, we can use it to make predictions. Let's say a new student studies for 4 hours. We can use our model to find the probability of passing:</p>
+    <p>This indicates a 73% chance of passing.</p>
+
+    <h4 class="section-title">5.4.2.3 Introduction to Clustering Techniques</h4>
+    <p>Clustering is a way of grouping similar things together based on their characteristics. Imagine you have a group of students in your class, and you want to divide them into groups based on their performance in different subjects like math, science, and English. Clustering helps us do that by creating groups of students who perform similarly.</p>
+    <p><strong>Example: Clustering of Students by Performance</strong></p>
+    <p>Let's say we have data for five students, showing their scores in math and English:</p>
+
+    <!-- Page 138 -->
+    <div class="page-marker"><span>Page 138</span></div>
+    <p>We can use clustering to group these students based on their performance in these two subjects.</p>
+
+    <p><strong>K-means Clustering</strong></p>
+    <p>K-means clustering is one of the simplest and most popular techniques to group data. In K-means, we need to decide how many groups (clusters) we want. For this example, let's say we want to divide the students into two clusters: one for students who are strong in math and one for students who are strong in English. The algorithm will group students with similar performance in math and English together by calculating the distance between their scores and finding patterns. It will assign students like Basim and Umer (who are good at math) to one group and students like Anie and Tallat (who are good at English) to another group.</p>
+
+    <p><strong>Step-by-step Working of K-means:</strong></p>
+    <ul>
+      <li><strong>Step 1: Select the number of clusters (K)</strong><br>We decide on K = 2, meaning we want to divide the students into two clusters. One cluster will group students who are stronger in math, and the other will group students stronger in English.</li>
+      <li><strong>Step 2: Place initial group centers</strong><br>We need to start with two initial cluster centers, chosen randomly from the students' scores.
+        <ol>
+          <li>Initial Center 1: Basim (85, 70) — for students strong in math.</li>
+          <li>Initial Center 2: Tallat (40, 85) — for students strong in English.</li>
+        </ol>
+      </li>
+      <li><strong>Step 3: Assign each student to the nearest center</strong><br>We calculate the distance of each student's scores from both cluster centers. The most common way to calculate this is using the Euclidean distance formula.</li>
+    </ul>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Student</th><th>Math Score</th><th>English Score</th></tr></thead>
+        <tbody>
+          <tr><td>Basim</td><td>85</td><td>70</td></tr>
+          <tr><td>Umer</td><td>90</td><td>65</td></tr>
+          <tr><td>Anie</td><td>50</td><td>80</td></tr>
+          <tr><td>Tallat</td><td>40</td><td>85</td></tr>
+          <tr><td>Maliha</td><td>60</td><td>60</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Page 139 -->
+    <div class="page-marker"><span>Page 139</span></div>
+    <p>After calculating these distances, we assign each student to the nearest center. Based on the calculations:</p>
+    <ol>
+      <li>Basim and Umer are closer to Center 1 (Basim), so they join Cluster 1 (Math-strong).</li>
+      <li>Anie, Tallat, and Maliha are closer to Center 2 (Tallat), so they join Cluster 2 (English-strong).</li>
+    </ol>
+
+    <ul>
+      <li><strong>Step 4: Recalculate the centers.</strong><br>Now that the students have been assigned to clusters, we need to recalculate the centers by finding the average position (average scores) of the students in each cluster.</li>
+    </ul>
+
+    <!-- Page 140 -->
+    <div class="page-marker"><span>Page 140</span></div>
+    <ul>
+      <li><strong>Step 5: Repeat steps 3 and 4 until the centers stop moving.</strong><br>Now that the centers are updated, we will again calculate the distance between each student and the new centers and reassign them if needed. This process continues until the centers no longer change, which means the clusters are stable.</li>
+    </ul>
+    <p>For this example, after recalculating, the cluster centers are already quite stable. Basim and Umer still be closer to the math-strong cluster, and Anie, Tallat, and Maliha would remain in the English-strong cluster.</p>
+    <p>After these steps, we will get two clusters: <strong>Cluster 1:</strong> Basim, Umer, and Maliha (good in math) <strong>Cluster 2:</strong> Anie and Tallat (good in English)</p>
+
+    <h3 class="section-title" id="s5_4_2">5.4.2 Evaluating and Interpreting Models</h3>
+    <p>Once a model is built, it is important to check how well it performs and to understand the results it provides. This is called model evaluation.</p>
+
+    <h4 class="section-title">5.4.2.1 Performance Metrics</h4>
+    <p>Performance metrics help us measure how well a model is doing. Some common metrics include:</p>
+    <ul>
+      <li><strong>Error Metrics:</strong> Error metrics measure how much the model's predictions differ from the actual values. In our grocery example, if the model predicts a monthly grocery bill of 8,000 rupees but the actual bill is 10,000 rupees, the difference is the error.</li>
+      <li><strong>Accuracy Metrics:</strong> Accuracy metrics tell us how many of the model's predictions were correct. For example, if a model predicts whether a student will pass or fail an exam, accuracy measures how often the model was right.</li>
+    </ul>
+
+    <h4 class="section-title">5.4.2.2 Interpreting Outputs</h4>
+    <p>Interpreting a model's output means understanding what the results tell us.</p>
+    <ul>
+      <li><strong>Drawing Conclusions from Insights:</strong> For example, if our linear regression model shows that hours studied strongly affect exam scores, we can conclude that students should study more hours to improve their scores.</li>
+    </ul>
+
+    <h4 class="section-title">5.4.2.3 Ethical Considerations</h4>
+    <p>When building models, it is important to consider the ethical implications, such as fairness and privacy.</p>
+    <ul>
+      <li><strong>Fairness and Bias:</strong> A model should be fair and not biased. For example, if a model is used to decide who gets a loan, it should not unfairly favor one group of people over another.</li>
+      <li><strong>Data Privacy:</strong> When using personal data to build models, it is important to respect privacy. For</li>
+    </ul>
+
+    <!-- Page 141 -->
+    <div class="page-marker"><span>Page 141</span></div>
+    <p>example, if a company is using customer data to build models, they should ensure the data is secure and not shared without permission.</p>
+
+    <div class="tip-box"><strong>Tip:</strong> Always visualize your data before building models and test your results on new data for better accuracy.</div>
+
+    <!-- Class Activity — Linear Regression -->
+    <div class="activity-box">
+      <div class="activity-header">Class Activity — Linear Regression</div>
+      <p>You are given the following data that shows the relationship between the number of hours studied and the marks obtained in a test by students. Your task is to build a linear regression model that predicts the marks based on the number of hours studied.</p>
+      <p><strong>Steps:</strong></p>
+      <ol>
+        <li>Plot the data points on a graph (Hours studied on the x-axis and Marks obtained on the y-axis).</li>
+        <li>Calculate the equation of the line using linear regression.</li>
+        <li>Use the equation to predict the marks for a student who studied for 7 hours.</li>
+        <li>How well does the model fit the data? Justify your answer by calculating the error between actual and predicted marks.</li>
+      </ol>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Hours Studied</th><th>Marks Obtained</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>20</td></tr>
+            <tr><td>2</td><td>25</td></tr>
+            <tr><td>3</td><td>35</td></tr>
+            <tr><td>4</td><td>40</td></tr>
+            <tr><td>5</td><td>45</td></tr>
+            <tr><td>6</td><td>50</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Class Activity — Logistic Regression -->
+    <div class="activity-box">
+      <div class="activity-header">Class Activity — Logistic Regression</div>
+      <p>You are a college administrator, and you want to predict whether students will pass or fail a final exam based on their midterm marks. The following data shows the midterm marks of students and whether they passed or failed the final exam. Your task is to build a logistic regression model to predict the likelihood of passing based on midterm marks.</p>
+    </div>
+
+    <!-- Page 142 -->
+    <div class="page-marker"><span>Page 142</span></div>
+    <div class="activity-box">
+      <div class="activity-header">Class Activity (continued)</div>
+      <p><strong>Steps:</strong></p>
+      <ol>
+        <li>Plot the data points (Midterm marks on the x-axis, and Pass/Fail on the y-axis).</li>
+        <li>Fit a logistic regression model to the data.</li>
+        <li>Based on the model, predict the probability of passing for a student who scored 55 in the midterm.</li>
+        <li>Discuss how the logistic regression model helps in making this prediction and whether it's accurate.</li>
+      </ol>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Midterm Marks</th><th>Pass (1) / Fail (0)</th></tr></thead>
+          <tbody>
+            <tr><td>30</td><td>0</td></tr>
+            <tr><td>40</td><td>0</td></tr>
+            <tr><td>50</td><td>0</td></tr>
+            <tr><td>60</td><td>1</td></tr>
+            <tr><td>70</td><td>1</td></tr>
+            <tr><td>80</td><td>1</td></tr>
+            <tr><td>90</td><td>1</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Class Activity — K-Means Clustering -->
+    <div class="activity-box">
+      <div class="activity-header">Class Activity — K-Means Clustering</div>
+      <p>You work in a local retail shop, and you want to segment your customers into two groups based on their monthly spending in two categories: groceries and clothing. The following table shows the monthly spending of six customers. Your task is to use K-means clustering to group these customers into two clusters based on their spending habits.</p>
+      <p><strong>Steps:</strong></p>
+      <ol>
+        <li>Choose K = 2 clusters and randomly select two initial cluster centers.</li>
+        <li>Assign each customer to the nearest cluster based on their spending.</li>
+        <li>Recalculate the cluster centers by finding the average spending in each category for each cluster.</li>
+        <li>Repeat the process until the cluster centers stabilize.</li>
+        <li>Analyze the clusters and describe the spending habits of customers in each group.</li>
+      </ol>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Customer</th><th>Groceries Spending (in $)</th><th>Clothing Spending (in $)</th></tr></thead>
+          <tbody>
+            <tr><td>Customer 1</td><td>150</td><td>100</td></tr>
+            <tr><td>Customer 2</td><td>200</td><td>150</td></tr>
+            <tr><td>Customer 3</td><td>100</td><td>50</td></tr>
+            <tr><td>Customer 4</td><td>80</td><td>20</td></tr>
+            <tr><td>Customer 5</td><td>160</td><td>90</td></tr>
+            <tr><td>Customer 6</td><td>40</td><td>10</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Page 143 -->
+    <div class="page-marker"><span>Page 143</span></div>
+    <h2 class="section-title" id="s5_5">5.5 Introduction to Data Visualization</h2>
+    <p>Data visualization is the process of representing data in a visual format, such as graphs or charts. It helps us to quickly grasp patterns, trends, and insights from data.</p>
+
+    <h3 class="section-title" id="s5_5_1">5.5.1 Types of Visualizations</h3>
+    <p>Data visualization is a powerful way to understand complex information. Different types of visualizations serve various purposes, making it easier to interpret and analyze data. Below are some common types of visualizations explained in detail:</p>
+
+    <h4 class="section-title">5.5.1.1 Bar Charts</h4>
+    <p>Bar charts are ideal for comparing different categories. Each bar represents a category, and the height (or length) of the bar indicates the value associated with that category.</p>
+    <p><strong>Example:</strong> Imagine you want to compare the sales figures for different products in a store. A bar chart can visually represent this data.</p>
+    <p>Sales on Day 1 and Day 2 for various items</p>
+    <div class="figure-caption">Figure 5.4: A bar chart showing sales figures of different products</div>
+
+    <h4 class="section-title">5.5.1.2 Line Graphs</h4>
+    <p>Line graphs are used to show trends over time. They plot data points and connect them with a line, making it easy to observe changes.</p>
+    <p><strong>Example:</strong> If you track the temperature over a week, a line graph will show how the temperature rises and falls each day.</p>
+    <div class="figure-caption">Figure 5.5: A line graph showing variation of temperature over time</div>
+
+    <!-- Page 144 -->
+    <div class="page-marker"><span>Page 144</span></div>
+    <h4 class="section-title">5.5.1.3 Histograms</h4>
+    <p>Histograms are used to show the distribution of a dataset. They group data into bins or intervals, allowing you to see how frequently values occur within those ranges.</p>
+    <p><strong>Example:</strong> If you want to analyze how students performed in a math exam, a histogram can show the distribution of scores.</p>
+    <div class="figure-caption">Figure 5.6: Example of a Histogram showing the distribution of exam scores</div>
+
+    <h4 class="section-title">5.5.1.4 Scatterplots</h4>
+    <p>Scatterplots display relationships between two variables. Each point represents an observation, and the position on the graph indicates values for both variables.</p>
+    <p><strong>Example:</strong> A scatterplot can be used to explore the relationship between the number of hours studied and exam scores.</p>
+    <div class="figure-caption">Figure 5.7: Scatterplot showing the relationship between hours studied and exam scores</div>
+
+    <!-- Page 145 -->
+    <div class="page-marker"><span>Page 145</span></div>
+    <h4 class="section-title">5.5.1.5 Boxplots</h4>
+    <p>Boxplots, or whisker plots, summarize data distribution by displaying the median, quartiles, and potential outliers. They provide a visual summary of data variability.</p>
+    <p><strong>Example:</strong> A boxplot can be used to compare the exam scores of different classes to see which class performed better overall.</p>
+    <div class="figure-caption">Figure 5.8: A Boxplot, showing class scores performance of three classes</div>
+
+    <h2 class="section-title" id="s5_6">5.6 Tools for Data Visualization</h2>
+    <p>As we discussed above, visualization of data helps us make sense of large amounts of information by turning numbers into easy-to-understand charts and graphs. In this section, we will discuss tools that can be used to create these visualizations and guide you through how to create and interpret them step by step.</p>
+    <p>There are many tools available for creating data visualizations, but some of the easiest to use are tools you may already be familiar with, like Microsoft Excel and Google Sheets. These tools are widely accessible and provide straightforward methods to create charts, graphs, and other visual representations of data.</p>
+
+    <h3 class="section-title">5.6.1 Using Excel and Google Sheets for Visualization</h3>
+    <p><strong>Excel and Google Sheets:</strong> These tools allow you to easily enter your data and then generate a variety of visualizations such as bar charts, line graphs, and pie charts.</p>
+    <p><strong>Example:</strong> Let's say you run a small business in your local area, and you want to track how many products you sell each month. You can enter the data for each month in Excel or Google Sheets, and with just a few clicks, you can create a bar chart to see which month</p>
+
+    <!-- Page 146 -->
+    <div class="page-marker"><span>Page 146</span></div>
+    <p>had the most sales.</p>
+
+    <h3 class="section-title">5.6.2 Creating and Interpreting Visualizations</h3>
+    <p><strong>Step-by-Step Guide:</strong> Here's a simple guide to creating a visualization in Excel or Google Sheets.</p>
+    <ol>
+      <li><strong>Enter Your Data:</strong> Start by entering your data into the spreadsheet. Example: In one column, you could have the months (January, February, etc.), and in another column, the sales figures for each month.</li>
+      <li><strong>Select the Data:</strong> Highlight the data you want to visualize by clicking and dragging your mouse over the cells.</li>
+      <li><strong>Choose a Chart Type:</strong> Click on the "Insert" tab and select the type of chart you want to create (bar chart, line graph, etc.).</li>
+      <li><strong>Customize the Chart:</strong> You can add labels to your chart to make it clearer, such as labeling the x-axis with the months and the y-axis with the sales figures. This makes the chart easier to interpret.</li>
+      <li><strong>Understanding Statistical Representations:</strong><br>When you create a visualization, it's important to understand what the chart is telling you.</li>
+    </ol>
+    <p><strong>Example:</strong> Bar Charts: Useful for comparing different categories, such as monthly sales.<br>Line Graphs: Ideal for showing trends over time, like how sales have increased or decreased over several months.</p>
+
+    <!-- SUMMARY — Page 146-147 -->
+    <div class="summary-box" id="summary">
+      <h2>📝 Summary</h2>
+      <p>This unit focuses on model building and data visualization, equipping learners with the skills to analyze, interpret, and present data effectively. Key topics include:</p>
+      <ol>
+        <li><strong>Model Building:</strong>
+          <ul>
+            <li>Understand the role and importance of statistical models in solving real-world problems.</li>
+            <li>Learn to build basic statistical models (e.g., linear regression) and evaluate their performance using appropriate metrics.</li>
+          </ul>
+        </li>
+        <li><strong>Experimental Design:</strong>
+          <ul>
+            <li>Gain an understanding of experimental design in data science, including hypothesis testing, control groups, and randomization.</li>
+          </ul>
+        </li>
+        <li><strong>Data Visualization:</strong>
+          <ul>
+            <li>Explore the types and uses of data visualizations (e.g., bar charts, scatter plots, heatmaps).</li>
+          </ul>
+        </li>
+      </ol>
+
+      <!-- Page 147 -->
+      <div class="page-marker"><span>Page 147</span></div>
+      <ol start="3">
+        <li value="3">
+          <ul>
+            <li>Learn methods for creating effective visualizations to communicate insights clearly.</li>
+          </ul>
+        </li>
+        <li><strong>Descriptive Statistics:</strong>
+          <ul>
+            <li>Understand the benefits of visualizing data through descriptive statistics (e.g., mean, median, standard deviation) to summarize and interpret data trends.</li>
+          </ul>
+        </li>
+        <li><strong>Tools for Visualization:</strong>
+          <ul>
+            <li>Develop hands-on skills in creating visualizations using tools like MS Excel, Google Sheets, Python (Matplotlib), and Tableau.</li>
+          </ul>
+        </li>
+      </ol>
+    </div>
+
+    <!-- EXERCISE — Pages 147-149 -->
+    <div class="exercise-section" id="exercise">
+      <h2>📋 Exercise</h2>
+
+      <h3>Multiple Choice Questions</h3>
+
+      <div class="mcq-item">
+        <p class="question">1. Which of the following is an example of a basic statistical model?</p>
+        <ol class="options" type="a">
+          <li>Linear Regression</li>
+          <li>Neural Networks</li>
+          <li>Decision Trees</li>
+          <li>Support Vector Machines</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">2. What does experimental design in data science involve?</p>
+        <ol class="options" type="a">
+          <li>Creating visualizations</li>
+          <li>Collecting and analyzing data systematically</li>
+          <li>Writing code for machine learning</li>
+          <li>Building databases</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">3. Which of the following is NOT a type of data visualization?</p>
+        <ol class="options" type="a">
+          <li>Bar Chart</li>
+          <li>Scatter Plot</li>
+          <li>Hypothesis Test</li>
+          <li>Heatmap</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">4. Which tool is commonly used for creating data visualizations?</p>
+        <ol class="options" type="a">
+          <li>MS Excel</li>
+          <li>Python (Matplotlib)</li>
+          <li>Tableau</li>
+          <li>All of the above</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">5. What does the slope in a linear regression model represent?</p>
+        <ol class="options" type="a">
+          <li>The intercept of the model</li>
+        </ol>
+      </div>
+
+      <!-- Page 148 -->
+      <div class="page-marker"><span>Page 148</span></div>
+
+      <div class="mcq-item">
+        <p class="question">5. (continued)</p>
+        <ol class="options" type="a" start="2">
+          <li>The change in the dependent variable for a unit change in the independent variable</li>
+          <li>The error term</li>
+          <li>The mean of the data</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">6. Which of the following is an example of a real-world application of statistical models?</p>
+        <ol class="options" type="a">
+          <li>Predicting house prices</li>
+          <li>Creating social media posts</li>
+          <li>Designing websites</li>
+          <li>Writing essays</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">7. Which of the following is NOT a benefit of data visualization?</p>
+        <ol class="options" type="a">
+          <li>Identifying trends and patterns</li>
+          <li>Communicating insights effectively</li>
+          <li>Making data more complex</li>
+          <li>Summarizing large datasets</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">8. What is the primary goal of K-Means Clustering?</p>
+        <ol class="options" type="a">
+          <li>To classify data into predefined categories</li>
+          <li>To group data into clusters based on similarity</li>
+          <li>To predict continuous outcomes</li>
+          <li>To reduce the dimensionality of data</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">9. In K-Means Clustering, what does the "K" represent?</p>
+        <ol class="options" type="a">
+          <li>The number of features in the dataset</li>
+          <li>The number of clusters to be formed</li>
+          <li>The number of iterations required for convergence</li>
+          <li>The number of data points in the dataset</li>
+        </ol>
+      </div>
+
+      <h3>Short Questions</h3>
+      <ol style="margin-left:20px; color:#37474f; font-size:14px; line-height:2;">
+        <li>What is the importance of building statistical models in real-world applications?</li>
+        <li>Name one basic statistical model used for predicting outcomes and explain its purpose.</li>
+        <li>List two types of data visualizations and describe when you would use each.</li>
+        <li>How does visualizing data help in understanding descriptive statistics?</li>
+        <li>What is the purpose of using tools like MS Excel for data visualization?</li>
+        <li>Give an example of a real-world problem where a statistical model could be applied.</li>
+      </ol>
+
+      <!-- Page 149 -->
+      <div class="page-marker"><span>Page 149</span></div>
+      <h3>Long Questions</h3>
+      <ol style="margin-left:20px; color:#37474f; font-size:14px; line-height:2.2;">
+        <li>Explain the role and importance of statistical models in solving real-world problems.</li>
+        <li>Describe the steps involved in building a basic statistical model (e.g., linear regression). Include details on data collection, model training, and evaluation.</li>
+        <li>Discuss the types of data visualizations and their uses.</li>
+        <li>Explain the concept of model evaluation in statistical modeling.</li>
+        <li>Explain the K-Means Clustering algorithm step by step. Include details on how initial centroids are selected, how data points are assigned to clusters, and how centroids are updated.</li>
+        <li>Describe a real-world scenario where K-Means Clustering can be applied. Explain how you would preprocess the data, choose the value of K, and interpret the results.</li>
+      </ol>
+    </div><!-- end exercise-section -->
+
+  </main>
+</div>
+
+</body>
+</html>

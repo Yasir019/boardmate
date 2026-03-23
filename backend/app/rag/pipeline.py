@@ -1,172 +1,186 @@
-from typing import List, Dict
-from pathlib import Path
-from app.rag.loader import load_textbooks
+"""RAG pipeline: indexing and querying textbooks via LangChain."""
+
+import logging
+from typing import Dict
+
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+from app.core.config import (
+    CHUNK_OVERLAP,
+    CHUNK_SIZE,
+    COLLECTION_NAME,
+    DATA_DIR,
+    EMBEDDING_MODEL,
+    TOP_K_RESULTS,
+    VECTOR_DB_DIR,
+)
 from app.rag.cleaner import clean_text
-from app.rag.chunker import chunk_text
-from app.rag.embeddings import EmbeddingModel
+from app.rag.loader import load_textbooks
 from app.rag.vector_store import VectorStore
 from app.services.llm_service import generate_response
-from app.core.config import (
-    DATA_DIR, VECTOR_DB_DIR, EMBEDDING_MODEL,
-    CHUNK_SIZE, CHUNK_OVERLAP, COLLECTION_NAME, TOP_K_RESULTS
-)
+
+logger = logging.getLogger(__name__)
+
 
 class RAGPipeline:
-    """Complete RAG pipeline for indexing and querying"""
-    
+    """Complete RAG pipeline for indexing and querying textbook content."""
+
     def __init__(self):
-        self.embedding_model = None
         self.vector_store = None
-    
+        self.text_splitter = None
+
     def _ensure_models_loaded(self):
-        """Lazy load models when needed"""
-        if self.embedding_model is None:
-            self.embedding_model = EmbeddingModel(EMBEDDING_MODEL)
+        """Lazy-load models on first use."""
         if self.vector_store is None:
-            self.vector_store = VectorStore(VECTOR_DB_DIR, COLLECTION_NAME)
-    
+            self.vector_store = VectorStore(
+                VECTOR_DB_DIR,
+                COLLECTION_NAME,
+                EMBEDDING_MODEL,
+            )
+        if self.text_splitter is None:
+            self.text_splitter = RecursiveCharacterTextSplitter(
+                chunk_size=CHUNK_SIZE,
+                chunk_overlap=CHUNK_OVERLAP,
+                length_function=len,
+                separators=["\n\n", "\n", ". ", " ", ""],
+            )
+
     def index_textbooks(self) -> Dict:
         """
-        Complete indexing pipeline:
-        1. Load textbooks from data directory
-        2. Clean text
-        3. Chunk text
-        4. Generate embeddings
-        5. Store in ChromaDB
-        
+        Run the full indexing pipeline:
+        1. Load textbooks from the data directory.
+        2. Clean and chunk text.
+        3. Store chunks in ChromaDB.
+
         Returns:
-            Dict with files_indexed and chunks_indexed counts
+            Dict with files_indexed and chunks_indexed counts.
         """
         self._ensure_models_loaded()
-        
-        print("📚 Starting indexing pipeline...")
-        
-        # Load textbooks
-        print(f"📂 Loading textbooks from {DATA_DIR}")
+
+        logger.info("Starting indexing pipeline")
+        logger.info("Loading textbooks from %s", DATA_DIR)
         textbooks = load_textbooks(DATA_DIR)
-        print(f"✅ Loaded {len(textbooks)} textbook files")
-        
+        logger.info("Loaded %d textbook files", len(textbooks))
+
         if not textbooks:
             return {"files_indexed": 0, "chunks_indexed": 0}
-        
-        # Clear existing data
-        print("🗑️ Clearing existing vector store...")
+
+        logger.info("Clearing existing vector store")
         self.vector_store.clear()
-        
-        # Process each textbook
+
         all_chunks = []
         all_metadatas = []
         all_ids = []
-        
-        for idx, textbook in enumerate(textbooks):
-            # Clean text
+
+        for textbook in textbooks:
             cleaned = clean_text(textbook["content"])
-            
-            # Chunk text
-            chunks = chunk_text(cleaned, CHUNK_SIZE, CHUNK_OVERLAP)
-            
-            # Create metadata and IDs for each chunk
+            chunks = self.text_splitter.split_text(cleaned)
+
             for chunk_idx, chunk in enumerate(chunks):
                 all_chunks.append(chunk)
                 all_metadatas.append({
                     "board": textbook["board"],
                     "class_level": textbook["class_level"],
                     "subject": textbook["subject"],
-                    "chapter": textbook["chapter"]
+                    "chapter": textbook["chapter"],
+                    "chapter_number": textbook["chapter_number"],
+                    "chapter_title": textbook["chapter_title"],
+                    "pdf_path": textbook.get("pdf_path", ""),
                 })
-                all_ids.append(f"{textbook['board']}_{textbook['class_level']}_{textbook['subject']}_{textbook['chapter']}_{chunk_idx}")
-        
-        print(f"✂️ Generated {len(all_chunks)} chunks")
-        
-        # Generate embeddings
-        print("🔢 Generating embeddings...")
-        embeddings = self.embedding_model.embed_texts(all_chunks)
-        
-        # Store in vector database
-        print("💾 Storing in ChromaDB...")
+                all_ids.append(
+                    f"{textbook['board']}_{textbook['class_level']}_"
+                    f"{textbook['subject']}_{textbook['chapter']}_{chunk_idx}"
+                )
+
+        logger.info("Generated %d chunks", len(all_chunks))
+        logger.info("Storing chunks in ChromaDB")
+
         self.vector_store.add_documents(
             chunks=all_chunks,
-            embeddings=embeddings,
             metadatas=all_metadatas,
-            ids=all_ids
+            ids=all_ids,
         )
-        
-        print(f"✅ Indexing complete!")
-        
+
+        logger.info("Indexing complete")
         return {
             "files_indexed": len(textbooks),
-            "chunks_indexed": len(all_chunks)
+            "chunks_indexed": len(all_chunks),
         }
-    
+
     def query(
         self,
         question: str,
         board: str,
         class_level: str,
-        subject: str
+        subject: str,
+        chapter: str = None,
     ) -> Dict:
         """
         Query the RAG system.
-        
+
         Args:
-            question: User's question
-            board: Board filter
-            class_level: Class filter
-            subject: Subject filter
-        
+            question: User's question.
+            board: Board filter.
+            class_level: Class filter.
+            subject: Subject filter.
+            chapter: Optional chapter filter.
+
         Returns:
-            Dict with answer and sources
+            Dict with answer and sources.
         """
         self._ensure_models_loaded()
-        
-        # Generate query embedding
-        query_embedding = self.embedding_model.embed_query(question)
-        
-        # Search vector store with filters
+
         filters = {
             "board": board,
             "class_level": class_level,
-            "subject": subject
+            "subject": subject,
         }
-        
+        if chapter:
+            filters["chapter"] = chapter
+
         results = self.vector_store.search(
-            query_embedding=query_embedding,
+            query=question,
             top_k=TOP_K_RESULTS,
-            filters=filters
+            filters=filters,
         )
-        
-        # Build response
+
         if not results:
             return {
-                "answer": "I couldn't find information about this topic in the textbook. Please try rephrasing your question or check if this topic is covered in another chapter.",
-                "sources": []
+                "answer": (
+                    "I couldn't find information about this topic in the textbook. "
+                    "Please try rephrasing your question or check if this topic "
+                    "is covered in another chapter."
+                ),
+                "sources": [],
             }
-        
-        # Create context from retrieved chunks
-        context = "\n\n---\n\n".join([r["text"] for r in results])
-        
-        # Generate answer using Groq LLM
+
+        context = "\n\n---\n\n".join(r["text"] for r in results)
+
         answer = generate_response(
             question=question,
             context=context,
             board=board,
-            class_level=class_level
+            class_level=class_level,
         )
-        
-        # Format sources
-        sources = [
-            {
-                "chapter": r["metadata"]["chapter"],
-                "subject": r["metadata"]["subject"],
-                "snippet": r["text"][:150] + "..." if len(r["text"]) > 150 else r["text"]
-            }
-            for r in results
-        ]
-        
-        return {
-            "answer": answer,
-            "sources": sources
-        }
 
-# Global pipeline instance
+        sources = []
+        seen_chapters = set()
+        for r in results:
+            metadata = r["metadata"]
+            chapter_key = metadata.get("chapter", "")
+            if chapter_key not in seen_chapters:
+                snippet = r["text"]
+                sources.append({
+                    "chapter": chapter_key,
+                    "chapter_title": metadata.get("chapter_title", ""),
+                    "chapter_number": metadata.get("chapter_number", ""),
+                    "subject": metadata.get("subject", ""),
+                    "snippet": snippet[:150] + "..." if len(snippet) > 150 else snippet,
+                    "pdf_path": metadata.get("pdf_path", ""),
+                })
+                seen_chapters.add(chapter_key)
+
+        return {"answer": answer, "sources": sources}
+
+
 rag_pipeline = RAGPipeline()

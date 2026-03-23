@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Unit 4 – Computational Structures | Computer Science Class 11</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.75;
+      color: #1a1a2e;
+      background: #f4f6fb;
+    }
+
+    .wrapper { display: block; max-width: 1200px; margin: 0 auto; padding: 0 16px; }
+    main { width: 100%; padding: 32px 20px 80px 20px; background: #fff; box-shadow: 0 0 40px rgba(0,0,0,.08); }
+
+    aside {
+      width: 240px; flex-shrink: 0; position: sticky; top: 0;
+      height: 100vh; overflow-y: auto; padding: 24px 16px;
+      background: #1a1a2e; color: #ccd6f6; font-size: 13px;
+    }
+    aside h2 { color: #64ffda; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
+    aside ul { list-style: none; }
+    aside ul li { margin: 3px 0; }
+    aside ul li a { color: #a8b2d8; text-decoration: none; display: block; padding: 3px 6px; border-radius: 4px; transition: all .2s; }
+    aside ul li a:hover { color: #64ffda; background: rgba(100,255,218,.08); }
+    aside ul li.sub a { padding-left: 14px; font-size: 12px; color: #8892b0; }
+    aside ul li.sub2 a { padding-left: 24px; font-size: 11.5px; color: #6a7899; }
+    aside::-webkit-scrollbar { width: 4px; }
+    aside::-webkit-scrollbar-thumb { background: #233554; border-radius: 4px; }
+
+    /* Cover */
+    .cover {
+      background: linear-gradient(135deg, #4a148c 0%, #6a1b9a 60%, #311b92 100%);
+      color: #fff; padding: 60px 40px; margin: -32px -40px 48px -40px;
+      position: relative; overflow: hidden;
+    }
+    .cover::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 70% 30%, rgba(206,147,216,.15), transparent 60%);
+    }
+    .cover .badge { display: inline-block; background: #ce93d8; color: #311b92; font-weight: 700; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; padding: 4px 14px; border-radius: 20px; margin-bottom: 20px; }
+    .cover h1 { font-size: 2.4rem; font-weight: 800; line-height: 1.2; margin-bottom: 10px; position: relative; }
+    .cover .subtitle { font-size: 1.05rem; color: #e1bee7; margin-bottom: 8px; }
+    .cover .subject-tag { font-size: 12px; color: #ce93d8; letter-spacing: 1px; text-transform: uppercase; }
+
+    /* Page marker */
+    .page-marker { display: flex; align-items: center; gap: 10px; margin: 36px 0 10px; color: #8892b0; font-size: 11.5px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+    .page-marker::before, .page-marker::after { content: ''; flex: 1; height: 1px; background: #e0e7ff; }
+    .page-marker span { white-space: nowrap; }
+
+    /* Headings */
+    h1.section-title { font-size: 1.7rem; color: #4a148c; margin: 32px 0 12px; border-left: 5px solid #ce93d8; padding-left: 14px; }
+    h2.section-title { font-size: 1.35rem; color: #6a1b9a; margin: 28px 0 10px; border-left: 4px solid #ba68c8; padding-left: 12px; }
+    h3.section-title { font-size: 1.1rem; color: #311b92; margin: 22px 0 8px; border-left: 3px solid #a5d6a7; padding-left: 10px; }
+    h4.section-title { font-size: 1rem; color: #37474f; margin: 18px 0 6px; padding-left: 10px; border-left: 3px solid #ffcc80; }
+    p { margin-bottom: 14px; }
+    ul, ol { margin: 10px 0 14px 28px; }
+    li { margin-bottom: 6px; }
+    strong { color: #4a148c; }
+
+    /* SLO */
+    .slo-box { background: linear-gradient(120deg, #f3e5f5, #ede7f6); border: 1.5px solid #ba68c8; border-radius: 12px; padding: 24px 28px; margin: 24px 0 32px; }
+    .slo-box h3 { color: #6a1b9a; font-size: 1rem; margin-bottom: 12px; }
+    .slo-box ul { margin-left: 20px; }
+    .slo-box li { margin-bottom: 8px; color: #4a148c; font-size: 14px; }
+
+    /* Info box */
+    .info-box { display: flex; gap: 14px; background: #fff8e1; border-left: 5px solid #ffd54f; border-radius: 8px; padding: 16px 20px; margin: 20px 0; }
+    .info-box .icon { font-size: 1.6rem; flex-shrink: 0; line-height: 1; }
+    .info-box .content { font-size: 13.5px; color: #5d4037; }
+    .tip-box { background: #e8f4fd; border-left: 5px solid #42a5f5; border-radius: 8px; padding: 16px 20px; margin: 20px 0; font-size: 13.5px; color: #0d47a1; }
+    .tip-box strong { color: #0d47a1; }
+
+    /* Activity */
+    .activity-box { background: linear-gradient(135deg, #fce4ec, #fff9c4); border: 1.5px dashed #e91e63; border-radius: 12px; padding: 20px 24px; margin: 24px 0; }
+    .activity-box .activity-header { display: flex; align-items: center; gap: 10px; color: #880e4f; font-weight: 700; font-size: 14px; margin-bottom: 12px; }
+    .activity-box .activity-header::before { content: '🎯'; font-size: 1.2rem; }
+
+    /* Formula */
+    .formula-block { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 16px 20px; margin: 16px 0; font-family: 'Courier New', monospace; font-size: 13.5px; color: #212529; }
+    .formula-math { background: #ede7f6; border-left: 4px solid #7b1fa2; border-radius: 8px; padding: 16px 22px; margin: 16px 0; font-size: 1.05rem; color: #4a148c; text-align: center; font-style: italic; }
+
+    /* Output box */
+    .output-box { background: #e8f5e9; border-left: 4px solid #43a047; border-radius: 8px; padding: 14px 20px; margin: 12px 0 18px; font-family: 'Courier New', monospace; font-size: 13px; color: #1b5e20; }
+
+    /* Summary */
+    .summary-box { background: linear-gradient(135deg, #e3f2fd, #e8eaf6); border-left: 5px solid #1565c0; border-radius: 10px; padding: 24px 28px; margin: 32px 0; }
+    .summary-box h2 { color: #0d47a1; font-size: 1.1rem; margin-bottom: 12px; }
+
+    /* Exercise */
+    .exercise-section { background: #f3e5f5; border-top: 4px solid #7b1fa2; border-radius: 12px; padding: 28px 32px; margin: 40px 0 0; }
+    .exercise-section h2 { color: #4a148c; margin-bottom: 20px; font-size: 1.3rem; }
+    .exercise-section h3 { color: #6a1b9a; margin: 22px 0 12px; font-size: 1rem; }
+    .mcq-item { margin-bottom: 20px; }
+    .mcq-item .question { font-weight: 600; color: #1a1a2e; margin-bottom: 6px; }
+    .mcq-item .options { list-style: lower-alpha; margin-left: 20px; color: #37474f; font-size: 14px; }
+    .mcq-item .options li { margin-bottom: 3px; }
+
+    /* Table */
+    .table-wrap { overflow-x: auto; margin: 20px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    thead { background: #4a148c; color: #fff; }
+    thead th { padding: 10px 14px; text-align: left; }
+    tbody tr:nth-child(even) { background: #f3e5f5; }
+    tbody td { padding: 9px 14px; border-bottom: 1px solid #e0e7ff; vertical-align: top; }
+    .table-caption { font-size: 12.5px; color: #6a7899; text-align: center; margin-top: 6px; font-style: italic; }
+
+    /* Figure caption */
+    .figure-caption {
+      display: block; text-align: center; font-size: 12.5px; color: #5c6bc0;
+      font-style: italic; background: #e8eaf6; border-radius: 6px;
+      padding: 8px 16px; margin: 8px 0 20px;
+    }
+
+    /* Code block */
+    .code-block {
+      background: #0d1117; color: #e6edf3;
+      border-radius: 10px; padding: 20px 22px;
+      font-family: 'Courier New', Consolas, monospace;
+      font-size: 13px; line-height: 1.6;
+      margin: 16px 0; overflow-x: auto;
+      border-left: 4px solid #ce93d8;
+      white-space: pre;
+    }
+    .code-block .comment { color: #8b949e; }
+    .code-block .keyword { color: #ff7b72; }
+    .code-block .string { color: #a5d6ff; }
+    .code-block .output-line { color: #3fb950; }
+
+    @media (max-width: 900px) { aside { display: none; } .wrapper { display: block; } main { padding: 24px 20px 60px; } }
+  </style>
+</head>
+<body>
+
+<div class="wrapper">
+
+  <main>
+
+    <!-- COVER — Page 87 -->
+    <div class="cover" id="cover">
+      <div class="badge">Unit 4</div>
+      <h1>Computational Structures</h1>
+      <p class="subtitle">Computer Science | Class 11 | Punjab Curriculum &amp; Textbook Board</p>
+      <p class="subject-tag">Single National Curriculum 2022</p>
+    </div>
+
+    <!-- SLO — Page 87 -->
+    <div class="page-marker"><span>Page 87</span></div>
+    <div class="slo-box" id="slo">
+      <h3>🎓 Student Learning Outcomes</h3>
+      <p><strong>By the end of this chapter, students will be able to:</strong></p>
+      <ul>
+        <li>Define and explain the purpose of primitive computational structures, including lists, stacks, queues, trees, and graphs.</li>
+        <li>Identify and describe the characteristics and properties of different computational structures.</li>
+        <li>Perform basic operations such as insertion, deletion, traversal, and searching on various computational structures.</li>
+        <li>Understand and implement the LIFO (Last-In, First-Out) and FIFO (First-In, First-Out) principles in stacks and queues, respectively.</li>
+        <li>Compare and contrast different types of trees and graphs, and apply appropriate operations to them.</li>
+        <li>Analyze and choose the most suitable computational structure based on problem requirements, data organization, and performance considerations.</li>
+        <li>Apply computational structures in real-world scenarios, including data organization, task scheduling, and network modeling.</li>
+        <li>Combine different computational structures to solve complex problems and enhance functionality.</li>
+      </ul>
+    </div>
+
+    <!-- INTRODUCTION — Page 88 -->
+    <div class="page-marker"><span>Page 88</span></div>
+    <h1 class="section-title" id="intro">Introduction</h1>
+    <p>In this chapter, we will explore key computational structures, such as lists, stacks, queues, trees, and graphs, which are fundamental in programming. We will examine their properties, operations, and how to implement them efficiently. Additionally, we will discuss selecting the appropriate structure based on specific problem requirements and demonstrate their application in real-world scenarios. By the end of this chapter, you will understand how to effectively use these structures in various contexts.</p>
+
+    <h2 class="section-title" id="s4_1">4.1 Primitive Computational Structures</h2>
+    <p>In our daily lives, we often need to organize and manage data. For instance, think about the way you store your contacts on your phone, keep a to-do list, or even stack plates in your kitchen. Similarly, in the world of computers, we need to organize and manage data. Computational structures help us do that.</p>
+
+    <h3 class="section-title" id="s4_1_1">4.1.1 Lists</h3>
+    <p>A list is a data structure used to store multiple pieces of data in a specific sequence. Each piece of data, known as an element, is positioned at a particular index within the list, facilitating easy access and management.</p>
+
+    <h4 class="section-title">4.1.1.1 List Creation</h4>
+    <p>In Python, Lists are created using square brackets '[]', with each item separated by a comma. Here's how you can create and work with a list in Python:</p>
+    <div class="code-block"><span class="comment"># Create a list of items</span>
+items = [<span class="string">"Decorations"</span>, <span class="string">"Snacks"</span>, <span class="string">"cold drinks"</span>, <span class="string">"Plates"</span>, <span class="string">"Balloon"</span>]
+<span class="comment"># Print the list</span>
+<span class="keyword">print</span>(items)</div>
+    <p>In the above code:</p>
+    <ul>
+      <li><strong>"Items"</strong> is the name of the list.</li>
+      <li>The items inside the list are "Decorations", "Snacks", "Cold drinks", "Plates", and "Balloons".</li>
+      <li>Each item is enclosed in quotes (for text) and separated by a comma.</li>
+      <li>The <code>print()</code> function is used to display the list.</li>
+    </ul>
+    <p>You can also add or remove items from the list. Lists are useful for storing multiple values in one variable and managing them efficiently.</p>
+    <div class="info-box">
+      <div class="icon">🔗</div>
+      <div class="content">A type of list known as a <strong>linked list</strong> uses nodes, where each node contains a value and a reference to the next node.</div>
+    </div>
+
+    <!-- Page 89 -->
+    <div class="page-marker"><span>Page 89</span></div>
+    <h4 class="section-title">4.1.1.2 List Properties</h4>
+    <p>List has following properties:</p>
+    <ol>
+      <li><strong>Dynamic Size:</strong> A list in Python can change its size. You can add new items to the list or remove items without any problem. The list will automatically adjust to fit the changes.</li>
+      <li><strong>Index-Based Access:</strong> Every item in a list has a position, called an index. The first item has an index of 0, the second item has an index of 1, and so on. You can use these indexes to get specific items from the list.</li>
+      <li><strong>Ordered Collection:</strong> The order in which you add items to a list is preserved. This means that if you add an item first, it will stay in that position unless you change it.</li>
+      <li><strong>Heterogeneous Elements:</strong> A list can hold different types of items together. For example, you can have numbers, words, and even other lists all in one list.</li>
+      <li><strong>Mutability:</strong> Lists are changeable, meaning you can update, add, or remove items from the list after you create it.</li>
+      <li><strong>Supports Duplicates:</strong> A list can contain the same item more than once. This means you can repeat values in the list if needed.</li>
+    </ol>
+    <div class="code-block"><span class="comment"># Example List</span>
+items = [<span class="string">"Decorations"</span>, <span class="string">"Snacks"</span>, <span class="string">"Cold drinks"</span>, <span class="string">"Plates"</span>, <span class="string">"Balloons"</span>]
+<span class="comment"># Characteristics of Lists:</span>
+<span class="comment"># Nature of the Data Structure</span>
+<span class="keyword">print</span>(<span class="string">"List of items:"</span>, items)
+<span class="comment"># Mutability</span>
+items.append(<span class="string">"Party Hats"</span>)
+items.remove(<span class="string">"Snacks"</span>)
+<span class="keyword">print</span>(<span class="string">"After modifications:"</span>, items)
+<span class="comment"># Homogeneous vs. Heterogeneous</span>
+<span class="keyword">print</span>(<span class="string">"Homogeneous List:"</span>, [1, 2, 3, 4])
+<span class="keyword">print</span>(<span class="string">"Heterogeneous List:"</span>, [<span class="string">"Apple"</span>, 42, 3.14, True])
+<span class="comment"># Properties of Lists:</span>
+<span class="comment"># Length</span>
+<span class="keyword">print</span>(<span class="string">"Number of items:"</span>, len(items))
+<span class="comment"># Indexing</span>
+<span class="keyword">print</span>(<span class="string">"Item at index 2:"</span>, items[2])
+<span class="comment"># Ordering</span>
+<span class="keyword">print</span>(<span class="string">"Order maintained:"</span>, items)
+<span class="comment"># Duplication</span>
+<span class="keyword">print</span>(<span class="string">"List with duplicates:"</span>, [<span class="string">"Decorations"</span>, <span class="string">"Snacks"</span>, <span class="string">"cold drinks"</span>, <span class="string">"Snacks"</span>])</div>
+
+    <!-- Page 90 -->
+    <div class="page-marker"><span>Page 90</span></div>
+    <p>The code above shows different features of lists. First, it creates a list called 'items' with party essentials, keeping the items in the order they were added. We then demonstrate that lists can be changed by adding 'Party Hats' as a new item and removing 'Snacks', which shows that lists are dynamic.</p>
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content">Did you know that lists in Python can be nested, meaning you can have lists within lists? This feature is useful for representing complex data structures.</div>
+    </div>
+
+    <h4 class="section-title">4.1.1.3 List Operations</h4>
+    <p>Let's explore some common operations we can perform on a list using real-world examples and Python code.</p>
+
+    <p><strong>1. Insertion:</strong> Adding a new item to your list is like adding a new task to your to-do list. You can insert an item at different positions in the list. Here are several ways to do this:</p>
+
+    <p><strong>a. Inserting at a Specific Position:</strong> You can insert an item at any position in the list using the <code>insert()</code> function.</p>
+    <div class="code-block">party_list = [<span class="string">"Buy drinks"</span>, <span class="string">"Buy decorations"</span>, <span class="string">"Buy snacks"</span>, <span class="string">"Buy cold drinks"</span>]
+party_list.insert(0, <span class="string">"Invite friends"</span>) <span class="comment"># add Invite friends at start</span>
+<span class="keyword">print</span>(party_list)
+<span class="comment"># Output: ["Invite friends", "Buy drinks", "Buy decorations", "Buy snacks", "Buy cold drinks"]</span></div>
+
+    <p><strong>b. Appending to the End:</strong> If you want to add an item to the end of the list, use the <code>append()</code> function.</p>
+    <div class="code-block">party_list = [<span class="string">"Invite friends"</span>, <span class="string">"Buy cold drinks"</span>, <span class="string">"Buy decorations"</span>, <span class="string">"Buy snacks"</span>]
+party_list.append(<span class="string">"Order cake"</span>) <span class="comment"># Adds 'Order cake' at the end</span>
+<span class="keyword">print</span>(party_list)
+<span class="comment"># Output: ["Invite friends", "Buy cold drinks", "Buy decorations", "Buy snacks", "Order cake"]</span></div>
+
+    <p><strong>c. Extending the List:</strong> You can also add multiple items at once using the <code>extend()</code> function.</p>
+    <div class="code-block">party_list = [<span class="string">"Invite friends"</span>, <span class="string">"Buy decorations"</span>, <span class="string">"Buy snacks"</span>, <span class="string">"Buy cold drinks"</span>]
+party_list.extend([<span class="string">"Party hats"</span>, <span class="string">"Streamers"</span>]) <span class="comment"># Add multiple items at once</span>
+<span class="keyword">print</span>(party_list)
+<span class="comment"># Output: ["Invite friends", "Buy decorations", "Buy snacks", "Buy cold drinks", "Party hats", "Streamers"]</span></div>
+
+    <!-- Page 91 -->
+    <div class="page-marker"><span>Page 91</span></div>
+    <p><strong>2. Deletion:</strong> Removing an item from your list is like crossing off a task you've completed. You can remove items in various ways:</p>
+
+    <p><strong>a. Removing by Value:</strong> Use the <code>remove()</code> function to delete the first occurrence of a specific item.</p>
+    <div class="code-block">party_list = [<span class="string">"Invite friends"</span>, <span class="string">"Buy decorations"</span>, <span class="string">"Buy snacks"</span>, <span class="string">"Buy cold drinks"</span>]
+party_list.remove(<span class="string">"Buy snacks"</span>) <span class="comment"># Removes 'Buy snacks' from the list</span>
+<span class="keyword">print</span>(party_list)
+<span class="comment"># Output: ['Invite friends', 'Buy decorations', 'Buy cold drinks']</span></div>
+
+    <p><strong>b. Removing by Index:</strong> Use the <code>pop()</code> function to remove an item at a specific index.</p>
+    <div class="code-block">party_list = [<span class="string">"Invite friends"</span>, <span class="string">"Buy decorations"</span>, <span class="string">"Buy cold drinks"</span>]
+party_list.pop(0) <span class="comment"># Removes the item at index 0</span>
+<span class="keyword">print</span>(party_list)
+<span class="comment"># Output: ['Buy decorations', 'Buy cold drinks']</span></div>
+
+    <p><strong>c. Removing All Items:</strong> Use the <code>clear()</code> function to remove all items from the list.</p>
+    <div class="code-block">party_list = [<span class="string">"Invite friends"</span>, <span class="string">"Buy decorations"</span>, <span class="string">"Buy cold drinks"</span>]
+<span class="comment"># Removes all items from the list</span>
+party_list.clear()
+<span class="keyword">print</span>(party_list) <span class="comment"># Output: []</span></div>
+
+    <p><strong>3. Searching:</strong> Finding an item in a list is similar to looking for a specific task in your to-do list. You can search for an item using different functions:</p>
+
+    <p><strong>a. Checking for Existence:</strong> Use the <code>in</code> keyword to check if an item exists in the list.</p>
+    <div class="code-block">party_list = [<span class="string">"Invite friends"</span>, <span class="string">"Buy decorations"</span>, <span class="string">"Buy cold drinks"</span>]
+<span class="keyword">if</span> <span class="string">"Buy cold drinks"</span> <span class="keyword">in</span> party_list:
+    <span class="keyword">print</span>(<span class="string">"Buy cold drinks is on the list."</span>) <span class="comment"># Prints if 'Buy cold drinks' is found</span>
+<span class="keyword">else</span>:
+    <span class="keyword">print</span>(<span class="string">"Buy cold drinks is not on the list."</span>)
+<span class="comment"># Output: Buy cold drinks is on the list.</span></div>
+
+    <!-- Page 92 -->
+    <div class="page-marker"><span>Page 92</span></div>
+    <p><strong>b. Finding the Index:</strong> Use the <code>index()</code> function to find the position of an item in the list.</p>
+    <div class="code-block">party_list = [<span class="string">"Invite friends"</span>, <span class="string">"Buy decorations"</span>, <span class="string">"Buy cold drinks"</span>]
+index = party_list.index(<span class="string">"Buy decorations"</span>) <span class="comment"># Finds the position of 'Buy decorations'</span>
+<span class="keyword">print</span>(<span class="string">"Index of 'Buy decorations':"</span>, index)
+<span class="comment"># Output: Index of 'Buy decorations': 1</span></div>
+
+    <h4 class="section-title">4.1.1.4 Applications of Lists</h4>
+    <ul>
+      <li><strong>Data Storage and Manipulation:</strong> Lists are commonly used to store and manage collections of data, such as records, entries, or values. They allow for easy insertion, deletion, and access to elements.</li>
+      <li><strong>Stack and Queue Implementations:</strong> Lists can be used to implement stack (LIFO) and queue (FIFO) data structures, which are fundamental for various algorithms and tasks in computing. Stacks and queues are discussed in sections 4.1.2 and 4.1.4, respectively.</li>
+      <li><strong>Sorting and Searching Algorithms:</strong> Lists are frequently used in algorithms for sorting and searching data. Algorithms like bubble sort, selection sort, and binary search often operate on lists to arrange or find data efficiently.</li>
+      <li><strong>Function Arguments:</strong> Lists are often used to pass multiple arguments to functions, enabling flexible and efficient handling of inputs in programming.</li>
+      <li><strong>Matrix Operations:</strong> Lists can be used to represent and manipulate matrices in numerical and scientific computing, where each list represents a row or column of the matrix.</li>
+    </ul>
+
+    <h3 class="section-title" id="s4_1_2">4.1.2 Stacks</h3>
+    <p>A stack is a simple data structure where you can only add or remove items from one end, known as the "top". Both insertion and deletion of elements occur at this top end. A stack operates on the Last-In, First-Out (LIFO) principle, meaning that the most recently added element is the first one to be removed.</p>
+
+    <h4 class="section-title">4.1.2.1 Properties of Stack</h4>
+    <ul>
+      <li><strong>LIFO Principle:</strong> A stack works by the Last-In, First-Out rule. The last item added is the first one removed.</li>
+      <li><strong>Single Access Point:</strong> You can only add or remove items from the top of the stack.</li>
+      <li><strong>Order Preservation:</strong> The order in which you add items is preserved, with the last item added being the first to leave.</li>
+      <li><strong>Size Flexibility:</strong> A stack can either have a fixed size or grow as needed.</li>
+      <li><strong>Sequential Access:</strong> You can only access items in the order they were added, starting from the top.</li>
+    </ul>
+
+    <!-- Page 93 -->
+    <div class="page-marker"><span>Page 93</span></div>
+    <h4 class="section-title">4.1.2.1 Stack Operations</h4>
+    <p>There are two basic operations in a stack:</p>
+    <ul>
+      <li><strong>Push Operation:</strong> Push means adding an item to the top of the stack. In Python, we use list data structure to implement the stack. Therefore, we use the list function <code>append()</code> to add an element to the top of the stack.</li>
+      <li><strong>Pop Operation:</strong> Pop means removing the item from the top of the stack. We use list <code>pop()</code> function to remove the element from the top of the stack.</li>
+    </ul>
+    <p><strong>Example:</strong> Imagine a stack of books shown in Figure 4.2, on a desk, you can only add a book on top of the stack or take the top book off. Here is a Python implementation of the book stack described above.</p>
+    <div class="figure-caption">Figure 4.2: Stack of Books</div>
+    <div class="code-block"><span class="comment"># Create an empty stack of books</span>
+stack_of_books = []
+<span class="keyword">print</span>(<span class="string">"Initial stack:"</span>, stack_of_books)
+<span class="comment"># Empty stack</span>
+
+<span class="comment"># Add books to the stack (push operation)</span>
+<span class="keyword">print</span>(<span class="string">"\nAdding books to the stack (push operation):"</span>)
+stack_of_books.append(<span class="string">'Book A'</span>)
+<span class="keyword">print</span>(<span class="string">"Stack after pushing 'Book A':"</span>, stack_of_books)
+stack_of_books.append(<span class="string">'Book B'</span>)
+<span class="keyword">print</span>(<span class="string">"Stack after pushing 'Book B':"</span>, stack_of_books)
+stack_of_books.append(<span class="string">'Book C'</span>)
+<span class="keyword">print</span>(<span class="string">"Stack after pushing 'Book C':"</span>, stack_of_books)
+
+<span class="comment"># Remove the top book from the stack (pop operation)</span>
+<span class="keyword">print</span>(<span class="string">"\nDeletion of top book (pop operation):"</span>)
+top_book = stack_of_books.pop()
+<span class="keyword">print</span>(<span class="string">"Removed book:"</span>, top_book)
+<span class="keyword">print</span>(<span class="string">"Stack after popping the top book:"</span>, stack_of_books)</div>
+
+    <!-- Page 94 -->
+    <div class="page-marker"><span>Page 94</span></div>
+    <p>The code creates an empty stack to hold books. It then adds three books ("Book A", "Book B", and "Book C") one by one to the top of the stack. Finally, it removes the top book "Book C" from the stack, showing how the last book added is the first one taken off.</p>
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <div class="content">Did you know that stacks are used in algorithms like depth-first search (DFS) in graph traversal? They help manage the nodes to be explored in a LIFO manner.</div>
+    </div>
+
+    <h3 class="section-title" id="s4_1_3">4.1.3 Using Stacks in Computers</h3>
+    <p>Stacks are used to evaluate expressions, function call management, balancing parentheses and undo mechanism. Let's discuss them one by one.</p>
+
+    <h4 class="section-title">4.1.3.1 Infix, Postfix, and Prefix Notations</h4>
+    <p>In mathematics and computer science, expressions can be written in different notations. The three main notations are infix, postfix, and prefix notations.</p>
+    <ul>
+      <li><strong>Infix Notation:</strong> The operator is placed between the operands. This is the standard notation used in most arithmetic and algebraic expressions.<br>
+      Example: A + B or (A + B) &times; C<br>
+      In A + B, the operator + is between the operands A and B. Parentheses may be used to clarify the order of operations.</li>
+      <li><strong>Postfix Notation (Reverse Polish Notation, RPN):</strong> The operator is placed after the operands. This notation does not require parentheses to denote the order of operations.<br>
+      Examples: A + B = AB+ and (A + B) &times; C = (AB+) &times; C = AB+C&times;<br>
+      In AB+, you first encounter the operands A and B, followed by the operator +, indicating that A and B are to be added. In AB+C&times;, you first add A and B, then multiply the result to C.</li>
+      <li><strong>Prefix Notation (Polish Notation):</strong> The operator is placed before the operands. Like postfix notation, prefix notation also does not require parentheses to indicate the order of operations.<br>
+      Example: +AB or +A&times;BC<br>
+      In +AB, the operator + comes before the operands A and B, indicating that A and B are to be added. In +A&times;BC, you first multiply B and C, then add A to the result.</li>
+    </ul>
+
+    <p><strong>Converting an Infix Expression to Postfix</strong></p>
+    <p>Converting an infix expression (like 3 + 4 * 5) to postfix notation (like 3 4 5 * +) can make calculations easier for computers. We use a stack to help with this conversion. Here's a simple explanation:</p>
+    <ol>
+      <li>Start with an empty stack and an empty output list.</li>
+      <li>Read the infix expression from left to right.</li>
+    </ol>
+
+    <!-- Page 95 -->
+    <div class="page-marker"><span>Page 95</span></div>
+    <ul>
+      <li>If you find an operand, add it directly to the output list.</li>
+      <li>If you find an operator (like +, -, *), push it onto the stack. But, if there is already an operator on the stack with higher or equal priority, pop it from the stack to the output list before pushing the new operator.</li>
+      <li>If you find a left parenthesis (, push it onto the stack.</li>
+      <li>If you find a right parenthesis ), pop operators from the stack to the output list until you find a left parenthesis. Remove the left parenthesis from the stack but do not add it to the output list.</li>
+    </ul>
+    <p>When you have processed the entire infix expression, pop any remaining operators from the stack to the output list.</p>
+    <p><strong>Example:</strong></p>
+    <p>Convert the infix expression 3 + 4 * 2 to postfix notation.</p>
+    <ul>
+      <li>Start with an empty stack and output list.</li>
+      <li>Read 3: Add to the output list: [3].</li>
+      <li>Read +: Push to the stack: [+].</li>
+      <li>Read 4: Add to the output list: [3, 4].</li>
+      <li>Read *: Push to the stack (since * has higher priority than +): [+, *].</li>
+      <li>Read 2: Add to the output list: [3, 4, 2].</li>
+      <li>Pop all operators from the stack to the output list: [3, 4, 2, *, +].</li>
+    </ul>
+    <p><strong>Result:</strong> The postfix expression is 3 4 2 * +.</p>
+
+    <h4 class="section-title">4.1.3.2 Evaluating Postfix Expression</h4>
+    <p>To solve the above 3 4 2 * +, postfix expressions we can use a stack. Here's a step-by-step guide:</p>
+    <p><strong>Example:</strong> Evaluate the postfix expression 3 4 5 * + using a stack.</p>
+    <ol>
+      <li>Start with an empty stack.</li>
+      <li>Read the expression from left to right.</li>
+      <li>When you find a number, push it onto the stack.
+        <ul>
+          <li>Push 3 onto the stack: [3]</li>
+          <li>Push 4 onto the stack: [3, 4]</li>
+          <li>Push 5 onto the stack: [3, 4, 5]</li>
+        </ul>
+      </li>
+      <li>When you find an operator, pop the required number of items from the stack, perform the operation, and push the result back onto the stack.
+        <ul>
+          <li>Pop 5 and 4, multiply them: 4 * 5 = 20</li>
+          <li>Push the result 20 back onto the stack: [3, 20]</li>
+          <li>Pop 20 and 3, add them: 3 + 20 = 23</li>
+          <li>Push the result 23 back onto the stack: [23]</li>
+        </ul>
+      </li>
+    </ol>
+    <p>The final result on the stack is the answer to the expression.</p>
+
+    <!-- Page 96 -->
+    <div class="page-marker"><span>Page 96</span></div>
+    <h4 class="section-title">4.1.3.3 Function Call Management</h4>
+    <p>Stacks are very useful in managing function calls in programming. Let's break it down with a simple example: Imagine you are making a series of phone calls. Each time you call someone, you write their name on a notepad. When you finish talking, you cross off their name.</p>
+    <p><strong>How This Works:</strong></p>
+    <ol>
+      <li><strong>Making a Call:</strong> When you make a call, you write down the name on top of the notepad. This is like pushing information onto the stack.</li>
+      <li><strong>Ending a Call:</strong> After you finish talking, you cross off the name. This is like popping information off the stack.</li>
+    </ol>
+    <p>In programming, when a function is called, its details (like what it needs to do and where to return after it's done) are written on the stack. This helps the computer remember what to do next. When the function finishes, it removes (or pops) its details from the stack, just like crossing off the name.</p>
+
+    <h4 class="section-title">4.1.3.4 Balancing Parentheses</h4>
+    <p>When dealing with infix expressions, parentheses are used to show which operations should be done first. Balancing parentheses is important to ensure that every opening parenthesis has a matching closing parenthesis.</p>
+    <p><strong>Steps to Check Parentheses:</strong></p>
+    <ol>
+      <li>Use a stack to keep track of opening parentheses.</li>
+      <li>When you find an opening parenthesis (, push it onto the stack.</li>
+      <li>When you find a closing parenthesis ), pop the top of the stack.</li>
+      <li>If the stack is empty after processing all parentheses, they are balanced.</li>
+      <li>If the stack is not empty, or if you try to pop from an empty stack, the parentheses are not balanced.</li>
+    </ol>
+    <p><strong>Example:</strong> For the expression (3 + 4) * (5 - 2), the parentheses are balanced. Each ( has a matching ).</p>
+
+    <h4 class="section-title">4.1.3.5 Undo Mechanism</h4>
+    <p>Stacks are used to implement undo functionality in applications such as Notepad and Microsoft Word. Each action you perform is saved on a stack. When you want to undo an action, the most recent action is removed from the stack and reversed. This allows you to go back to the previous state.</p>
+    <p><strong>Example:</strong></p>
+    <p>Imagine you are using a text editor and you make several changes to a document, like typing new text or deleting old text. Here's how the undo mechanism works:</p>
+    <ol>
+      <li><strong>Performing Actions:</strong> As you make changes, each action (such as typing or deleting text) is saved on a stack. For example, if you type "Hello", this action is</li>
+    </ol>
+
+    <!-- Page 97 -->
+    <div class="page-marker"><span>Page 97</span></div>
+    <ol start="1">
+      <li value="1">pushed onto the stack.</li>
+      <li><strong>Undoing an Action:</strong> When you press the undo button, the most recent action (like typing "Hello") is removed from the stack. The text editor then reverses this action (e.g., it deletes "Hello" from the document).</li>
+      <li><strong>Multiple Undos:</strong> If you continue to press undo, each previous action is reversed in the order they were performed. If you typed "World" after "Hello", pressing undo would first remove "World", then "Hello".</li>
+    </ol>
+
+    <div class="activity-box">
+      <div class="activity-header">Class Activity</div>
+      <p>Consider the task of managing a stack of plates in a restaurant kitchen. Write a Python code to simulate the operations of adding and removing plates from this stack.</p>
+      <p><strong>Requirements:</strong></p>
+      <ol>
+        <li><strong>Create a Stack Class:</strong>
+          <ul>
+            <li>Define a Stack class using a list to represent the stack of plates.</li>
+            <li>Implement methods for push (to add a plate), pop (to remove a plate), and peek (to view the top plate without removing it).</li>
+          </ul>
+        </li>
+        <li><strong>Demonstrate Stack Operations:</strong>
+          <ul>
+            <li>Push the following plates onto the stack: Plate 1, Plate 2, Plate 3.</li>
+            <li>Display the stack after each addition.</li>
+            <li>Pop a plate from the stack, and print both the removed plate and stack.</li>
+            <li>Peek at the top plate and print its value.</li>
+          </ul>
+        </li>
+      </ol>
+    </div>
+
+    <h3 class="section-title" id="s4_1_4">4.1.4 Queues</h3>
+    <p>A queue is like a line in front of a bank or a ticket counter. The first person to get in line is the first person to be served. In a computer, a queue works the same way. It keeps track of things so that the first item added is the first one to be taken out. Just like in a bank line, you add things to the back and remove them from the front, following the FIFO (First-In, First-Out) principle, as shown in Figure 4.3.</p>
+    <div class="figure-caption">Figure 4.3: Queue of persons in front of the bank</div>
+
+    <!-- Page 98 -->
+    <div class="page-marker"><span>Page 98</span></div>
+    <h4 class="section-title">4.1.4.1 Properties of Queue</h4>
+    <p>Below are the key properties of a queue.</p>
+    <ul>
+      <li><strong>Order Preservation:</strong> A queue keeps track of the order of items. The first item you put in the queue is the first one to come out.</li>
+      <li><strong>FIFO Principle:</strong> A queue works on the "First-In, First-Out" rule. This means the first item added to the queue is the first one to be removed.</li>
+      <li><strong>Dynamic Size:</strong> A queue can grow or shrink in size as you add or remove items. It adjusts automatically based on the number of items it holds.</li>
+    </ul>
+
+    <h4 class="section-title">4.1.4.2 Queue Operations</h4>
+    <p>Queues support two primary operations:</p>
+    <ul>
+      <li><strong>Enqueue (Add an Item):</strong> This is like adding a person to the end of the line. In a queue, you add items to the back.</li>
+      <li><strong>Dequeue (Remove an Item):</strong> This is like serving the person at the front of the line. In a queue, you take items out from the front.</li>
+      <li>Additional operations might include checking if the queue is empty, retrieving the element at the front without removing it, and determining the size of the queue.</li>
+    </ul>
+    <div class="code-block"><span class="comment"># Built-in module to implement queues in python</span>
+<span class="keyword">from</span> queue <span class="keyword">import</span> Queue
+<span class="comment"># Create a new queue</span>
+q = Queue()
+<span class="comment"># Add people to the queue (Enqueue)</span>
+q.put(<span class="string">"Ahmed"</span>)   <span class="comment"># Adds Ahmed to the end of the queue</span>
+q.put(<span class="string">"Fatima"</span>)  <span class="comment"># Adds Fatima to the end of the queue</span>
+q.put(<span class="string">"Ali"</span>)     <span class="comment"># Adds Ali to the end of the queue</span>
+<span class="comment"># View the person at the front of the queue (Peek)</span>
+front_person = q.queue[0] <span class="comment"># Looks at the person at the front without removing them</span>
+<span class="keyword">print</span>(front_person)
+<span class="comment"># Remove a person from the front of the queue (Dequeue)</span>
+removed_person = q.get() <span class="comment"># Removes and returns the person at the front of the queue</span>
+<span class="keyword">print</span>(removed_person)
+<span class="comment"># Add another person to the queue (Enqueue)</span>
+q.put(<span class="string">"Sara"</span>) <span class="comment"># Adds Sara to the end of the queue</span>
+<span class="comment"># View the updated queue</span>
+updated_queue = list(q.queue)
+<span class="keyword">print</span>(updated_queue)</div>
+
+    <!-- Page 99 -->
+    <div class="page-marker"><span>Page 99</span></div>
+    <p>The code manages a line of people using a queue. It adds people to the end of the line, checks who is at the front without removing them, and then serves (removes) the person at the front. Finally, it adds another person to the end and shows the updated line.</p>
+    <div class="tip-box"><strong>Tip:</strong> The 'peek' operation allows you to view the element at the front of the queue without removing it. It's similar to looking at the first book on the shelf to see which one will be picked next.</div>
+
+    <h3 class="section-title" id="s4_1_5">4.1.5 Using Queues in Computers</h3>
+    <p>Queues are used to implement Breadth-First Search (BFS) in Graph, Task scheduling, Print Spooling while printing jobs and Call centre systems. Let's discuss them one by one.</p>
+
+    <h4 class="section-title">4.1.5.1 Breadth-First Search Algorithm (BFS) in Graph</h4>
+    <p>BFS is an algorithm used to explore and traverse data structures like trees or graphs. It systematically examines all the nodes at the present "level" or depth before moving on to nodes at the next level.</p>
+    <p>Imagine you and your friends are visiting a zoo. The zoo has many animal enclosures connected by paths. You want to see all the animals, so you need a plan to visit every enclosure without missing any. BFS is a method that helps you do this. To follow this method, you will use a queue, which is like a line of people waiting for their turn.</p>
+    <ol>
+      <li><strong>Start at the Entrance:</strong> You begin your visit at the zoo entrance, which is the first enclosure you will explore. This entrance is like the starting point in a map, called the "start node".</li>
+      <li><strong>Using a Queue to Visit Enclosures:</strong> To stay organized, you put the entrance in a queue. The queue will help you visit each enclosure in the order you discover them. Think of the queue as a line where you add the enclosures you find so you can visit them one by one.</li>
+      <li><strong>Visit the First Enclosure:</strong> You start by visiting the first enclosure in the queue (the one at the front of the line). After seeing the animals there, you look at the map to find all the nearby enclosures connected to it. These nearby enclosures are called "neighboring enclosures." You then add (enqueue) these neighboring enclosures to the queue so you can visit them next.</li>
+      <li><strong>Move to the Next Enclosure in the Queue:</strong> Now, you move to the next enclosure in the queue and repeat the process. You visit the animals there, find its neighboring enclosures, and add them to the queue. This way, you visit all the enclosures step by step.</li>
+    </ol>
+
+    <!-- Page 100 -->
+    <div class="page-marker"><span>Page 100</span></div>
+    <ol start="5">
+      <li><strong>Continue Until the Queue is Empty:</strong> You keep following the queue until there are no more enclosures left in it. When the queue is empty, it means you have visited every enclosure in the zoo.</li>
+    </ol>
+
+    <h4 class="section-title">4.1.5.2 How We Traverse a Tree Using BFS?</h4>
+    <p>Breadth-First Search (BFS) is an algorithm used to explore and traverse tree structures by visiting nodes level by level. This approach uses a queue to manage the nodes that need to be visited. Below is a detailed explanation using a numeric tree example. The Figure 4.4 illustrates the tree structure used in our BFS example:</p>
+    <div class="figure-caption">Figure 4.4: Balanced Binary Tree</div>
+
+    <p><strong>BFS Process with Queue Operations:</strong></p>
+    <ol>
+      <li><strong>Start at the Root:</strong> Begin at the root node (1). This node is placed into the queue.</li>
+      <li>Queue: [1]</li>
+      <li><strong>Visit Node 1:</strong> Dequeue node 1 and visit it. Add its children (nodes 2 and 3) to the queue.</li>
+      <li>Queue after visiting 1: [2, 3]</li>
+      <li><strong>Visit Node 2:</strong> Dequeue node 2 and visit it. Add its children (nodes 4 and 5) to the queue.</li>
+      <li>Queue after visiting 2: [3, 4, 5]</li>
+      <li><strong>Visit Node 3:</strong> Dequeue node 3 and visit it. Add its children (nodes 6 and 7) to the queue.</li>
+      <li>Queue after visiting 3: [4, 5, 6, 7]</li>
+      <li><strong>Visit Node 4:</strong> Dequeue node 4 and visit it. Node 4 has no children, so the queue remains unchanged.</li>
+      <li>Queue after visiting 4: [5, 6, 7]</li>
+      <li><strong>Visit Node 5:</strong> Dequeue node 5 and visit it. Node 5 has no children, so the queue remains unchanged.</li>
+      <li>Queue after visiting 5: [6, 7]</li>
+      <li><strong>Visit Node 6:</strong> Dequeue node 6 and visit it. Node 6 has no children, so the queue remains unchanged.</li>
+    </ol>
+
+    <!-- Page 101 -->
+    <div class="page-marker"><span>Page 101</span></div>
+    <ol start="14">
+      <li>Queue after visiting 6: [7]</li>
+      <li><strong>Visit Node 7:</strong> Dequeue node 7 and visit it. Node 7 has no children, so the queue is now empty.</li>
+      <li>Queue after visiting 7: []</li>
+      <li><strong>Completion:</strong> The queue is empty, indicating that all nodes have been visited in a level-by-level order.</li>
+    </ol>
+
+    <h4 class="section-title">4.1.5.3 Task Scheduling using a Queue</h4>
+    <p>To understand task scheduling using a queue, let's compare it to a simple real-life scenario at a doctor's clinic.</p>
+    <ol>
+      <li><strong>Tasks as Patients:</strong> Imagine that each task your computer needs to do is like a patient visiting a doctor. Just as patients arrive at the clinic and wait their turn to see the doctor, tasks arrive on your computer and wait to be processed.</li>
+      <li><strong>Queue as the Waiting List:</strong> The queue in a computer works like a waiting list at the clinic. It keeps track of all the tasks in the order they arrive, just like the list keeps track of the patients. This ensures that tasks are handled one by one in the correct order.</li>
+      <li><strong>Enqueue Operation:</strong> When a new task arrives (for example, when you press "Print" on your computer), it is added to the end of the queue, similar to how a new patient is added to the end of the waiting list. This process of adding a task to the queue is called enqueue.</li>
+      <li><strong>Dequeue Operation:</strong> As soon as the computer is ready to process a task, it removes the first task from the front of the queue, just like the doctor calling in the next patient from the waiting list. This process of removing a task from the queue for processing is called dequeue.</li>
+      <li><strong>Why Use a Queue?</strong> Using a queue ensures that tasks are processed in the order they arrive, without skipping any. This is similar to ensuring that each patient is seen by the doctor in the order they arrived. It helps the computer manage tasks efficiently and fairly.</li>
+    </ol>
+
+    <h4 class="section-title">4.1.5.4 Print Spooling</h4>
+    <p>Print spooling is a system used to manage print jobs sent to a printer, ensuring that they are processed in the order they are received. This process involves the use of a queue to maintain organization and efficiency.</p>
+    <ul>
+      <li><strong>Managing Print Jobs:</strong> When multiple documents are sent to a printer, they are placed in a queue, analogous to a line of people waiting at a service counter. Each document is added to the end of the queue, which maintains the order of arrival.</li>
+    </ul>
+
+    <!-- Page 102 -->
+    <div class="page-marker"><span>Page 102</span></div>
+    <ul>
+      <li><strong>Order of Printing:</strong> The queue ensures that documents are printed sequentially, based on the order they were submitted. The document that was sent first will be printed first, while subsequent documents will wait their turn in the queue.</li>
+      <li><strong>Advantages of Using a Queue:</strong> By employing a queue, print spooling prevents issues such as documents being printed out of sequence or confusion arising from simultaneous print requests. This orderly approach allows the printer to handle multiple tasks efficiently and fairly, maintaining an organized process.</li>
+    </ul>
+
+    <h4 class="section-title">4.1.5.5 Data Buffering</h4>
+    <p>Queues play a crucial role in buffering data streams, which helps manage and process data efficiently. To understand this concept better, let's look at a couple of real-world examples.</p>
+    <ol>
+      <li><strong>Online Video Streaming:</strong> When you watch a video online, the video is not played all at once. Instead, it is buffered in small chunks. This means that as the video plays, a queue stores and loads parts of the video ahead of what you are currently watching. This buffering queue helps ensure that the video plays smoothly without interruptions, even if there are delays in data transfer from the internet.</li>
+      <li><strong>Printer Queue:</strong> Imagine you have several documents to print, but your printer can only handle one document at a time. When you send multiple print jobs to the printer, they are placed in a queue. The printer then processes each document in the order they were received. This queue helps manage and organize the print jobs so that each document is printed one after the other without confusion.</li>
+    </ol>
+
+    <h3 class="section-title" id="s4_1_6">4.1.6 Trees</h3>
+    <p>A tree data structure organizes information in a way that spreads out from a main point called the root node. In a tree, each piece of information, called a node, can connect to other pieces, which are also nodes, forming a branching structure. This branching structure is different from a list, where items are organized one after the other in a straight line.</p>
+    <p><strong>Example:</strong> In a family tree, the oldest ancestors represent the root node, serving as the starting point of the hierarchy. Each individual in the tree may have descendants, forming subsequent levels of the hierarchy, as illustrated in Figure 4.5. This hierarchical structure is not suitable for storage in a linear format, such as a list, due to the complex parent-child relationships. Therefore, a tree data structure is employed to efficiently store and access such hierarchical data, enabling clear representation and retrieval of information.</p>
+
+    <!-- Page 103 -->
+    <div class="page-marker"><span>Page 103</span></div>
+    <div class="figure-caption">Figure 4.5: Family Tree</div>
+    <div class="info-box">
+      <div class="icon">📜</div>
+      <div class="content">The concept of tree data structures was first introduced by computer scientist <strong>John McCarthy</strong> in 1960.</div>
+    </div>
+
+    <h4 class="section-title">4.1.6.1 Properties of Trees</h4>
+    <ol>
+      <li><strong>Root Node:</strong> The root is the very first or top node in a tree, like the main folder in a computer where all other folders and files are contained.</li>
+      <li><strong>Edges and Nodes:</strong> Nodes are the individual elements in the tree, and they are connected by lines called edges. A node without any child nodes is called a leaf, similar to a file in a folder that doesn't contain any other files.</li>
+      <li><strong>Height:</strong> The height of a tree is the longest path from the root node down to the farthest leaf. It tells us how deep or tall the tree is.</li>
+      <li><strong>Balanced Trees:</strong> A tree is considered balanced if the branches on the left and right sides are nearly the same height. See the details in Section 4.1.7</li>
+    </ol>
+    <p>Here's a simple example of how to create a family tree structure in Python using classes. This implementation shows how to create family members (nodes) and how to add children (descendants) to them.</p>
+
+    <!-- Page 104 -->
+    <div class="page-marker"><span>Page 104</span></div>
+    <p>The above code shows:</p>
+    <ul>
+      <li>The <code>FamilyMember</code> class represents a single person in the family tree. Each person has a name and can have children (descendants).</li>
+      <li>The <code>FamilyTree</code> class manages the entire tree, starting with an ancestor at the root. It includes functions to add children and find family members.</li>
+    </ul>
+    <p>Therefore, the code generates the following tree in which each node (family member) is represented by a circle, and arrows indicate the parent-child relationships as shown in Figure 4.6.</p>
+    <div class="code-block"><span class="keyword">class</span> FamilyMember:
+    <span class="keyword">def</span> __init__(self, name):
+        self.name = name
+        self.children = []
+
+<span class="keyword">class</span> FamilyTree:
+    <span class="keyword">def</span> __init__(self, ancestor_name):
+        self.root = FamilyMember(ancestor_name)
+
+    <span class="keyword">def</span> add_child(self, parent_name, child_name):
+        parent_node = self._find_member(self.root, parent_name)
+        <span class="keyword">if</span> parent_node:
+            parent_node.children.append(FamilyMember(child_name))
+
+    <span class="keyword">def</span> _find_member(self, current_member, name):
+        <span class="keyword">if</span> current_member.name == name:
+            <span class="keyword">return</span> current_member
+        <span class="keyword">for</span> child <span class="keyword">in</span> current_member.children:
+            result = self._find_member(child, name)
+            <span class="keyword">if</span> result:
+                <span class="keyword">return</span> result
+        <span class="keyword">return</span> None
+
+<span class="comment"># Example usage</span>
+family_tree = FamilyTree(<span class="string">'Grandparent'</span>)
+family_tree.add_child(<span class="string">'Grandparent'</span>, <span class="string">'Parent1'</span>)
+family_tree.add_child(<span class="string">'Grandparent'</span>, <span class="string">'Parent2'</span>)
+family_tree.add_child(<span class="string">'Parent1'</span>, <span class="string">'Child1'</span>)
+family_tree.add_child(<span class="string">'Parent1'</span>, <span class="string">'Child2'</span>)</div>
+    <div class="figure-caption">Figure 4.6: A Family Tree Structure</div>
+
+    <!-- Page 105 -->
+    <div class="page-marker"><span>Page 105</span></div>
+    <h3 class="section-title" id="s4_1_7">4.1.7 Balanced Tree</h3>
+    <p>A Balanced Tree is a type of tree data structure where the height of the tree is kept as small as possible by ensuring that the tree remains balanced. This balance is achieved by maintaining that the height difference between the left and right subtrees of any node is no more than a certain value (commonly 1). Balanced trees are essential for efficient operations such as searching, insertion, and deletion, as they keep these operations close to O(log n) time complexity.</p>
+    <p><strong>Example: Organizing Books in a Library</strong></p>
+    <p>Consider a library that needs to efficiently organize and locate books on shelves. If the books were simply arranged in a linear order on a single shelf, finding a specific book might require scanning through many books. Instead, imagine the books are organized using a balanced tree structure.</p>
+    <p>At the root of this tree, we have a central category, such as <strong>Science</strong>. This category could then be divided into subcategories like <strong>Physics</strong> and <strong>Biology</strong>, each forming the children of the root. Within each subcategory, further divisions can be made, such as separating Physics into <strong>Classical Mechanics</strong> and <strong>Quantum Physics</strong>, and Biology into <strong>Botany</strong> and <strong>Zoology</strong>. This process continues, ensuring that no single branch of the tree becomes significantly longer than the others.</p>
+    <div class="figure-caption">Figure 4.7: Balanced Tree structure for organizing books in a Store</div>
+
+    <!-- Page 106 -->
+    <div class="page-marker"><span>Page 106</span></div>
+    <p>In this balanced tree, searching for a book on <strong>Quantum Physics</strong> involves traversing down the branches of the tree: first to Science, then to Physics, and finally to Quantum Physics. The balanced nature of the tree ensures that this search is quick, as the tree's height remains logarithmic relative to the number of categories, avoiding lengthy search times.</p>
+    <p>This concept is illustrated in Figure 4.7 while the computer science tree has upside down as shown in Figure 4.8.</p>
+
+    <h4 class="section-title">4.1.7.1 Operations on Tree</h4>
+    <p>In a tree structure, there are some basic operations that help us manage and work with the data. Let's break them down:</p>
+    <ul>
+      <li><strong>Insertion:</strong> Imagine you're adding a new family member to your family tree. Insertion is like finding the right spot in the tree and adding the new member there. We connect the new person to their parent in the tree, making sure they are part of the family structure.</li>
+      <li><strong>Deletion:</strong> Sometimes, we need to remove a member from the tree. Deletion is the process of taking someone out of the family tree. We carefully remove them, making sure the rest of the tree still makes sense and stays connected.</li>
+      <li><strong>Traversal:</strong> Tree traversal like walking through the family tree to visit each member. There are different ways to do this, like starting from the top and visiting each person one by one, or visiting all the children of a person before moving to the next branch. There are three common types of tree traversals: In-order, Pre-order, and Post-order. We will use the following simple tree structure with numeric data to understand traversal functions more easily.</li>
+    </ul>
+    <div class="figure-caption">Figure 4.8: Tree Structure with Numeric Data</div>
+
+    <!-- Page 107 -->
+    <div class="page-marker"><span>Page 107</span></div>
+    <p>This tree has a root node with the value 1. It has two child nodes, 2 and 3, which themselves have children as shown in Figure 4.8.</p>
+
+    <p><strong>1. In-order Traversal</strong></p>
+    <p>In-order traversal means visiting the left subtree first, then the root node, and finally the right subtree.</p>
+    <p><strong>Example:</strong> The in-order traversal of the above tree is given below.</p>
+    <ol>
+      <li>Visit node 4 (leftmost node of 2)</li>
+      <li>Visit node 2</li>
+      <li>Visit node 5 (right child of 2)</li>
+      <li>Visit node 1 (root)</li>
+      <li>Visit node 6 (leftmost node of 3)</li>
+      <li>Visit node 3</li>
+      <li>Visit node 7 (right child of 3)</li>
+    </ol>
+    <p>The in-order traversal output is: <strong>4, 2, 5, 1, 6, 3, 7</strong>.</p>
+
+    <p><strong>2. Pre-order Traversal</strong></p>
+    <p>Pre-order traversal involves visiting the root node first, then the left subtree, followed by the right subtree.</p>
+    <p><strong>Example:</strong> The pre-order traversal of the above tree is given below:</p>
+    <ol>
+      <li>Visit node 1 (root)</li>
+      <li>Visit node 2</li>
+      <li>Visit node 4 (leftmost node of 2)</li>
+      <li>Visit node 5 (right child of 2)</li>
+      <li>Visit node 3</li>
+      <li>Visit node 6 (leftmost node of 3)</li>
+      <li>Visit node 7 (right child of 3)</li>
+    </ol>
+    <p>The pre-order traversal output is: <strong>1, 2, 4, 5, 3, 6, 7</strong>.</p>
+
+    <p><strong>3. Post-order Traversal</strong></p>
+    <p>Post-order traversal means visiting the left subtree first, then the right subtree, and finally the root node.</p>
+    <p><strong>Example:</strong> The post-order traversal of the above tree is given below:</p>
+    <ol>
+      <li>Visit node 4 (leftmost node of 2)</li>
+      <li>Visit node 5 (right child of 2)</li>
+      <li>Visit node 2</li>
+      <li>Visit node 6 (leftmost node of 3)</li>
+      <li>Visit node 7 (right child of 3)</li>
+      <li>Visit node 3</li>
+      <li>Visit node 1 (root)</li>
+    </ol>
+
+    <!-- Page 108 -->
+    <div class="page-marker"><span>Page 108</span></div>
+    <p>The post-order traversal output is: <strong>4, 5, 2, 6, 7, 3, 1</strong>.</p>
+    <ul>
+      <li><strong>Searching:</strong> Searching is like looking for a specific member in the family tree. We go through the tree, checking each person until we find the one we're looking for. This helps us quickly locate information in the tree.</li>
+    </ul>
+
+    <h4 class="section-title">4.1.7.2 Types of Trees</h4>
+    <p>Trees come in various types, each with its own unique structure and purpose. There are two common types of trees: Binary Trees and AVL Trees. These types help in organizing and managing data in efficient ways.</p>
+
+    <p><strong>1. Binary Tree:</strong></p>
+    <p>A binary tree is a hierarchical data structure in which each node can have at most two children, known as the left and right children as shown in Figure 4.9. This structure is analogous to a family tree, where each individual may have up to two descendants, ensuring a well-organized and balanced arrangement of data for efficient management and retrieval.</p>
+    <p><strong>Example:</strong> In the binary tree example shown in Figure 4.9:</p>
+    <ol>
+      <li>The "Grandparent" is the root, and it has two children, "Parent1" and "Parent2".</li>
+      <li>Each parent can have their own children (like "Child1", "Child2", etc.).</li>
+    </ol>
+    <div class="figure-caption">Figure 4.9: Binary Tree Representation of a Family Tree</div>
+
+    <!-- Page 109 -->
+    <div class="page-marker"><span>Page 109</span></div>
+    <p><strong>2. AVL Trees:</strong></p>
+    <p>An AVL tree is a type of binary tree that keeps itself balanced, meaning the height of the tree is managed carefully. If one side of the tree starts getting too tall compared to the other, the tree rearranges itself to maintain balance.</p>
+    <p><strong>Example:</strong> Imagine you are organizing books on shelves. You want to make sure that the shelves are balanced, so one side isn't heavier than the other. This is similar to an AVL tree as shown in Figure 4.10.</p>
+    <div class="figure-caption">Figure 4.10: AVL Tree.</div>
+    <p>In the above example:</p>
+    <ul>
+      <li>The tree stays balanced after each new number (like a book on a shelf) is added.</li>
+      <li>The height difference between the left side (with nodes 15, 10, 18) and the right side (with node 30) remains minimal, keeping the tree balanced.</li>
+    </ul>
+
+    <h4 class="section-title">4.1.7.2 Applications of Trees</h4>
+    <ol>
+      <li><strong>File Systems:</strong> Pre-order tree traversal is useful for creating backups of file systems. By visiting the root first and then recursively backing up each directory, it ensures that directories are backed up before their contents.</li>
+      <li><strong>File System Deletion:</strong> In file systems, Post-order traversal ensures that files and directories are deleted in the correct order—by first deleting all sub directories and files before deleting the parent directory.</li>
+      <li><strong>Hierarchical Data Representation:</strong> Trees are used in representing data with a clear hierarchical relationship, such as organisational charts and family trees.</li>
+      <li><strong>Decision Making:</strong> Trees, such as decision trees, are used in algorithms to make decisions based on various conditions and outcomes.</li>
+      <li><strong>Syntax Parsing:</strong> In programming languages, trees are used to parse and represent the syntax of source code and help compilers to understand and process code structure.</li>
+    </ol>
+
+    <!-- Page 110 -->
+    <div class="page-marker"><span>Page 110</span></div>
+    <h3 class="section-title" id="s4_1_8">4.1.8 Introduction to Graphs</h3>
+    <p>A Graph is a data structure that consists of a set of vertices (or nodes) connected by edges. Graphs are used to represent networks of connections, where each connection is a relationship between two vertices. These vertices can represent anything, like cities, people, or even abstract concepts, and the edges represent the relationships or pathways between them.</p>
+    <p>Imagine you are mapping out all the cities in Pakistan and the roads that connect them. Each city is a vertex, and each road between two cities is an edge. Unlike a tree, a graph does not have a single "root" and does not follow a hierarchical structure. In a graph, any two vertices can be connected, creating a complex web of relationships.</p>
+    <p><strong>Example:</strong> In a social network, each person can be connected to many others, forming a graph. There is no single starting point, and people (vertices) can have multiple connections (edges) that do not follow a strict parent-child relationship like in a tree.</p>
+    <p><strong>Difference from a Tree:</strong> While both graphs and trees are used to represent relationships between objects, a tree is a special kind of graph with some important differences:</p>
+    <ul>
+      <li>A <strong>Tree</strong> is hierarchical, meaning it has a single root node from which all other nodes branch out. In contrast, a <strong>Graph</strong> does not necessarily have a hierarchy or a root.</li>
+      <li>In a <strong>Tree</strong>, there is exactly one path between any two nodes, ensuring no cycles (loops). However, in a <strong>Graph</strong>, there can be multiple paths between nodes, and cycles are allowed.</li>
+      <li>Trees are often used to represent structured data like family trees or organizational charts. Graphs are more flexible and can represent a broader range of connections, such as networks, web links, or transport systems.</li>
+    </ul>
+
+    <h4 class="section-title">4.1.8.1 Characteristics of Graphs</h4>
+    <p>Graphs have several defining features that help us understand and use them effectively:</p>
+    <ul>
+      <li><strong>Vertices (Nodes):</strong> These are the individual points or entities in a graph. For example, in a social network graph, each user is represented by a vertex.</li>
+      <li><strong>Edges (Links):</strong> These are the connections between vertices. For example, in a transport system graph, each road connecting two cities is an edge.</li>
+    </ul>
+
+    <h4 class="section-title">4.1.8.2 Properties of Graphs</h4>
+    <p>Graphs also have specific details that describe their structure:</p>
+    <ul>
+      <li><strong>Degree:</strong> This is the number of edges connected to a vertex. For instance, if a city is connected to three other cities, the degree of that city's vertex is 3.</li>
+      <li><strong>Weight:</strong> In some graphs, edges have weights that represent values like distances or costs. For example, if a road between two cities is 50 kilometres long, its edge might have a weight of 50.</li>
+    </ul>
+
+    <!-- Page 111 -->
+    <div class="page-marker"><span>Page 111</span></div>
+    <ul>
+      <li><strong>Direction:</strong> Edges can be either directed or undirected. Directed edges have a one-way connection, meaning a road from city A to city B does not necessarily have a return road from B to A. Undirected edges represent a two-way connection.</li>
+    </ul>
+
+    <h4 class="section-title">4.1.8.3 Operations on Graphs</h4>
+    <p>Graphs support various operations to manipulate and explore their structure. Here are some essential operations:</p>
+    <ul>
+      <li><strong>Insertion:</strong> Adding a new vertex or edge to the graph.<br>
+      <strong>Example:</strong> If a new city is added to the transport map, it introduces a new vertex and possibly new edges.</li>
+      <li><strong>Deletion:</strong> Removing a vertex or edge from the graph.<br>
+      <strong>Example:</strong> If a city is removed from the map, its corresponding vertex and all edges connected to it are deleted.</li>
+      <li><strong>Traversal:</strong> Visiting all vertices and edges systematically. Traversal can be done using different functions:
+        <ul>
+          <li><strong>Breadth-First Search (BFS):</strong> This technique starts from a source vertex and explores all its immediate neighbors before moving to the next level of vertices.<br>
+          <strong>Example:</strong> Imagine you are at a central train station in a city, and you want to visit all the nearby neighborhoods. First, you would take the trains that directly connect to the central station and explore all the neighborhoods they reach. Once you have visited all these neighboring areas, you then move to the next set of neighborhoods that are directly connected to the previously visited ones. This process continues until you have explored all reachable neighborhoods from the central station.</li>
+          <li><strong>Depth-First Search (DFS):</strong> This technique starts from a source vertex and explores as far as possible along each branch before backtracking.<br>
+          <strong>Example:</strong> Imagine you are exploring a multi-storey building. You start at the entrance and decide to explore each floor completely before moving to the next floor. You walk down each hallway and check every room on the current floor before going up or down to the next floor. If you reach the end of a hallway, you go back to explore any other rooms you might have missed on that floor before moving to the next one.</li>
+        </ul>
+      </li>
+      <li><strong>Searching:</strong> Finding a specific vertex or edge in the graph. Searching operations help locate particular cities or routes efficiently.</li>
+    </ul>
+
+    <h4 class="section-title">4.1.8.4 Types of Graphs</h4>
+    <p>Graphs can be classified into several types based on their structure and properties. The main types of graphs are directed, undirected, and weighted. Each type has its own characteristics, which can be better understood through simple examples.</p>
+
+    <!-- Page 112 -->
+    <div class="page-marker"><span>Page 112</span></div>
+    <ul>
+      <li><strong>Directed Graphs:</strong> In a directed graph, edges have a direction, which means they go from one vertex to another in a specific way as shown in Figure 4.11.<br>
+      <strong>Example:</strong> Consider a graph shown in Figure 4.11. If you want to travel from city A to city B, you can only go in the direction permitted by the city's sign. If there's no one-way street going from city A to city B, you cannot travel directly from city A to B.</li>
+      <li><strong>Undirected Graphs:</strong> In an undirected graph, edges do not have a direction. This means that if there is a connection between two vertices, you can travel in both directions.<br>
+      <strong>Example:</strong> Consider a graph that is shown in Figure 4.12, if Person A is friends with Person B, then Person B is also friends with Person A. There is no restriction on the direction of the friendship, so you can move freely between friends.</li>
+    </ul>
+    <div class="figure-caption">Figure 4.11: Directed Weighted Graph</div>
+    <div class="figure-caption">Figure 4.12: Undirected Graph</div>
+
+    <!-- Page 113 -->
+    <div class="page-marker"><span>Page 113</span></div>
+    <ul>
+      <li><strong>Weighted Graphs:</strong> In a weighted graph, each edge has a weight or cost associated with it. This weight represents the distance, time, or cost required to travel from one vertex to another as shown in Figure 4.11.<br>
+      <strong>Example:</strong> Imagine a map of a city where each road has a different distance or travel time. If you want to travel from one landmark to another, the map provides the distance or travel time for each road. This information helps you determine the shortest or quickest route between landmarks.</li>
+    </ul>
+
+    <p><strong>Graph Implementation Using Python</strong></p>
+    <div class="code-block"><span class="keyword">import</span> networkx <span class="keyword">as</span> nx
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+<span class="comment"># Create a graph object</span>
+G = nx.Graph()
+<span class="comment"># Add vertices (nodes)</span>
+G.add_node(<span class="string">'A'</span>)
+G.add_node(<span class="string">'B'</span>)
+G.add_node(<span class="string">'C'</span>)
+<span class="comment"># Add edges (links) between vertices</span>
+G.add_edge(<span class="string">'A'</span>, <span class="string">'B'</span>)
+G.add_edge(<span class="string">'B'</span>, <span class="string">'C'</span>)
+<span class="comment"># Draw the graph</span>
+nx.draw(G, with_labels=True)
+plt.show()</div>
+    <p>In the above code:</p>
+    <ul>
+      <li>We first create a graph object.</li>
+      <li>Nodes 'A', 'B', and 'C' are added to the graph.</li>
+      <li>Edges are added to connect these nodes.</li>
+      <li>The graph is drawn and displayed using Matplotlib.</li>
+    </ul>
+    <p>This example demonstrates a simple graph with three nodes and two edges, visualizing how vertices and edges are represented programmatically.</p>
+
+    <h2 class="section-title" id="s4_2">4.2 Choosing the Right Data Structure for the Problem</h2>
+    <p>When solving problems in computer science and programming, selecting the right data structure is crucial. Different data structures are suited to different types of problems, and understanding when to use each one can make your solutions more efficient and</p>
+
+    <!-- Page 114 -->
+    <div class="page-marker"><span>Page 114</span></div>
+    <p>easier to implement. Let's break down when each of the five data structures: Stack, Queue, List, Tree, and Graph, is most appropriate.</p>
+
+    <h3 class="section-title">4.2.1 Stack: Best for Last-In, First-Out (LIFO) Problems</h3>
+    <p><strong>When to Use:</strong> A stack is ideal when you need to process data in the reverse order of how it was received. This is known as 'Last-In, First-Out' (LIFO). Stacks are often used in scenarios where you need to backtrack, like in navigating through web pages (where you can go back to the previous page) or evaluating mathematical expressions. Common applications include:</p>
+    <ul>
+      <li><strong>Expression Evaluation:</strong> Converting infix expressions to postfix or prefix, and evaluating them.</li>
+      <li><strong>Backtracking Algorithms:</strong> Such as solving puzzles like mazes, or the Depth-First Search (DFS) in graphs.</li>
+      <li><strong>Undo Mechanisms:</strong> In software like text editors, where you can undo the most recent action.</li>
+    </ul>
+
+    <h3 class="section-title">4.2.2 Queue: Best for First-In, First-Out (FIFO) Problems</h3>
+    <p><strong>When to Use:</strong> A queue is perfect for scenarios where the order of processing needs to follow the 'First-In, First-Out' (FIFO) principle. This means the first element added to the queue will be the first one to be removed. Queues are commonly used in:</p>
+    <ul>
+      <li><strong>Breadth-First Search (BFS):</strong> In graphs or trees, where you explore all nodes at the current level before moving to the next.</li>
+      <li><strong>Task Scheduling:</strong> Where tasks are processed in the order they arrive, like print job management or handling requests in a web server.</li>
+      <li><strong>Simulation of Real-World Scenarios:</strong> Such as modeling a line of customers in a store.</li>
+    </ul>
+
+    <h3 class="section-title">4.2.3 List: Best for Ordered Collections</h3>
+    <p><strong>When to Use:</strong> Lists are versatile and useful when you need to store an ordered collection of elements. They are especially appropriate when the order of elements matters, but direct access to elements by index is also needed. Use lists in:</p>
+    <ul>
+      <li><strong>Dynamic Arrays:</strong> Where you need to frequently add or remove elements.</li>
+      <li><strong>Storing Sequences:</strong> Such as the order of elements in a to-do list or playlist.</li>
+      <li><strong>Implementing Other Data Structures:</strong> Lists can be used as the building blocks for stacks, queues, and more.</li>
+    </ul>
+
+    <h3 class="section-title">4.2.4 Tree: Best for Hierarchical Data</h3>
+    <p><strong>When to Use:</strong> Trees are essential when dealing with hierarchical data, where elements are naturally organized in a parent-child relationship. Trees are used in:</p>
+    <ul>
+      <li><strong>Hierarchical Databases:</strong> Representing organizational structures, file systems, or XML/HTML documents.</li>
+    </ul>
+
+    <!-- Page 115 -->
+    <div class="page-marker"><span>Page 115</span></div>
+    <ul>
+      <li><strong>Binary Search Trees (BSTs):</strong> For efficient searching, insertion, and deletion operations.</li>
+      <li><strong>Understanding Code Structure:</strong> When building compilers, trees are used to break down and understand the code's structure, helping the computer figure out its step-by-step instructions.</li>
+    </ul>
+
+    <h3 class="section-title">4.2.5 Graph: Best for Networked Data</h3>
+    <p><strong>When to Use:</strong> Graphs are used when you need to represent a set of objects (nodes) and the connections (edges) between them. Graphs are particularly useful in problems involving networks, such as:</p>
+    <ul>
+      <li><strong>Social Networks:</strong> Representing users and their connections (friends, followers).</li>
+      <li><strong>Pathfinding Algorithms:</strong> Like finding the shortest path in maps or game development.</li>
+      <li><strong>Dependency Resolution:</strong> Such as determining the build order of software projects with interdependent components.</li>
+    </ul>
+
+    <h2 class="section-title" id="s4_3">4.3 Combining Computational Structures for Complex Problems</h2>
+    <p>Combining different data structures, such as lists, stacks, queues, trees, and graphs, is essential for solving complex problems effectively. Each of these structures has its own strengths, and when we combine them, we can tackle more challenging problems with greater success.</p>
+    <p>This combination allows us to create stronger and more efficient solutions. It helps us manage complex data relationships and improve our ability to solve problems. By using these structures together, we can develop solutions that are better suited to specific needs and challenges, ultimately enhancing both performance and functionality.</p>
+
+    <h3 class="section-title">4.3.1 Combining Stacks and Queues to Evaluate Expressions</h3>
+    <p>Stacks and queues are powerful tools in evaluating mathematical expressions, especially when the expressions involve complex operations. By combining these two data structures, we can efficiently manage the order of operations, handle parentheses, and ensure the correct evaluation of expressions.</p>
+
+    <h3 class="section-title">4.3.2 Combining Stack and Graph to perform Depth-First Search (DFS)</h3>
+    <p>Depth-First Search (DFS) is a fundamental algorithm used to explore or traverse through a graph or tree structure. It uses a stack data structure to keep track of the vertices or nodes that need to be visited. This method is particularly useful when we need to explore as far as possible along a branch before backtracking, making it ideal for situations</p>
+
+    <!-- Page 116 -->
+    <div class="page-marker"><span>Page 116</span></div>
+    <p>where deep exploration is required.</p>
+    <p><strong>Example:</strong> Consider the graph shown in Figure 4.13, as a tree with numeric nodes:</p>
+    <div class="figure-caption">Figure 4.13: Graph Representation of a Tree with Numeric Nodes</div>
+    <p>In this graph:</p>
+    <ul>
+      <li>Node 1 is the root.</li>
+      <li>Nodes 2, 3, and 4 are children of node 1.</li>
+      <li>Nodes 5 and 6 are children of node 2.</li>
+      <li>Node 7 is a child of node 3.</li>
+      <li>Nodes 8 and 9 are children of node 4.</li>
+    </ul>
+    <p>Here's how the DFS algorithm uses a stack to traverse this graph:</p>
+    <ol>
+      <li>Start with an empty stack and push the root node (1) onto the stack.</li>
+      <li><strong>Step 1:</strong> Pop node 1 from the stack and mark it as visited. Push all of its unvisited children (nodes 2, 3, 4) onto the stack. The stack now contains nodes [4, 3, 2].</li>
+      <li><strong>Step 2:</strong> Pop the top of the stack (node 2). Mark node 2 as visited and push its unvisited children (nodes 5, 6) onto the stack. The stack now contains nodes [4, 3, 6, 5].</li>
+      <li><strong>Step 3:</strong> Pop the top of the stack (node 5). Mark node 5 as visited. Since node 5 has no children, nothing is added to the stack. The stack now contains nodes [4, 3, 6].</li>
+      <li><strong>Step 4:</strong> Pop the top of the stack (node 6). Mark node 6 as visited. Since node 6 has no children, nothing is added to the stack. The stack now contains nodes [4, 3].</li>
+      <li><strong>Step 5:</strong> Pop the top of the stack (node 3). Mark node 3 as visited and push its unvisited child (node 7) onto the stack. The stack now contains nodes [4, 7].</li>
+      <li><strong>Step 6:</strong> Pop the top of the stack (node 7). Mark node 7 as visited. Since node</li>
+    </ol>
+
+    <!-- Page 117 -->
+    <div class="page-marker"><span>Page 117</span></div>
+    <ol start="7">
+      <li value="7">7 has no children, nothing is added to the stack. The stack now contains node [4].</li>
+      <li><strong>Step 7:</strong> Pop the top of the stack (node 4). Mark node 4 as visited and push its unvisited children (nodes 8, 9) onto the stack. The stack now contains nodes [9, 8].</li>
+      <li><strong>Step 8:</strong> Pop the top of the stack (node 8). Mark node 8 as visited. Since node 8 has no children, nothing is added to the stack. The stack now contains node [9].</li>
+      <li><strong>Step 9:</strong> Pop the top of the stack (node 9). Mark node 9 as visited. Since node 9 has no children, the stack is now empty.</li>
+    </ol>
+    <p>The traversal order of the nodes using DFS in this example would be: <strong>1, 2, 5, 6, 3, 7, 4, 8, 9</strong>.</p>
+    <p>In this example, the DFS algorithm starts at the root node (1) and explores as far as possible along each branch before backtracking. By using a stack, the algorithm traverses the graph depth-first, visiting nodes in the order: 1, 2, 5, 6, 3, 7, 4, 8, 9. The stack helps manage the nodes to visit next, ensuring a complete exploration of each branch before moving to the next.</p>
+
+    <h3 class="section-title">4.3.3 Combining Queue and Graph to Perform Breadth-First Search (BFS)</h3>
+    <p>Breadth-First Search (BFS) is another fundamental algorithm used to explore or traverse through a graph or tree structure. Unlike Depth-First Search, BFS uses a queue data structure to keep track of the vertices or nodes that need to be visited. This method is particularly useful when we need to explore all nodes at the present depth level before moving on to nodes at the next depth level, making it ideal for situations where we need to find the shortest path or explore all possible paths level by level.</p>
+    <p><strong>Example:</strong> Consider the same graph represented in Figure 4.13, as a tree with numeric nodes:</p>
+    <p>Here's how the BFS algorithm uses a queue to traverse this graph:</p>
+    <ol>
+      <li>Start with an empty queue and enqueue the root node (1).</li>
+      <li><strong>Step 1:</strong> Dequeue node 1 and mark it as visited. Enqueue all of its unvisited children (nodes 2, 3, 4). The queue now contains nodes [2, 3, 4].</li>
+      <li><strong>Step 2:</strong> Dequeue the front of the queue (node 2). Mark node 2 as visited and enqueue its unvisited children (nodes 5, 6). The queue now contains nodes [3, 4, 5, 6].</li>
+      <li><strong>Step 3:</strong> Dequeue the front of the queue (node 3). Mark node 3 as visited and enqueue its unvisited child (node 7). The queue now contains nodes [4, 5, 6, 7].</li>
+      <li><strong>Step 4:</strong> Dequeue the front of the queue (node 4). Mark node 4 as visited and enqueue its unvisited children (nodes 8, 9). The queue now contains nodes [5, 6,</li>
+    </ol>
+
+    <!-- Page 118 -->
+    <div class="page-marker"><span>Page 118</span></div>
+    <ol start="5">
+      <li value="5">7, 8, 9].</li>
+      <li><strong>Step 5:</strong> Dequeue the front of the queue (node 5). Mark node 5 as visited. Since node 5 has no children, nothing is added to the queue. The queue now contains nodes [6, 7, 8, 9].</li>
+      <li><strong>Step 6:</strong> Dequeue the front of the queue (node 6). Mark node 6 as visited. Since node 6 has no children, nothing is added to the queue. The queue now contains nodes [7, 8, 9].</li>
+      <li><strong>Step 7:</strong> Dequeue the front of the queue (node 7). Mark node 7 as visited. Since node 7 has no children, nothing is added to the queue. The queue now contains nodes [8, 9].</li>
+      <li><strong>Step 8:</strong> Dequeue the front of the queue (node 8). Mark node 8 as visited. Since node 8 has no children, nothing is added to the queue. The queue now contains node [9].</li>
+      <li><strong>Step 9:</strong> Dequeue the front of the queue (node 9). Mark node 9 as visited. Since node 9 has no children, the queue is now empty.</li>
+    </ol>
+    <p>The traversal order of the nodes using BFS in this example would be: <strong>1, 2, 3, 4, 5, 6, 7, 8, 9</strong>.</p>
+    <p>In this example, the BFS algorithm, using a queue, guarantees that all nodes at the current level of the tree or graph are explored before proceeding to the next level. This approach is particularly effective for finding the shortest path in unweighted graphs or exploring all possible connections at each level of depth.</p>
+
+    <h3 class="section-title">4.3.4 Combining List and Stack to Perform Sequential Operations</h3>
+    <p>Lists and stacks are fundamental data structures that, when combined, provide a powerful way to manage and process data in a controlled sequence. A list allows for flexible data storage and access, while a stack imposes a Last-In-First-Out (LIFO) order, making it useful for tasks where the most recent element needs to be processed first.</p>
+    <p><strong>Example:</strong> Consider a scenario where we need to reverse the order of a list of numbers using a stack. Let's take the following list of numbers as an example:</p>
+    <p><strong>Original List: [10, 20, 30, 40, 50]</strong></p>
+    <p>To reverse the order of this list using a stack, we can follow these steps:</p>
+    <ol>
+      <li>Initialize an empty stack.</li>
+      <li><strong>Step 1:</strong> Push each element of the list onto the stack. After pushing all elements, the stack will contain:<br>
+      Stack: [10 &nbsp; 20 &nbsp; 30 &nbsp; 40 &nbsp; 50]</li>
+      <li><strong>Step 2:</strong> Pop elements from the stack one by one and insert them back into the list. Since the stack follows the LIFO order, the elements will be inserted in reverse order.</li>
+      <li><strong>Step 3:</strong> After all elements are popped and inserted back into the list, the list</li>
+    </ol>
+
+    <!-- Page 119 -->
+    <div class="page-marker"><span>Page 119</span></div>
+    <p>will now be:</p>
+    <p><strong>Reversed List: [50, 40, 30, 20, 10]</strong></p>
+    <p>In this example, the stack is used to temporarily hold the elements of the list, enabling us to reverse the order by taking advantage of the LIFO nature of the stack. The combination of a list and a stack allows us to efficiently perform operations that require reversing, undoing, or backtracking, which are common in various algorithms and applications.</p>
+
+    <!-- SUMMARY -->
+    <div class="summary-box" id="summary">
+      <h2>📝 Summary</h2>
+      <p>This chapter offers a comprehensive overview of fundamental computational structures, including lists, stacks, queues, trees, and graphs. It details their properties, operations, and applications, emphasizing their roles in organizing and managing data. The chapter also addresses the criteria for selecting appropriate data structures based on problem requirements. Additionally, it explores the integration of different computational structures to address complex problems effectively. By providing a detailed understanding of these structures, the chapter aims to enhance the reader's ability to apply them effectively in various computational contexts.</p>
+    </div>
+
+    <!-- EXERCISE — Pages 119–122 -->
+    <div class="exercise-section" id="exercise">
+      <h2>📋 Exercise</h2>
+
+      <h3>Multiple Choice Questions</h3>
+
+      <div class="mcq-item">
+        <p class="question">1. Which function is used to add an item at the end of the list in Python?</p>
+        <ol class="options" type="a">
+          <li>insert()</li>
+          <li>append()</li>
+          <li>remove()</li>
+          <li>pop()</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">2. What does the 'in' keyword do when used with a Python list?</p>
+        <ol class="options" type="a">
+          <li>Adds an item to the list.</li>
+          <li>Removes an item from the list.</li>
+          <li>Checks if an item exists in the list.</li>
+          <li>Returns the length of the list.</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">3. Which operation removes an item from the top of the stack?</p>
+        <ol class="options" type="a">
+          <li>Push</li>
+          <li>Pop</li>
+          <li>Peek</li>
+          <li>Add</li>
+        </ol>
+      </div>
+
+      <!-- Page 120 -->
+      <div class="page-marker"><span>Page 120</span></div>
+
+      <div class="mcq-item">
+        <p class="question">4. When converting an infix expression to postfix notation, what does a stack help to manage?</p>
+        <ol class="options" type="a">
+          <li>Order of operands</li>
+          <li>Priority of operators</li>
+          <li>Parentheses</li>
+          <li>Both b and c</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">5. Which operation is used to add an item to a queue?</p>
+        <ol class="options" type="a">
+          <li>Dequeue</li>
+          <li>Peek</li>
+          <li>Enqueue</li>
+          <li>Remove</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">6. In the context of Breadth-First Search (BFS) in a tree, which operation of queue is used to visit nodes level by level?</p>
+        <ol class="options" type="a">
+          <li>Adding nodes to the end of a stack.</li>
+          <li>Removing nodes from the end of a list.</li>
+          <li>Enqueueing nodes to a queue.</li>
+          <li>Dequeueing nodes from a stack.</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">7. Which of the following tree traversals visits the root node before its children?</p>
+        <ol class="options" type="a">
+          <li>In-order</li>
+          <li>Pre-order</li>
+          <li>Post-order</li>
+          <li>Level-order</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">8. Which of the following is true about the height of a tree?</p>
+        <ol class="options" type="a">
+          <li>The height is the number of edges from the root to the deepest node</li>
+          <li>The height is the number of nodes from the root to the deepest node</li>
+          <li>The height is the number of children of the root node</li>
+          <li>The height is always equal to the number of nodes in the tree</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">9. Which graph traversal explores all immediate neighbors of a vertex before moving to the next level?</p>
+        <ol class="options" type="a">
+          <li>Depth-First Search (DFS)</li>
+          <li>Breadth-First Search (BFS)</li>
+          <li>Depth-Limited Search (DLS)</li>
+          <li>Iterative Deepening Search (IDS)</li>
+        </ol>
+      </div>
+
+      <div class="mcq-item">
+        <p class="question">10. For which scenario would a graph data structure be most appropriate?</p>
+        <ol class="options" type="a">
+          <li>Managing a to-do list</li>
+          <li>Modeling a line of customers in a store</li>
+          <li>Representing connections in a social network</li>
+        </ol>
+      </div>
+
+      <!-- Page 121 -->
+      <div class="page-marker"><span>Page 121</span></div>
+      <h3>Short Questions</h3>
+      <ol style="margin-left:20px; color:#37474f; font-size:14px; line-height:2;">
+        <li>Explain how the 'extend()' function works in Python lists. Provide an example.</li>
+        <li>Explain the potential issues which could arise when two variables reference the same list in a program? Provide an example.</li>
+        <li>Define a stack and explain the Last-In, First-Out (LIFO) principle.</li>
+        <li>How does the stack help in balancing parentheses in an expression? Describe the process.</li>
+        <li>Differentiate between the Enqueue and Dequeue operations of queue.</li>
+        <li>Explain how the concept of a queue is applied in a computer's job scheduling system?</li>
+        <li>How can lists be utilized to implement other data structures?</li>
+        <li>Differentiate between the Depth-First Search (DFS) and Breadth-First Search (BFS).</li>
+      </ol>
+
+      <h3>Long Questions</h3>
+      <ol style="margin-left:20px; color:#37474f; font-size:14px; line-height:2.2;">
+        <li>Discuss the dynamic size property of lists in Python. How does this property make lists more flexible?</li>
+        <li>Write a Python program to manage a project's task list. Start with an initial list containing the following tasks = [design, development, testing, deployment]. Perform the following operations on the tasks list:
+          <ul>
+            <li>Add 'review' to the end of the list.</li>
+            <li>Insert 'planning' at the third position in the list.</li>
+            <li>Update 'testing' to quality assurance.</li>
+            <li>Remove 'development' from the list by its value.</li>
+            <li>Remove the task at index 1 from the list.</li>
+            <li>Find the index of the task 'deployment' and print it.</li>
+            <li>Print the final list after all modifications.</li>
+            <li>Count and print the number of tasks in the list.</li>
+          </ul>
+        </li>
+        <li>Discuss two real-world situations where stacks are commonly used. Explain how stack operations function in these contexts.</li>
+        <li>Consider the following infix expression (5 + 2) * (3 - 1).
+          <ol type="a">
+            <li>Describe the step-by-step process to convert this infix expression into postfix notation using a stack.</li>
+            <li>Illustrate the state of the stack and the output list after processing each token of the infix expression.</li>
+          </ol>
+          <p><strong>Hint:</strong> A token is a single element in an expression, such as a number, operator, or parenthesis.</p>
+        </li>
+        <li>Write a Python code to simulate a queue of print jobs. The code performs the following operations:
+
+          <!-- Page 122 -->
+          <div class="page-marker"><span>Page 122</span></div>
+          <ol type="a">
+            <li>Create an empty queue.</li>
+            <li>Add three print jobs to the queue.</li>
+            <li>Display the print job at the front of the queue without removing it.</li>
+            <li>Remove the print job from the front of the queue.</li>
+            <li>Add another print job to the queue.</li>
+            <li>Display the updated queue of print jobs.</li>
+          </ol>
+        </li>
+        <li>Explain the different types of tree traversals (In-order, Pre-order, Post-order). Provide an example of each traversal using a given tree structure, and explain how each traversal method processes the nodes.</li>
+        <li>Consider the following graph and perform the operations specified below:
+          <p><strong>Required Operations:</strong></p>
+          <ol type="a">
+            <li>Start from node A, write down the sequence of nodes visited during a depth-first search traversal of the graph.</li>
+            <li>Start from node A, write down the sequence of nodes visited throughout a breadth-first search traversal of the graph.</li>
+          </ol>
+        </li>
+        <li>Consider the task of organizing a desk. Describe how you can use both a stack and a queue to manage tasks such as sorting papers, putting away books, and cleaning the desk.</li>
+      </ol>
+    </div><!-- end exercise-section -->
+
+  </main>
+</div>
+
+</body>
+</html>

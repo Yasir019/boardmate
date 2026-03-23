@@ -1,120 +1,119 @@
-import chromadb
-from typing import List, Dict, Optional
+"""LangChain Chroma vector store for textbook chunks."""
+
+import logging
 from pathlib import Path
+from typing import Dict, List, Optional
+
+from langchain_chroma import Chroma
+from langchain_community.embeddings import HuggingFaceEmbeddings
+
+logger = logging.getLogger(__name__)
+
 
 class VectorStore:
-    """ChromaDB vector store for textbook chunks"""
-    
-    def __init__(self, persist_directory: Path, collection_name: str = "boardmate_textbooks"):
-        """
-        Initialize ChromaDB client and collection.
-        
-        Args:
-            persist_directory: Directory to persist ChromaDB data
-            collection_name: Name of the collection
-        """
+    """Wrapper around LangChain Chroma for storing and retrieving textbook chunks."""
+
+    def __init__(
+        self,
+        persist_directory: Path,
+        collection_name: str = "boardmate_textbooks",
+        embedding_model: str = None,
+    ):
         self.persist_directory = persist_directory
         self.collection_name = collection_name
-        
-        # Create directory if it doesn't exist
+
         persist_directory.mkdir(parents=True, exist_ok=True)
-        
-        # Initialize ChromaDB persistent client (ChromaDB 1.x API)
-        self.client = chromadb.PersistentClient(path=str(persist_directory))
-        
-        # Get or create collection
-        self.collection = self.client.get_or_create_collection(
-            name=collection_name,
-            metadata={"description": "Textbook chunks with embeddings"}
+
+        self.embeddings = HuggingFaceEmbeddings(
+            model_name=embedding_model or "sentence-transformers/all-MiniLM-L6-v2"
         )
-    
+
+        self.vectorstore = Chroma(
+            collection_name=collection_name,
+            embedding_function=self.embeddings,
+            persist_directory=str(persist_directory),
+        )
+
     def clear(self):
-        """Delete all documents from collection"""
+        """Delete all documents from the collection and recreate it."""
         try:
-            self.client.delete_collection(name=self.collection_name)
-            self.collection = self.client.create_collection(
-                name=self.collection_name,
-                metadata={"description": "Textbook chunks with embeddings"}
+            self.vectorstore.delete_collection()
+            self.vectorstore = Chroma(
+                collection_name=self.collection_name,
+                embedding_function=self.embeddings,
+                persist_directory=str(self.persist_directory),
             )
-            print("✅ Collection cleared")
+            logger.info("Collection cleared")
         except Exception as e:
-            print(f"⚠️ Error clearing collection: {e}")
-    
+            logger.warning("Error clearing collection: %s", e)
+
     def add_documents(
         self,
         chunks: List[str],
-        embeddings: List[List[float]],
         metadatas: List[Dict[str, str]],
-        ids: List[str]
+        ids: List[str],
     ):
-        """
-        Add documents to the vector store.
-        
-        Args:
-            chunks: List of text chunks
-            embeddings: List of embedding vectors
-            metadatas: List of metadata dicts (board, class_level, subject, chapter)
-            ids: List of unique IDs
-        """
-        self.collection.add(
-            documents=chunks,
-            embeddings=embeddings,
+        """Add text chunks with metadata to the vector store."""
+        self.vectorstore.add_texts(
+            texts=chunks,
             metadatas=metadatas,
-            ids=ids
+            ids=ids,
         )
-    
+
     def search(
         self,
-        query_embedding: List[float],
+        query: str,
         top_k: int = 3,
-        filters: Optional[Dict[str, str]] = None
+        filters: Optional[Dict[str, str]] = None,
     ) -> List[Dict]:
         """
         Search for similar chunks.
-        
+
         Args:
-            query_embedding: Query embedding vector
-            top_k: Number of results to return
-            filters: Metadata filters (e.g., {"board": "Punjab", "class_level": "9"})
-        
+            query: Query text.
+            top_k: Number of results to return.
+            filters: Metadata filters (e.g. {"board": "Punjab"}).
+
         Returns:
-            List of results with text, metadata, and distance
+            List of dicts with text, metadata, and distance.
         """
-        # Build ChromaDB where clause with $and for multiple filters
         where = None
         if filters:
-            # Filter out None values
             valid_filters = {k: v for k, v in filters.items() if v is not None}
             if len(valid_filters) == 1:
-                # Single filter - use directly
                 key, value = list(valid_filters.items())[0]
                 where = {key: {"$eq": value}}
             elif len(valid_filters) > 1:
-                # Multiple filters - use $and
                 where = {
                     "$and": [
                         {k: {"$eq": v}} for k, v in valid_filters.items()
                     ]
                 }
-        
-        results = self.collection.query(
-            query_embeddings=[query_embedding],
-            n_results=top_k,
-            where=where
+
+        if where:
+            results = self.vectorstore.similarity_search_with_score(
+                query=query, k=top_k, filter=where
+            )
+        else:
+            results = self.vectorstore.similarity_search_with_score(
+                query=query, k=top_k
+            )
+
+        return [
+            {
+                "text": doc.page_content,
+                "metadata": doc.metadata,
+                "distance": score,
+            }
+            for doc, score in results
+        ]
+
+    def as_retriever(self, search_kwargs: Dict = None):
+        """Return a LangChain retriever interface."""
+        return self.vectorstore.as_retriever(
+            search_kwargs=search_kwargs or {"k": 5}
         )
-        
-        # Format results
-        formatted_results = []
-        if results['documents']:
-            for i, doc in enumerate(results['documents'][0]):
-                formatted_results.append({
-                    "text": doc,
-                    "metadata": results['metadatas'][0][i],
-                    "distance": results['distances'][0][i]
-                })
-        
-        return formatted_results
-    
+
     def count(self) -> int:
-        """Get total number of documents in collection"""
-        return self.collection.count()
+        """Return the total number of documents in the collection."""
+        return len(self.vectorstore.get()["ids"])

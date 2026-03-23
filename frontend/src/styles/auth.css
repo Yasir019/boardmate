@@ -1,0 +1,120 @@
+.auth-page {
+  min-height: calc(100vh - 90px);
+  display: grid;
+  place-items: center;
+  padding: 2rem 1rem;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(0, 92, 204, 0.08), transparent 35%),
+    radial-gradient(circle at 80% 80%, rgba(255, 94, 0, 0.1), transparent 35%),
+    linear-gradient(180deg, #f7f9fc 0%, #eef3fb 100%);
+}
+
+.auth-card {
+  width: min(100%, 460px);
+  background: #ffffff;
+  border: 1px solid #e4e9f2;
+  border-radius: 16px;
+  padding: 1.6rem;
+  box-shadow: 0 15px 45px rgba(10, 30, 70, 0.1);
+}
+
+.auth-card h1 {
+  margin: 0;
+  color: #0b2246;
+  font-size: 1.8rem;
+}
+
+.auth-card > p {
+  margin-top: 0.6rem;
+  margin-bottom: 1.2rem;
+  color: #4b5d79;
+}
+
+.auth-form {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.auth-form label {
+  font-size: 0.9rem;
+  color: #0f2f61;
+  font-weight: 700;
+}
+
+.auth-form input {
+  width: 100%;
+  border: 1px solid #cfd8e6;
+  border-radius: 10px;
+  padding: 0.72rem 0.85rem;
+  font-size: 0.97rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.auth-form input:focus {
+  outline: none;
+  border-color: #005ccc;
+  box-shadow: 0 0 0 3px rgba(0, 92, 204, 0.14);
+}
+
+.auth-primary-btn {
+  margin-top: 0.35rem;
+  border: none;
+  border-radius: 10px;
+  padding: 0.82rem 1rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(90deg, #005ccc, #0a77ff);
+  cursor: pointer;
+}
+
+.auth-primary-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.auth-error {
+  color: #b00020;
+  font-size: 0.9rem;
+  background: #ffe9ee;
+  border: 1px solid #ffb5c2;
+  border-radius: 8px;
+  padding: 0.55rem 0.7rem;
+}
+
+.auth-footer-text {
+  margin: 1rem 0 0;
+  color: #3d4f6a;
+}
+
+.auth-footer-text a {
+  color: #005ccc;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.auth-footer-text a:hover {
+  text-decoration: underline;
+}
+
+.v2-nav-user {
+  color: #22406a;
+  font-weight: 700;
+  font-size: 0.92rem;
+  margin-right: 0.35rem;
+}
+
+@media (max-width: 700px) {
+  .auth-card {
+    border-radius: 12px;
+    padding: 1.25rem;
+  }
+
+  .auth-card h1 {
+    font-size: 1.45rem;
+  }
+
+  .v2-nav-user {
+    display: none;
+  }
+}

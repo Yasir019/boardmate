@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Unit 7 – Legal and Ethical Aspects of Computing System | Computer Science Class 11</title>
+<style>
+    /* ── Base ─────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.75;
+      color: #1a1a2e;
+      background: #f4f6fb;
+    }
+
+    /* ── Layout ───────────────────────────────────────────── */
+    .wrapper {
+      display: flex;
+      max-width: 1260px;
+      margin: 0 auto;
+      padding: 0;
+    }
+    main {
+      flex: 1;
+      min-width: 0;
+      padding: 32px 48px 80px 48px;
+      background: #fff;
+      box-shadow: 0 0 40px rgba(0,0,0,.08);
+    }
+
+    /* ── Sidebar ──────────────────────────────────────────── */
+    aside {
+      width: 248px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      padding: 24px 16px;
+      background: #1a1a2e;
+      color: #ccd6f6;
+      font-size: 13px;
+    }
+    aside h2 { color: #64ffda; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
+    aside ul { list-style: none; }
+    aside ul li { margin: 4px 0; }
+    aside ul li a { color: #a8b2d8; text-decoration: none; display: block; padding: 3px 6px; border-radius: 4px; transition: all .2s; }
+    aside ul li a:hover { color: #64ffda; background: rgba(100,255,218,.08); }
+    aside ul li.sub a { padding-left: 16px; font-size: 12px; color: #8892b0; }
+    aside ul li.sub2 a { padding-left: 28px; font-size: 11.5px; color: #6a7899; }
+
+    /* ── Cover ────────────────────────────────────────────── */
+    .cover {
+      background: linear-gradient(135deg, #0f3460 0%, #16213e 60%, #0d0d2b 100%);
+      color: #fff;
+      padding: 60px 40px;
+      margin: -32px -48px 48px -48px;
+      position: relative;
+      overflow: hidden;
+    }
+    .cover::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 70% 30%, rgba(100,255,218,.12), transparent 60%);
+    }
+    .cover .badge {
+      display: inline-block;
+      background: #64ffda;
+      color: #0d0d2b;
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+    }
+    .cover h1 {
+      font-size: 2.4rem;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 10px;
+      position: relative;
+    }
+    .cover .subtitle {
+      font-size: 1.05rem;
+      color: #a8d8ea;
+      margin-bottom: 32px;
+    }
+    .cover .subject-tag {
+      font-size: 12px;
+      color: #64ffda;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* ── Page marker ──────────────────────────────────────── */
+    .page-marker {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 36px 0 10px;
+      color: #8892b0;
+      font-size: 11.5px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .page-marker::before, .page-marker::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #e0e7ff;
+    }
+    .page-marker span { white-space: nowrap; }
+
+    /* ── Typography ───────────────────────────────────────── */
+    h1.section-title { font-size: 1.7rem; color: #0f3460; margin: 32px 0 12px; border-left: 5px solid #64ffda; padding-left: 14px; }
+    h2.section-title { font-size: 1.35rem; color: #16213e; margin: 28px 0 10px; border-left: 4px solid #4fc3f7; padding-left: 12px; }
+    h3.section-title { font-size: 1.1rem; color: #1a237e; margin: 22px 0 8px; border-left: 3px solid #a5d6a7; padding-left: 10px; }
+    h4.section-title { font-size: 1rem; color: #37474f; margin: 18px 0 6px; padding-left: 10px; border-left: 3px solid #ffcc80; }
+    p { margin-bottom: 14px; }
+    ul, ol { margin: 10px 0 14px 28px; }
+    li { margin-bottom: 6px; }
+    strong { color: #0f3460; }
+
+    /* ── SLO Box ──────────────────────────────────────────── */
+    .slo-box {
+      background: linear-gradient(120deg, #e8f5e9, #f1f8ff);
+      border: 1.5px solid #81c784;
+      border-radius: 12px;
+      padding: 24px 28px;
+      margin: 24px 0 32px;
+    }
+    .slo-box h3 { color: #2e7d32; font-size: 1rem; margin-bottom: 12px; letter-spacing: .5px; }
+    .slo-box ul { margin-left: 20px; }
+    .slo-box li { margin-bottom: 8px; color: #1b5e20; font-size: 14px; }
+
+    /* ── Info / Tip / Fun Fact box ────────────────────────── */
+    .info-box {
+      display: flex;
+      gap: 14px;
+      background: #fff8e1;
+      border-left: 5px solid #ffd54f;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 20px 0;
+    }
+    .info-box .icon { font-size: 1.6rem; flex-shrink: 0; line-height: 1; }
+    .info-box .content { font-size: 13.5px; color: #5d4037; }
+    .tip-box {
+      background: #e8f4fd;
+      border-left: 5px solid #42a5f5;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 20px 0;
+      font-size: 13.5px;
+      color: #0d47a1;
+    }
+    .tip-box strong { color: #0d47a1; }
+
+    /* ── Warning / Caution box ────────────────────────────── */
+    .warning-box {
+      background: #fff3e0;
+      border-left: 5px solid #ff6f00;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 20px 0;
+      font-size: 13.5px;
+      color: #bf360c;
+    }
+    .warning-box strong { color: #bf360c; }
+
+    /* ── Did You Know box ─────────────────────────────────── */
+    .didyouknow-box {
+      background: #f3e5f5;
+      border-left: 5px solid #8e24aa;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 20px 0;
+      font-size: 13.5px;
+      color: #4a148c;
+    }
+    .didyouknow-box .dyk-header {
+      font-weight: 700;
+      font-size: 14px;
+      color: #6a1b9a;
+      margin-bottom: 8px;
+    }
+
+    /* ── Class Activity ───────────────────────────────────── */
+    .activity-box {
+      background: linear-gradient(135deg, #fce4ec, #fff9c4);
+      border: 1.5px dashed #e91e63;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin: 24px 0;
+    }
+    .activity-box .activity-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #880e4f;
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+    .activity-box .activity-header::before { content: '🎯'; font-size: 1.2rem; }
+
+    /* ── Table ────────────────────────────────────────────── */
+    .table-wrap { overflow-x: auto; margin: 20px 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+    }
+    thead { background: #0f3460; color: #fff; }
+    thead th { padding: 10px 14px; text-align: left; }
+    tbody tr:nth-child(even) { background: #f0f4ff; }
+    tbody td { padding: 9px 14px; border-bottom: 1px solid #e0e7ff; vertical-align: top; }
+    .table-caption {
+      font-size: 12.5px;
+      color: #6a7899;
+      text-align: center;
+      margin-top: 6px;
+      font-style: italic;
+    }
+
+    /* ── Figure ───────────────────────────────────────────── */
+    .figure-caption {
+      display: block;
+      text-align: center;
+      font-size: 12.5px;
+      color: #5c6bc0;
+      font-style: italic;
+      background: #e8eaf6;
+      border-radius: 6px;
+      padding: 8px 16px;
+      margin: 8px 0 20px;
+    }
+
+    /* ── Formula block ────────────────────────────────────── */
+    .formula-block {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 16px 0;
+      font-family: 'Courier New', monospace;
+      font-size: 13.5px;
+      color: #212529;
+    }
+
+    /* ── Exercise ─────────────────────────────────────────── */
+    .exercise-section {
+      background: #f3e5f5;
+      border-top: 4px solid #7b1fa2;
+      border-radius: 12px;
+      padding: 28px 32px;
+      margin: 40px 0 0;
+    }
+    .exercise-section h2 { color: #4a148c; margin-bottom: 20px; border: none; padding: 0; font-size: 1.3rem; }
+    .exercise-section h3 { color: #6a1b9a; margin: 22px 0 12px; font-size: 1rem; border: none; padding: 0; }
+    .mcq-item { margin-bottom: 18px; }
+    .mcq-item .question { font-weight: 600; color: #1a1a2e; margin-bottom: 6px; }
+    .mcq-item .options { list-style: lower-alpha; margin-left: 20px; color: #37474f; font-size: 14px; }
+    .mcq-item .options li { margin-bottom: 3px; }
+    .sq-item, .lq-item { margin-bottom: 12px; font-size: 14px; color: #37474f; }
+
+    /* ── Summary ──────────────────────────────────────────── */
+    .summary-box {
+      background: linear-gradient(135deg, #e3f2fd, #e8eaf6);
+      border-left: 5px solid #1565c0;
+      border-radius: 10px;
+      padding: 24px 28px;
+      margin: 32px 0;
+    }
+    .summary-box h2 { color: #0d47a1; font-size: 1.1rem; margin-bottom: 12px; border: none; padding: 0; }
+
+    /* ── Scrollbar ────────────────────────────────────────── */
+    aside::-webkit-scrollbar { width: 4px; }
+    aside::-webkit-scrollbar-thumb { background: #233554; border-radius: 4px; }
+
+    /* ── Responsive ───────────────────────────────────────── */
+    @media (max-width: 900px) {
+      aside { display: none; }
+      .wrapper { display: block; }
+      main { padding: 24px 20px 60px; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+<!-- ── Sidebar TOC ─────────────────────────────────────── -->
+
+<!-- ── Main Content ────────────────────────────────────── -->
+<main>
+<!-- COVER — Page 172 -->
+<div class="cover" id="cover">
+<div class="badge">Unit 7</div>
+<h1>Legal and Ethical Aspects of Computing System</h1>
+<p class="subtitle">Computer Science | Class 11 | Punjab Curriculum &amp; Textbook Board</p>
+<p class="subject-tag">Single National Curriculum 2022</p>
+</div>
+<!-- STUDENT LEARNING OUTCOMES — Page 172 -->
+<div class="page-marker"><span>Page 172</span></div>
+<div class="slo-box" id="slo">
+<h3>🎓 Student Learning Outcomes</h3>
+<p><strong>By the end of this chapter, students will be able to:</strong></p>
+<ul>
+<li>Understand the fundamental legal and ethical considerations in computing systems.</li>
+<li>Identify various privacy and security threats in digital environments.</li>
+<li>Explain strategies for preventing and mitigating security threats.</li>
+<li>Discuss the digital divide and its implications for different social groups.</li>
+<li>Recognize and address bias in computing systems.</li>
+<li>Utilize information safely and responsibly.</li>
+<li>Assess the impact of computing on individuals and society.</li>
+<li>Apply principles of digital citizenship and ethical conduct.</li>
+</ul>
+</div>
+<!-- INTRODUCTION — Page 173 -->
+<div class="page-marker"><span>Page 173</span></div>
+<h1 class="section-title" id="intro">Introduction</h1>
+<p>In today's digital world, computing systems play a crucial role in every aspect of our lives, from personal devices to complex networks. As these systems become more integrated into our daily routines, understanding the legal and ethical considerations associated with their use is essential. This chapter delves into various aspects of digital technology, including terms of use, privacy and security threats, and the digital divide. The legal and ethical challenges in computing cover a range of issues such as data protection, intellectual property rights, and compliance with relevant laws. Ethical considerations address privacy, fairness, and the broader societal impacts of technology.</p>
+<!-- 7.1 Understanding Terms of Use — Page 173 -->
+<h2 class="section-title" id="s7_1">7.1 Understanding Terms of Use</h2>
+<p>"Terms of Use", also called Terms and Conditions or Terms of Service, are legal agreements that outline how a service or product can be used. These terms are set by the provider (like a website, app, or software company) and must be agreed upon by the user. The main purpose is to establish a fair and transparent relationship between the provider and the user, ensuring that both parties understand their rights and obligations.</p>
+<p><strong>Examples:</strong> When you sign up for an email service like Gmail, you are required to agree to Google's Terms of Use. These terms explain how you can use your email account, the types of content you are prohibited from sharing, and how Google handles your personal data. Similarly, when we use a Pakistani online shopping platform like Daraz, the Terms of Use may include clauses about payment methods, return policies, and delivery procedures, ensuring that customers are aware of what to expect and what is expected from them.</p>
+<!-- 7.1.1 Importance — Page 173 -->
+<h3 class="section-title" id="s7_1_1">7.1.1 Importance</h3>
+<p>Understanding Terms of Use is important for several reasons:</p>
+<ol>
+<li>
+<strong>Protection of Rights:</strong> Terms of Use protect users by defining their rights, such as the right to privacy, the right to receive certain levels of service, and the right to seek redress if things go wrong.
+        <div class="info-box" style="margin-top:10px;">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> When we use a food delivery service in Pakistan like Foodpanda, the Terms of Use will specify what happens if your order is incorrect or if the delivery is delayed.</div>
+</div>
+</li>
+<li>
+<strong>Clarity and Transparency:</strong> These terms provide clarity and transparency about what users can expect from a service. They explain what the service provider will deliver, under what conditions, and what actions are not permitted. This prevents misunderstandings and helps users make informed decisions.
+        <div class="info-box" style="margin-top:10px;">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> If we use a mobile phone for sending or receiving payments, the Terms of Use will outline transaction limits, fees, and the process for reporting</div>
+</div>
+</li>
+</ol>
+<!-- Page 174 -->
+<div class="page-marker"><span>Page 174</span></div>
+<p style="margin-top:0;">unauthorized transactions.</p>
+<ol start="3">
+<li>
+<strong>Legal Safeguards:</strong> For businesses, Terms of Use act as a safeguard against misuse of their services. They set boundaries to protect the company from potential legal issues caused by users not adhering to the rules.
+        <div class="info-box" style="margin-top:10px;">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> A Pakistani online education platform may include terms that prohibit the sharing of course content without permission, protecting their intellectual property.</div>
+</div>
+</li>
+</ol>
+<!-- 7.1.2 Common Clauses and Conditions — Page 174 -->
+<h3 class="section-title" id="s7_1_2">7.1.2 Common Clauses and Conditions</h3>
+<p>Terms of Use usually contain several common clauses, which are designed to protect both the provider and the user. These clauses include:</p>
+<ol>
+<li>
+<strong>User Obligations:</strong> These clauses outline what is expected from the user.
+        <div class="info-box" style="margin-top:10px;">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> In Pakistan, popular ride-sharing apps such as Careem include terms that require users to provide a valid phone number and prohibit the misuse of the service for non-transportation purposes.</div>
+</div>
+</li>
+<li>
+<strong>Limitations of Liability:</strong> These clauses limit the service provider's liability if things go wrong.
+        <div class="info-box" style="margin-top:10px;">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> In Pakistan, if you use an online banking service and the app is temporarily down, the bank's Terms of Use will typically limit their liability for such disruptions.</div>
+</div>
+</li>
+<li>
+<strong>Privacy and Data Use:</strong> Privacy clauses explain how a company will collect, use, and protect user data. This is particularly important given the increasing concerns around data privacy.
+        <div class="info-box" style="margin-top:10px;">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> If you use a messaging app like WhatsApp, the Terms of Use will outline how your messages are stored and protected.</div>
+</div>
+</li>
+<li>
+<strong>Intellectual Property Rights:</strong> These clauses protect the content owned by the service provider, such as logos, software, and other proprietary materials.
+        <div class="info-box" style="margin-top:10px;">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> Pakistani news website may include terms that prohibit users from copying and distributing their articles without permission, ensuring that their content is not misused or misrepresented.</div>
+</div>
+</li>
+<li>
+<strong>Termination of Service:</strong> This clause explains the conditions under which the provider can terminate a user's access to the service.
+        <div class="info-box" style="margin-top:10px;">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> Social media platforms like Facebook have terms stating that they can suspend or terminate accounts that violate community standards, such as accounts that spread hate speech or misinformation.</div>
+</div>
+</li>
+</ol>
+<!-- 7.1.3 Legal Ramifications — Page 174 -->
+<h3 class="section-title" id="s7_1_3">7.1.3 Legal Ramifications</h3>
+<p>Violating the Terms of Use can lead to serious legal consequences. Users can be fined, sued, or banned from using the service.</p>
+<p><strong>Examples:</strong> Using software without a proper license may result in legal action for</p>
+<!-- Page 175 -->
+<div class="page-marker"><span>Page 175</span></div>
+<p>software piracy. Companies that uses unlicensed software face legal risks and cybersecurity threats. Another example is violating the Terms of Use of a digital payment service like PayPak. Engaging in fraudulent activities or unauthorized transactions may result in legal penalties, including fines or criminal charges.</p>
+<!-- 7.1.4 Ethical Considerations — Page 175 -->
+<h3 class="section-title" id="s7_1_4">7.1.4 Ethical Considerations</h3>
+<p>Ethical considerations in Terms of Use encompass fairness, transparency, and respect for user rights. It is essential for companies to ensure that their terms are clear, straightforward, and not overly complex or deceptive. Providers are ethically obligated to ensure that users fully understand the terms to which they are agreeing, rather than obscuring critical information in lengthy or confusing documents.</p>
+<div class="info-box">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> In Pakistan, when users sign up for an online course, the terms should clearly specify whether a certificate will be awarded, how personal data will be handled, and whether there are any additional fees. It is ethically imperative that educational platforms avoid misleading users into believing a course is free if there are, in fact, hidden costs involved.</div>
+</div>
+<!-- 7.1.5 Personal Rights — Page 175 -->
+<h3 class="section-title" id="s7_1_5">7.1.5 Personal Rights</h3>
+<p>Personal rights within Terms of Use encompass the right to privacy, the right to be informed, and the right to withdraw consent. It is essential for users to be aware of their rights and understand how to exercise them.</p>
+<div class="info-box">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> Under Pakistan's Personal Data Protection Bill, users have the right to access their data and request corrections or deletions. When engaging with services like local e-commerce websites, users have the right to know how their personal information, such as addresses and phone numbers, will be utilized. If a user decides to discontinue using the platform, they have the right to delete their account and data, ensuring that their personal information is no longer retained or used.</div>
+</div>
+<div class="tip-box">Some online platforms update their Terms of Use frequently. It's a good idea to review them periodically to stay informed about any changes.</div>
+<div class="activity-box">
+<div class="activity-header">Class Activity</div>
+<p>Divide students into groups and assign each group a different Terms of Use document. Each group should highlight key clauses such as User Obligations, Privacy and Data Use, Limitations of Liability, and Termination of Service. Afterward, distribute a worksheet with questions asking about the main responsibilities of users, how user data is handled, specified limitations of liability, and conditions for service termination. Finally, have students review and summarize the key points and important clauses of the Terms of Use from a frequently used website or app.</p>
+</div>
+<!-- 7.2 Privacy and Security Threats — Page 176 -->
+<div class="page-marker"><span>Page 176</span></div>
+<h2 class="section-title" id="s7_2">7.2 Privacy and Security Threats</h2>
+<p>In today's digital world, privacy and security threats are prevalent concerns that affect individuals and organizations alike. These threats have the potential to compromise personal information, financial data, and overall online security. A comprehensive understanding of these threats is essential for safeguarding against potential risks and ensuring the protection of sensitive information. There are some main types of privacy and security threats.</p>
+<!-- 7.2.1 Types of Security Threats — Page 176 -->
+<h3 class="section-title" id="s7_2_1">7.2.1 Types of Security Threads</h3>
+<p>There are five primary categories of security threats of using online services.</p>
+<!-- Spam — Page 176 -->
+<h4 class="section-title" id="spam">7.2.1.1 Spam</h4>
+<p>Spam refers to unwanted messages that you receive on your email or phone.</p>
+<div class="info-box">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> You may receive numerous text messages from unknown numbers offering products or services that you did not ask for. In Pakistan, these messages may include offers for fake prizes or low-cost loans. Such messages can be irritating and waste your time. They can also attempt to trick you into providing personal information or money.</div>
+</div>
+<!-- Spyware — Page 176 -->
+<h4 class="section-title" id="spyware">7.2.1.2 Spyware</h4>
+<p>Spyware is a type of harmful software that secretly watches what you do on your computer or phone.</p>
+<div class="info-box">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> If you download a free app from an unreliable source, it may install spyware on your device. This spyware can secretly monitor your online activities, such as the websites you visit or the information you enter, without your knowledge.</div>
+</div>
+<!-- Cookies — Page 176 -->
+<h4 class="section-title" id="cookies">7.2.1.3 Cookies</h4>
+<p>Cookies are small files that websites place on your device when you visit them. They help the website remember things like your login details and personal preferences.</p>
+<div class="info-box">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> When you visit an online shopping site in Pakistan, cookies save your login information so you do not need to enter it each time you visit. However, cookies can also track your online activities, such as the products you view, to show you advertisements related to your interests. This tracking helps in providing personalized ads but also means that your browsing activities are being observed.</div>
+</div>
+<!-- Phishing — Page 176 -->
+<h4 class="section-title" id="phishing">7.2.1.4 Phishing</h4>
+<p>Phishing is a type of scam where someone pretends to be a trustworthy organization to trick you into giving away your personal information.</p>
+<!-- Page 177 -->
+<div class="page-marker"><span>Page 177</span></div>
+<div class="info-box">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> You may receive an email that looks like it comes from your bank, asking you to click a link and enter your account details. If you follow these instructions, your money could be at risk because the email is a fake.</div>
+</div>
+<!-- Pharming — Page 177 -->
+<h4 class="section-title" id="pharming">Pharming</h4>
+<p>Pharming is a sophisticated technique where users are redirected to a fake website without their knowledge.</p>
+<div class="info-box">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> Imagine you want to access your online banking account, but due to a pharming attack, you are sent to a counterfeit site that looks just like your bank's real site. If you enter your login information on this fake site, the scammer collects your details. In Pakistan, this can occur if a hacker changes the web address you type into your browser, leading you to a fraudulent site that closely resembles the legitimate one.</div>
+</div>
+<!-- 7.2.2 Characteristics of Security Threats — Page 177 -->
+<h3 class="section-title" id="s7_2_2">7.2.2 Characteristics of Security Threats</h3>
+<p>Security threats have different features and ways of causing harm.</p>
+<p>Spam, is often easy to recognize because it comes in large amounts and includes unwanted advertisements. Spyware, in contrast, operates quietly in the background and is not easily noticeable. Spam emails may have odd offers or suspicious links that make them stand out, while spyware works silently to monitor your activities without obvious signs.</p>
+<p>Each type of security threat has a unique method and purpose. Spam aims to promote products or trick you into buying something. Spyware is designed to secretly gather your personal information. Cookies collect data on your browsing habits. Phishing attempts to deceive you into revealing your personal details. Pharming redirects you to fake websites to steal your information. Understanding these differences is important for protecting yourself from each type of threat.</p>
+<!-- 7.2.3 Consequences and Severity — Page 177 -->
+<h3 class="section-title" id="s7_2_3">7.2.3 Consequences and Severity</h3>
+<p>Security threats can have serious effects. Spam is often just a nuisance, but spyware can lead to significant privacy issues by stealing your personal data. Cookies may invade your privacy by tracking your online activities. Phishing and pharming can cause financial losses and give unauthorized access to your accounts. The impact of these threats varies, but all can affect your safety and privacy. It is important to be aware of these threats to prevent problems and keep your personal information secure.</p>
+<!-- Page 178 -->
+<div class="page-marker"><span>Page 178</span></div>
+<div class="info-box">
+<div class="icon">📊</div>
+<div class="content">Over 90% of phishing attacks are carried out through email. These scams often look like legitimate communications from trusted organizations, making it crucial to verify the source before clicking on any links or providing personal information.</div>
+</div>
+<!-- 7.2.4 Security Threat Prevention Techniques — Page 178 -->
+<h3 class="section-title" id="s7_2_4">7.2.4 Security Threat Prevention Techniques</h3>
+<p>To protect yourself from online threats, it is important to use various security tools and practices. These techniques help safeguard your personal information and ensure a safer online experience.</p>
+<!-- Spam Filters — Page 178 -->
+<h4 class="section-title" id="spam-filter">7.2.4.1 Spam Filters</h4>
+<p>Spam filters help keep unwanted emails out of your inbox.</p>
+<div class="info-box">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> If you receive a lot of promotional emails that you don't want, a spam filter can automatically move these emails to a separate folder or delete them. This way, you only see the emails you actually want.</div>
+</div>
+<!-- Antivirus Software — Page 178 -->
+<h4 class="section-title" id="antivirus">7.2.4.2 Antivirus Software</h4>
+<p>Antivirus software protects your computer from harmful programs like spyware.</p>
+<div class="info-box">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> If you download a file from the internet, antivirus software checks it for any hidden threats. If the file is safe, you can open it without worry. If it is harmful, the software will alert you and prevent the file from causing damage.</div>
+</div>
+<!-- Cookie Management — Page 178 -->
+<h4 class="section-title" id="cookie-mgmt">7.2.4.3 Cookie Management</h4>
+<p>Cookies are small files stored on your computer by websites. Managing cookies means deciding which cookies you want to keep and which ones you want to delete.</p>
+<div class="info-box">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> You can keep cookies from your favorite shopping website so you don't have to log in every time, but you should delete cookies from other sites to protect your privacy.</div>
+</div>
+<!-- Recognizing Phishing — Page 178 -->
+<h4 class="section-title" id="recog-phishing">7.2.4.4 Recognizing Phishing</h4>
+<p>Phishing is a type of online scam where attackers try to trick you into sharing sensitive information, such as passwords, credit card numbers, or bank details.</p>
+<div class="info-box">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> You may receive an email that appears to be from your bank, asking you to click a link and enter your account details. Recognizing phishing involves identifying these emails as fake and avoiding clicking any links or providing any information.</div>
+</div>
+<!-- Page 179 -->
+<div class="page-marker"><span>Page 179</span></div>
+<!-- Guarding Against Pharming — Page 179 -->
+<h4 class="section-title" id="guard-pharming">7.2.4.5 Guarding Against Pharming</h4>
+<p>Pharming is when attackers redirect you from a legitimate website to a fake one to steal your information.</p>
+<div class="info-box">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> If you type in the URL for your bank's website, pharming can send you to a fake website that looks just like your bank's site. To guard against pharming, always check that the website's address is correct and secure (look for "https://" and a padlock symbol in the address bar).</div>
+</div>
+<div class="tip-box">Effective online security involves using multiple strategies like spam filters, antivirus software, and careful cookie management to cover various threat types. Combining different security techniques provides better protection against online threats.</div>
+<!-- 7.3 The Digital Divide and Its Impacts — Page 179 -->
+<h2 class="section-title" id="s7_3">7.3 The Digital Divide and Its Impacts</h2>
+<p>The digital divide refers to the gap between individuals, communities, and regions that have access to modern information and communication technology (ICT) and those that do not. This divide can manifest in various ways, including disparities in access to the internet, computing devices, and digital literacy. The digital divide is a critical issue because it can lead to unequal opportunities in education, employment, healthcare, and social participation.</p>
+<!-- 7.3.1 Causes of the Digital Divide — Page 179 -->
+<h3 class="section-title" id="s7_3_1">7.3.1 Causes of the Digital Divide</h3>
+<p>Several factors contribute to the digital divide:</p>
+<ol>
+<li><strong>Economic Barriers:</strong> One of the primary causes of the digital divide is the economic barrier. Many individuals and families cannot afford the costs associated with computers, smartphones, or broadband internet. This economic disparity is particularly evident in developing countries, rural areas, and among low-income populations.</li>
+<li><strong>Geographical Barriers:</strong> Access to ICT varies significantly between urban and rural areas. In many parts of the world, especially in remote or rural areas, the infrastructure necessary for internet connectivity is either underdeveloped or non-existent.</li>
+</ol>
+<!-- Page 180 -->
+<div class="page-marker"><span>Page 180</span></div>
+<ol start="3">
+<li><strong>Educational Barriers:</strong> Lack of digital literacy is another significant factor contributing to the digital divide. Even when the technology is available, individuals may not know how to use it effectively due to a lack of proper education and training.</li>
+<li><strong>Social Barriers:</strong> Age, gender, and disability can also affect access to technology. For example, older adults may be less inclined or able to use new technologies, and women in some regions may face cultural barriers that limit their access to ICT.</li>
+</ol>
+<!-- 7.3.2 Impacts of the Digital Divide — Page 180 -->
+<h3 class="section-title" id="s7_3_2">7.3.2 Impacts of the Digital Divide</h3>
+<p>The digital divide has far-reaching impacts on individuals and society as a whole. These impacts can exacerbate existing inequalities and create new ones.</p>
+<!-- Educational Inequality — Page 180 -->
+<h4 class="section-title" id="edu-ineq">7.3.2.1 Educational Inequality</h4>
+<p>Access to the internet and digital tools is increasingly essential for education. Students who lack access to these resources are at a significant disadvantage.</p>
+<div class="info-box">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> During the COVID-19 pandemic, when schools in Pakistan and around the world shifted to online learning, students from low-income families or rural areas struggled to keep up with their studies due to a lack of internet access or devices. This has led to a widening of the educational gap between different socio-economic groups.</div>
+</div>
+<!-- Economic Disparities — Page 180 -->
+<h4 class="section-title" id="eco-disp">7.3.2.2 Economic Disparities</h4>
+<p>The digital divide also has significant economic implications. In today's economy, many jobs require at least basic digital skills. Those without access to technology or the internet may find it challenging to secure employment, leading to higher unemployment rates in already disadvantaged communities.</p>
+<div class="info-box">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> In Pakistan, access to online job portals and digital banking services is often limited to those in urban areas, further widening the economic gap between urban and rural populations.</div>
+</div>
+<!-- Social and Civic Participation — Page 180 -->
+<h4 class="section-title" id="social-civic">7.1.2.3 Social and Civic Participation</h4>
+<p>The digital divide can also affect social and civic participation. Access to social media, online news, and digital government services allows individuals to stay informed and engaged in civic activities. However, those without access are often excluded from these opportunities, leading to a lack of representation and participation in democratic processes.</p>
+<div class="info-box">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> In Pakistan, access to e-government services is more readily available in cities, leaving rural populations with limited means to participate in governmental processes or access social services.</div>
+</div>
+<!-- Page 181 -->
+<div class="page-marker"><span>Page 181</span></div>
+<!-- Health Disparities — Page 181 -->
+<h4 class="section-title" id="health-disp">7.2.2.4 Health Disparities</h4>
+<p>The digital divide can lead to unequal access to health information and services. Digital platforms provide valuable resources for health education, telemedicine, and appointment scheduling. Without access to these resources, individuals may experience poorer health outcomes due to a lack of timely information and medical care.</p>
+<div class="info-box">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> In Pakistan, rural communities with limited internet access may struggle to find reliable health information online or participate in telemedicine consultations. This can result in delays in diagnosing and treating health conditions compared to those who have better access to digital health services.</div>
+</div>
+<!-- Digital Literacy Gap — Page 181 -->
+<h4 class="section-title" id="digital-lit">7.2.2.5 Digital Literacy Gap</h4>
+<p>A significant digital divide also creates a gap in digital literacy. Individuals who do not have access to technology may not develop essential digital skills, further reinforcing the divide between those who are tech-savvy and those who are not. This gap can affect their ability to navigate digital environments effectively and make use of online resources.</p>
+<div class="info-box">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> In Pakistan, people who lack access to computers and the internet may miss out on opportunities to learn and practice digital skills. This can hinder their ability to use online tools for everyday tasks, such as applying for jobs or accessing government services, compared to those with regular access to digital technologies.</div>
+</div>
+<!-- 7.3.3 Bridging the Digital Divide — Page 181 -->
+<h3 class="section-title" id="s7_3_3">7.3.3 Bridging the Digital Divide</h3>
+<p>Bridging the digital divide means making sure everyone has equal access to technology and the internet. This is important for giving everyone the same chances to learn and grow. Here are some ways to do it:</p>
+<ol>
+<li>
+<strong>Government Initiatives:</strong> The government can help by building the infrastructure needed for internet access in areas where it's not available.
+        <div class="info-box" style="margin-top:10px;">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> In Pakistan, the Universal Service Fund (USF) works to bring internet services to villages and remote areas where people might not have had access before.</div>
+</div>
+</li>
+<li>
+<strong>Educational Programs:</strong> Schools and community centers can teach people how to use technology.
+        <div class="info-box" style="margin-top:10px;">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> Digital literacy programs can help students and adults learn how to use computers and the internet for education and daily tasks.</div>
+</div>
+</li>
+<li><strong>Public-Private Partnerships:</strong> When the government teams up with businesses and nonprofits, they can make technology more affordable.</li>
+</ol>
+<!-- Page 182 -->
+<div class="page-marker"><span>Page 182</span></div>
+<div class="info-box">
+<div class="icon">🇵🇰</div>
+<div class="content">The Government of Pakistan has launched several initiatives to increase internet access in rural areas, including the introduction of mobile broadband services in remote regions. Despite these efforts, many areas still lack reliable connectivity, highlighting the ongoing challenge of bridging the digital divide.</div>
+</div>
+<div class="activity-box">
+<div class="activity-header">Class Activity</div>
+<p>Think about your own community. Are there people who may not have access to the internet or digital devices? What can be done to help them? Write a short paragraph on how your school or community can help bridge the digital divide.</p>
+</div>
+<!-- 7.4 Safe and Responsible Information Utilization — Page 182 -->
+<h2 class="section-title" id="s7_4">7.4 Safe and Responsible Information Utilization</h2>
+<p>In today's world, accessing and using information responsibly is very important. This section explains how to handle information carefully, with a focus on understanding sources, identifying reliability, and ensuring that we use information responsibly.</p>
+<!-- 7.4.1 Evaluating Information Sources — Page 182 -->
+<h3 class="section-title" id="s7_4_1">7.4.1 Evaluating Information Sources</h3>
+<p>Evaluating information sources helps us determine if the information we are using is accurate and trustworthy. This process includes several key steps.</p>
+<!-- Source Evaluation — Page 182 -->
+<h4 class="section-title" id="source-eval">7.4.1.1 Source Evaluation</h4>
+<p>When we talk about source evaluation, we mean checking where the information comes from.</p>
+<div class="info-box">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> Government websites and established news organizations are considered reliable because they follow strict guidelines to ensure the accuracy of their information. In Pakistan, official government websites are examples of reliable sources.</div>
+</div>
+<!-- Assessing Credibility — Page 182 -->
+<h4 class="section-title" id="credibility">7.4.1.2 Assessing Credibility</h4>
+<p>Assessing credibility means figuring out if the information is coming from an expert or someone with authority on the topic.</p>
+<div class="info-box">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> Information about the sighting of the moon for Eid in Pakistan should come from the official Hilal Committee rather than from unverified sources on social media.</div>
+</div>
+<!-- Data Provenance — Page 182 -->
+<h4 class="section-title" id="data-prov">7.4.1.3 Data Provenance</h4>
+<p>Data provenance refers to the history of the data, including where it came from and how it has been modified.</p>
+<div class="info-box">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> If a study was published in a scientific journal, it is important to know the methods and data sources used in the study.</div>
+</div>
+<!-- Primary Sources — Page 182 -->
+<h4 class="section-title" id="primary-src">7.4.1.4 Primary Sources</h4>
+<p>Primary sources are original materials that have not been altered.</p>
+<!-- Page 183 -->
+<div class="page-marker"><span>Page 183</span></div>
+<div class="info-box">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> A research paper written by scientists who conducted the study is a primary source. In contrast, a summary of the research written by someone else would be a secondary source.</div>
+</div>
+<!-- Critical Thinking Skills — Page 183 -->
+<h4 class="section-title" id="critical-think">7.4.1.5 Critical Thinking Skills</h4>
+<p>Critical thinking skills are necessary for analyzing and evaluating information. This means questioning the information, considering different perspectives, and making informed decisions.</p>
+<div class="info-box">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> If you read about a new technology, using critical thinking means looking at various sources and viewpoints before forming an opinion.</div>
+</div>
+<!-- Red Flags — Page 183 -->
+<h4 class="section-title" id="red-flags">7.4.1.6 Red Flags</h4>
+<p>Red flags are signs that indicate a source might be unreliable. These include lack of author information, sensational headlines, or sources that do not cite their references.</p>
+<div class="info-box">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> A website with no clear author or contact information might be unreliable.</div>
+</div>
+<!-- Understanding Bias — Page 183 -->
+<h4 class="section-title" id="bias">7.4.1.7 Understanding Bias</h4>
+<p>Understanding bias involves recognizing that every source may have a certain viewpoint or agenda.</p>
+<div class="info-box">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> A news website that only reports on one side of an issue might be biased. It is important to consider multiple viewpoints and check if the information is presented fairly.</div>
+</div>
+<div class="warning-box">
+<strong>Be cautious!</strong> Relying on unverified sources or failing to check the credibility of the information can lead to spreading misinformation and making poorly-informed decisions. Always verify the origin, check for author credentials, and be on the lookout for signs of bias or sensationalism to avoid being misled.
+    </div>
+<!-- 7.5 Computing's Impact on Individuals and Society — Page 183 -->
+<h2 class="section-title" id="s7_5">7.5 Computing's Impact on Individuals and Society</h2>
+<p>Computing systems have revolutionized the way we live, work, and communicate, bringing profound changes to society. The widespread adoption of technologies like the internet, smartphones, and artificial intelligence (AI) has led to both positive and negative impacts.</p>
+<!-- 7.5.1 Positive Impacts — Page 183 -->
+<h3 class="section-title" id="s7_5_1">7.5.1 Positive Impacts</h3>
+<p>One of the most significant positive impacts of computing is the increased accessibility to information. The internet has made it possible for people to access vast amounts of information on nearly any topic, breaking down barriers to education and knowledge.</p>
+<div class="info-box">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> Online educational platforms such as Coursera and edX allow students from remote areas to take courses from prestigious universities around the world.</div>
+</div>
+<!-- Page 184 -->
+<div class="page-marker"><span>Page 184</span></div>
+<p>Moreover, computing has improved communication, making it easier and faster for people to connect globally. Social media platforms like Facebook and X (Twitter) have not only facilitated personal connections but also enabled social movements, such as the #MeToo movement, to gain global traction. In Pakistan, social media played a crucial role in raising awareness about the 2014 Peshawar school attack, mobilizing support and solidarity.</p>
+<p>Computing has also driven economic growth by creating new industries and job opportunities. The rise of e-commerce platforms like Daraz has transformed traditional business models, allowing small businesses in Pakistan to reach customers nationwide and even internationally.</p>
+<!-- 7.5.2 Negative Impacts — Page 184 -->
+<h3 class="section-title" id="s7_5_2">7.5.2 Negative Impacts</h3>
+<p>However, the impact of computing is not without its drawbacks. One of the major concerns is the digital divide, where a significant portion of the population lacks access to modern computing technologies. In Pakistan, the urban-rural divide is evident, with rural areas having limited access to reliable internet and computing devices, leading to unequal opportunities in education and employment. Another negative impact is the spread of misinformation and fake news, which can lead to social unrest.</p>
+<div class="info-box">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> During the COVID-19 pandemic, misinformation about the virus and vaccines spread rapidly on social media, causing confusion and fear among the public. This highlights the need for digital literacy, so people can critically evaluate the information they encounter online.</div>
+</div>
+<p>Privacy concerns are also a significant issue, as the increased use of computing systems has led to the collection and storage of vast amounts of personal data. Without proper regulations, this data can be misused, leading to breaches of privacy and security. In Pakistan, incidents like the leakage of citizens' data from the National Database and Registration Authority (NADRA) underscore the importance of robust data protection measures.</p>
+<div class="info-box">
+<div class="icon">💡</div>
+<div class="content">Computing technology has enabled "Internet in a Box" projects that provide offline educational resources. In Pakistan, such initiatives have brought digital learning to remote areas without internet access, demonstrating how technology can bridge educational gaps in underserved regions.</div>
+</div>
+<!-- 7.6 Digital Citizenship and Ethical Considerations — Page 184 -->
+<h2 class="section-title" id="s7_6">7.6 Digital Citizenship and Ethical Considerations</h2>
+<p>Digital citizenship involves understanding how to behave responsibly and ethically when using digital technologies and the internet. It encompasses a range of behaviors</p>
+<!-- Page 185 -->
+<div class="page-marker"><span>Page 185</span></div>
+<p>and practices that help ensure a positive and secure online experience for everyone. By practicing good digital citizenship, individuals can protect themselves and others from harm, respect the rights of others, and contribute to a safe and inclusive digital environment.</p>
+<div class="info-box">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> In Pakistan, students should learn to communicate respectfully in online forums and social media platforms. This means avoiding bullying or harassment and not spreading false information. It also involves understanding the importance of digital privacy and securing one's online accounts to prevent unauthorized access.</div>
+</div>
+<!-- 7.6.1 Responsible Digital Behavior — Page 185 -->
+<h3 class="section-title" id="s7_6_1">7.6.1 Responsible Digital Behavior</h3>
+<p>Responsible digital behavior means using technology and the internet in ways that are respectful and safe. This includes:</p>
+<ol>
+<li>
+<strong>Using Strong Passwords:</strong> Create passwords that are difficult for others to guess.
+        <div class="info-box" style="margin-top:10px;">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> Instead of using "password123", use a combination of letters, numbers, and symbols.</div>
+</div>
+</li>
+<li>
+<strong>Avoiding Phishing Scams:</strong> Do not click on suspicious links or open emails from unknown sources that ask for personal information.
+        <div class="info-box" style="margin-top:10px;">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> If you receive an email claiming to be from a bank asking for your account details, verify its authenticity before responding.</div>
+</div>
+</li>
+</ol>
+<!-- 7.6.2 Ethical Use of Information — Page 185 -->
+<h3 class="section-title" id="s7_6_2">7.6.2 Ethical Use of Information</h3>
+<p>Ethical use of information involves handling data and content in a fair and lawful manner.</p>
+<!-- Responsible Data Sharing — Page 185 -->
+<h4 class="section-title">7.6.2.1 Responsible Data Sharing</h4>
+<p>Responsible data sharing means only sharing personal or sensitive information when absolutely necessary and ensuring that it is shared with trusted entities.</p>
+<div class="info-box">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> When applying for a school scholarship online in Pakistan, students should only provide personal details on secure and verified websites to prevent misuse of their information.</div>
+</div>
+<!-- Ethical Issues — Page 185 -->
+<h4 class="section-title">7.6.2.2 Ethical Issues</h4>
+<p>Ethical issues in information use include:</p>
+<ol>
+<li>
+<strong>Respecting Copyright:</strong> Do not copy or use someone else's work without permission.
+        <div class="info-box" style="margin-top:10px;">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> When writing a research paper, students in Pakistan should not copy text from online articles without citing the source.</div>
+</div>
+</li>
+<li><strong>Avoiding Plagiarism:</strong> Properly attribute ideas and information to their original authors to avoid plagiarism. This means mentioning the source of any quotes or ideas used in assignments.</li>
+</ol>
+<!-- Page 186 -->
+<div class="page-marker"><span>Page 186</span></div>
+<!-- 7.6.3 Cybersecurity Awareness — Page 186 -->
+<h3 class="section-title" id="s7_6_3">7.6.3 Cybersecurity Awareness</h3>
+<p>Cybersecurity awareness involves understanding and implementing practices to protect oneself from online threats.</p>
+<div class="tip-box">A Cyber Crime can be reported at NR3C-FIA available at <strong>https://www.nr3c.gov.pk</strong></div>
+<!-- Recognizing Threats — Page 186 -->
+<h4 class="section-title">7.6.3.1 Recognizing Threats</h4>
+<p>Recognizing threats means identifying potential online dangers such as:</p>
+<ol>
+<li>
+<strong>Phishing Scams:</strong> These are fraudulent attempts to obtain sensitive information by pretending to be a trustworthy entity.
+        <div class="info-box" style="margin-top:10px;">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> Be cautious of emails that ask for personal details under the guise of an urgent request from a known organization.</div>
+</div>
+</li>
+<li>
+<strong>Malware:</strong> Malicious software that can harm your computer or steal data.
+        <div class="info-box" style="margin-top:10px;">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> Avoid downloading software from untrusted sources and ensure your antivirus software is up to date.</div>
+</div>
+</li>
+</ol>
+<!-- Protecting Personal Information — Page 186 -->
+<h4 class="section-title">7.6.3.2 Protecting Personal Information</h4>
+<p>Protecting personal information involves taking steps to keep your data secure:</p>
+<ol>
+<li>
+<strong>Using Privacy Settings:</strong> Adjust privacy settings on social media to control who can see your information.
+        <div class="info-box" style="margin-top:10px;">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> Set your Facebook profile to private so only friends can view your posts.</div>
+</div>
+</li>
+<li>
+<strong>Being Cautious with Public Information:</strong> Avoid sharing personal details in public forums or on social media.
+        <div class="info-box" style="margin-top:10px;">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> Do not post your home address or phone number publicly online.</div>
+</div>
+</li>
+</ol>
+<div class="activity-box">
+<div class="activity-header">Class Activity</div>
+<p>Try to learn how a student can become a Cyber Scout at NR3C-FIA by visiting <strong>https://www.nr3c.gov.pk</strong></p>
+</div>
+<!-- 7.6.4 Collaborative Problem Solving — Page 186 -->
+<h3 class="section-title" id="s7_6_4">7.6.4 Collaborative Problem Solving</h3>
+<p>Collaborative problem solving involves working together with others to address challenges and achieve common goals.</p>
+<!-- Human-Machine Collaboration — Page 186 -->
+<h4 class="section-title">7.6.4.1 Human-Machine Collaboration</h4>
+<p>Human-machine collaboration is about working with technology to solve problems. This includes:</p>
+<ol>
+<li>
+<strong>Using Tools:</strong> Leverage software and digital tools to assist in tasks.
+
+    <!-- Page 187 -->
+<div class="page-marker"><span>Page 187</span></div>
+<div class="info-box" style="margin-top:10px;">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> Students might use spreadsheet software to analyze data for a group project.</div>
+</div>
+</li>
+<li>
+<strong>Combining Skills:</strong> Integrate human skills with machine capabilities for better results.
+        <div class="info-box" style="margin-top:10px;">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> Using data analysis tools to interpret complex data sets while applying human judgment to make decisions.</div>
+</div>
+</li>
+</ol>
+<!-- Teamwork and Knowledge Sharing — Page 187 -->
+<h4 class="section-title">7.6.4.2 Teamwork and Knowledge Sharing</h4>
+<p>Teamwork and knowledge sharing involve collaborating with others and exchanging information:</p>
+<ol>
+<li>
+<strong>Group Projects:</strong> Work together on assignments or projects, each contributing your expertise.
+        <div class="info-box" style="margin-top:10px;">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> In a group project for a science class, students should collaborate and share their research findings to complete the assignment.</div>
+</div>
+</li>
+<li><strong>Sharing Insights:</strong> Exchange ideas and knowledge with peers to enhance learning. Participate in study groups or discussions to broaden your understanding of the subject matter.</li>
+</ol>
+<!-- 7.6.5 Creating Accessible Digital Content — Page 187 -->
+<h3 class="section-title" id="s7_6_5">7.6.5 Creating Accessible Digital Content</h3>
+<p>Creating accessible digital content means designing and producing content that everyone can use, including people with disabilities.</p>
+<!-- Design for Accessibility — Page 187 -->
+<h4 class="section-title">7.6.5.1 Design for Accessibility</h4>
+<p>Designing for accessibility involves making digital content usable for all individuals, including those with disabilities:</p>
+<ol>
+<li><strong>Readable Fonts:</strong> Use clear and large fonts that are easy to read.</li>
+<li>
+<div class="info-box">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> Choose fonts like Arial or Times New Roman and avoid overly decorative styles.</div>
+</div>
+</li>
+<li><strong>Alternative Text for Images:</strong> Provide descriptions for images so that visually impaired users can understand the content.</li>
+<li>
+<div class="info-box">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> Include descriptive text for charts or graphs in a report.</div>
+</div>
+</li>
+</ol>
+<!-- User Feedback — Page 187 -->
+<h4 class="section-title">7.6.5.2 User Feedback</h4>
+<p>User feedback is about gathering opinions from users to improve digital content:</p>
+<ol>
+<li>
+<strong>Surveys and Forms:</strong> Use surveys to collect feedback on digital content and make necessary improvements.
+        <div class="info-box" style="margin-top:10px;">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> After creating a website, ask users to provide feedback on their experience and make adjustments based on their suggestions.</div>
+</div>
+</li>
+<li>
+<strong>Direct Communication:</strong> Engage with users directly to understand their needs and preferences.
+        <div class="info-box" style="margin-top:10px;">
+<div class="icon">💡</div>
+<div class="content"><strong>Example:</strong> Ask classmates for their input on a presentation and use their feedback to enhance its effectiveness.</div>
+</div>
+</li>
+</ol>
+<!-- Page 188 -->
+<div class="page-marker"><span>Page 188</span></div>
+<div class="didyouknow-box">
+<div class="dyk-header">💡 Did You Know?</div>
+<p>In 2020, Pakistan introduced the Personal Data Protection Bill, which aims to protect citizens' data and ensure their privacy. This bill requires organizations to obtain explicit consent before collecting personal data and mandates the secure storage of such data.</p>
+</div>
+<!-- SUMMARY — Page 188 -->
+<div class="summary-box" id="summary">
+<h2>📝 Summary</h2>
+<ul>
+<li>"Terms of Use", also called Terms and Conditions or Terms of Service, are legal agreements that outline how a service or product can be used.</li>
+<li>Violating the Terms of Use can lead to serious legal consequences. Users can be fined, sued, or banned from using the service.</li>
+<li>Ethical considerations in Terms of Use encompass fairness, transparency, and respect for user rights.</li>
+<li>Personal rights within Terms of Use encompass the right to privacy, the right to be informed, and the right to withdraw consent.</li>
+<li>Spam refers to unwanted messages that you receive on your email or phone.</li>
+<li>Spyware is a type of harmful software that secretly watches what you do on your computer or phone.</li>
+<li>Cookies are small files that websites place on your device when you visit them.</li>
+<li>Phishing is a type of scam where someone pretends to be a trustworthy organization to trick you into giving away your personal information.</li>
+<li>Antivirus software protects your computer from harmful programs like spyware.</li>
+<li>Cookies are small files stored on your computer by websites.</li>
+<li>Bridging the digital divide means making sure everyone has equal access to technology and the internet.</li>
+</ul>
+</div>
+<!-- EXERCISE — Pages 188–190 -->
+<div class="exercise-section" id="exercise">
+<h2>📋 Exercise</h2>
+<h3>Multiple-Choice Questions (MCQs)</h3>
+<div class="mcq-item">
+<p class="question">1. Which of the following is NOT typically included in the common clauses of Terms of Use?</p>
+<ol class="options">
+<li>User obligations</li>
+<li>Privacy and data use</li>
+<li>Product advertising</li>
+<li>Termination of service</li>
+</ol>
+</div>
+<div class="mcq-item">
+<p class="question">2. What does the "Limitations of Liability" clause in Terms of Use usually do?</p>
+<ol class="options">
+<li>Ensures the company takes full responsibility for all issues</li>
+<li>Limits the company's liability if things go wrong</li>
+<li>Provides user rights for any damages</li>
+<li>Guarantees service availability at all times</li>
+</ol>
+</div>
+<!-- Page 189 -->
+<div class="page-marker"><span>Page 189</span></div>
+<div class="mcq-item">
+<p class="question">3. Which of the following is a harmful software that secretly monitors your computer or phone activities?</p>
+<ol class="options">
+<li>Spam</li>
+<li>Cookies</li>
+<li>Spyware</li>
+<li>Pharming</li>
+</ol>
+</div>
+<div class="mcq-item">
+<p class="question">4. Which of the following threats involves redirecting users to fake websites without their knowledge?</p>
+<ol class="options">
+<li>Phishing</li>
+<li>Spam</li>
+<li>Spyware</li>
+<li>Pharming</li>
+</ol>
+</div>
+<div class="mcq-item">
+<p class="question">5. How does the digital divide affect education?</p>
+<ol class="options">
+<li>It improves learning for all students</li>
+<li>It has no impact on education</li>
+<li>It creates inequality in access to digital learning resources</li>
+<li>It makes traditional teaching methods obsolete</li>
+</ol>
+</div>
+<div class="mcq-item">
+<p class="question">6. What does data provenance refer to?</p>
+<ol class="options">
+<li>The cost of accessing the information.</li>
+<li>The history and origins of the data.</li>
+<li>The popularity of the information source.</li>
+<li>The translation of information into multiple languages.</li>
+</ol>
+</div>
+<div class="mcq-item">
+<p class="question">7. Why is understanding bias important when evaluating information?</p>
+<ol class="options">
+<li>To ignore opposing viewpoints.</li>
+<li>To recognize and account for a source's viewpoint or agenda.</li>
+<li>To validate all sources as equally reliable.</li>
+<li>To avoid evaluating the information altogether.</li>
+</ol>
+</div>
+<div class="mcq-item">
+<p class="question">8. Which of the following is a positive impact of computing systems on society?</p>
+<ol class="options">
+<li>Increased spread of misinformation</li>
+<li>Improved accessibility to information</li>
+<li>Privacy concerns</li>
+<li>Unequal access to technology</li>
+</ol>
+</div>
+<div class="mcq-item">
+<p class="question">9. What does ethical use of information involve?</p>
+<ol class="options">
+<li>Copying content without permission.</li>
+<li>Respecting copyright and avoiding plagiarism.</li>
+<li>Ignoring data sources when sharing information.</li>
+<li>Using unverified information for reports.</li>
+</ol>
+</div>
+<!-- Page 190 -->
+<div class="page-marker"><span>Page 190</span></div>
+<div class="mcq-item">
+<p class="question">10. Which of the following is NOT a sign of responsible digital behavior?</p>
+<ol class="options">
+<li>Using secure websites for personal data sharing.</li>
+<li>Spreading false information on social media.</li>
+<li>Respecting others' privacy online.</li>
+<li>Reporting suspicious online activities.</li>
+</ol>
+</div>
+<h3>Short Questions</h3>
+<ol>
+<li class="sq-item">Why is it important for users to understand Terms of Use?</li>
+<li class="sq-item">Differentiate between phishing and pharming.</li>
+<li class="sq-item">Describe how cookies can be both beneficial and invasive to privacy. Give an example of each scenario.</li>
+<li class="sq-item">Identify two impacts of the digital divide on social and civic participation.</li>
+<li class="sq-item">What are the key steps involved in evaluating information sources?</li>
+<li class="sq-item">Explain how computing systems have impacted communication in society.</li>
+<li class="sq-item">How does responsible data sharing contribute to ethical use of information?</li>
+<li class="sq-item">Describe two ways to recognize online threats and prevent cybersecurity risks.</li>
+</ol>
+<h3>Long Questions</h3>
+<ol>
+<li class="lq-item">Explain the common clauses found in Terms of Use and describe how they protect both the service provider and the user.</li>
+<li class="lq-item">Explain the concept of bridging the digital divide and discuss the roles of government initiatives in addressing this issue. Provide relevant examples from Pakistan.</li>
+<li class="lq-item">Explain how critical thinking skills contribute to responsible information utilization. Provide examples of how these skills can be applied in real-life scenarios.</li>
+<li class="lq-item">Discuss the importance of collaborative problem solving in a digital environment and provide examples of how human-machine collaboration can enhance this process.</li>
+<li class="lq-item">Explain the concept of creating accessible digital content and describe strategies to ensure digital inclusivity for individuals with disabilities.</li>
+</ol>
+</div><!-- end exercise -->
+</main>
+</div>
+</body>
+</html>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
-function ChapterList({ chapters = [], selectedChapter, onSelectChapter, isOpen, onClose }) {
+function ChapterList({ chapters = [], selectedChapter, onSelectChapter, isLoading = false }) {
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredChapters = chapters.filter((chapter) =>
@@ -9,24 +9,34 @@ function ChapterList({ chapters = [], selectedChapter, onSelectChapter, isOpen, 
   );
 
   return (
-    <aside className={`chapter-panel ${isOpen ? 'open' : ''}`}>
+    <aside className="chapter-panel">
       <Link to="/dashboard" className="back-link">
-        ← Back to Dashboard
+        Back to Dashboard
       </Link>
       <div className="chapter-header">
-        <h2>Chapters</h2>
+        <h2>
+          Chapters
+          {!isLoading && chapters.length > 0 && (
+            <span className="chapter-count"> ({chapters.length})</span>
+          )}
+        </h2>
         <input
           type="text"
           className="chapter-search"
           placeholder="Search chapters..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
+          disabled={isLoading}
         />
       </div>
       <div className="chapter-list">
-        {chapters.length === 0 ? (
-          <div className="chapter-item coming-soon" style={{ color: 'var(--text-secondary)', cursor: 'default', textAlign: 'center', padding: '20px' }}>
-            🚧 Coming Soon
+        {isLoading ? (
+          <div className="chapter-item" style={{ color: 'var(--text-secondary)', cursor: 'default', textAlign: 'center', padding: '20px' }}>
+            Loading chapters...
+          </div>
+        ) : chapters.length === 0 ? (
+          <div className="chapter-item" style={{ color: 'var(--text-secondary)', cursor: 'default', textAlign: 'center', padding: '20px' }}>
+            No chapters found
           </div>
         ) : (
           <>
@@ -34,17 +44,15 @@ function ChapterList({ chapters = [], selectedChapter, onSelectChapter, isOpen, 
               <div
                 key={chapter.id}
                 className={`chapter-item ${selectedChapter?.id === chapter.id ? 'active' : ''}`}
-                onClick={() => {
-                  onSelectChapter(chapter);
-                  if (onClose) onClose();
-                }}
+                onClick={() => onSelectChapter(chapter)}
+                title={`View ${chapter.name}`}
               >
                 {chapter.name}
               </div>
             ))}
             {filteredChapters.length === 0 && searchQuery && (
               <div className="chapter-item" style={{ color: 'var(--text-secondary)', cursor: 'default' }}>
-                No chapters found
+                No chapters matching "{searchQuery}"
               </div>
             )}
           </>
