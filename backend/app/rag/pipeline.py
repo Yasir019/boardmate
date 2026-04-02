@@ -114,6 +114,7 @@ class RAGPipeline:
         class_level: str,
         subject: str,
         chapter: str = None,
+        language: str = "en",
     ) -> Dict:
         """
         Query the RAG system.
@@ -161,6 +162,7 @@ class RAGPipeline:
             context=context,
             board=board,
             class_level=class_level,
+            language=language,
         )
 
         sources = []

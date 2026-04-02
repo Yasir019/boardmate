@@ -5,9 +5,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
 from app.api.routes import health, chat, admin, chapters, auth
-from app.core.config import DATA_DIR, DATABASE_URL, SQLITE_DB_PATH
+from app.core.config import CORS_ORIGINS, DATA_DIR, DATABASE_URL, SQLITE_DB_PATH
 from app.db.init_db import initialize_database
 
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
@@ -18,18 +19,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://localhost:5174",
-        "http://localhost:5175",
-        "http://localhost:5176",
-        "http://localhost:5177",
-        "http://localhost:5178",
-        "http://localhost:5179",
-        "http://localhost:3000",
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:5174",
-    ],
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -46,7 +36,11 @@ app.include_router(chapters.router, prefix="/api/chapters", tags=["Chapters"])
 async def serve_pdf(board: str, class_level: str, subject: str, filename: str):
     """Serve PDF files inline from All_Chapters_PDFs folder."""
     try:
-        pdf_path = DATA_DIR / board / class_level / subject / "All_Chapters_PDFs" / filename
+        base_pdf_dir = (DATA_DIR / board / class_level / subject / "All_Chapters_PDFs").resolve()
+        pdf_path = (base_pdf_dir / filename).resolve()
+
+        if base_pdf_dir not in pdf_path.parents:
+            raise HTTPException(status_code=400, detail="Invalid PDF path")
 
         if not pdf_path.exists():
             raise HTTPException(status_code=404, detail="PDF not found")

@@ -1,12 +1,22 @@
 """Service for managing textbook indexing."""
 
 import logging
+import re
 from typing import Dict
 
 from app.core.config import DATA_DIR
 from app.rag.pipeline import rag_pipeline
 
 logger = logging.getLogger(__name__)
+
+
+def _safe_path_segment(value: str, field_name: str) -> str:
+    cleaned = value.strip()
+    if not cleaned:
+        raise ValueError(f"{field_name} is required")
+    if cleaned in {".", ".."} or re.search(r"[\\/]", cleaned):
+        raise ValueError(f"Invalid {field_name}")
+    return cleaned
 
 
 class IndexingService:
@@ -48,18 +58,25 @@ class IndexingService:
             Dict with ok status and saved_path.
         """
         try:
-            save_dir = DATA_DIR / board / class_level / subject
+            safe_board = _safe_path_segment(board, "board")
+            safe_class_level = _safe_path_segment(class_level, "class_level")
+            safe_subject = _safe_path_segment(subject, "subject")
+            safe_chapter = _safe_path_segment(chapter, "chapter")
+
+            save_dir = (DATA_DIR / safe_board / safe_class_level / safe_subject).resolve()
+            if DATA_DIR.resolve() not in save_dir.parents:
+                raise ValueError("Invalid upload path")
             save_dir.mkdir(parents=True, exist_ok=True)
 
-            file_path = save_dir / f"{chapter}.txt"
+            file_path = save_dir / f"{safe_chapter}.txt"
             with open(file_path, "w", encoding="utf-8") as f:
                 f.write(content)
 
             return {
                 "ok": True,
-                "saved_path": str(file_path.relative_to(DATA_DIR.parent)),
+                "saved_path": str(file_path.relative_to(DATA_DIR.parent)).replace("\\", "/"),
             }
-        except Exception as e:
+        except (OSError, ValueError) as e:
             logger.error("File save error: %s", e)
             return {"ok": False, "error": str(e)}
 

@@ -1,5 +1,4 @@
 from datetime import datetime
-
 from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy import select
@@ -49,6 +48,43 @@ def _extract_bearer_token(authorization: str | None) -> str:
     return parts[1]
 
 
+def get_current_user(
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    db: Session = Depends(get_db),
+) -> User:
+    """Resolve the current authenticated user from the Authorization header."""
+    token = _extract_bearer_token(authorization)
+    payload = decode_access_token(token)
+    if not payload or "sub" not in payload:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+    user = db.get(User, int(payload["sub"]))
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return user
+
+
+def get_optional_current_user(
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    db: Session = Depends(get_db),
+) -> User | None:
+    """Resolve the current user when a bearer token is present, otherwise return None."""
+    if not authorization:
+        return None
+
+    token = _extract_bearer_token(authorization)
+    payload = decode_access_token(token)
+    if not payload or "sub" not in payload:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+    user = db.get(User, int(payload["sub"]))
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return user
+
+
 @router.post("/signup", response_model=AuthResponse)
 def signup(payload: SignUpRequest, db: Session = Depends(get_db)):
     existing = db.scalar(select(User).where(User.email == payload.email.lower().strip()))
@@ -90,18 +126,8 @@ def signin(payload: SignInRequest, db: Session = Depends(get_db)):
 
 @router.get("/me", response_model=UserProfileResponse)
 def me(
-    authorization: str | None = Header(default=None, alias="Authorization"),
-    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
-    token = _extract_bearer_token(authorization)
-    payload = decode_access_token(token)
-    if not payload or "sub" not in payload:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
-
-    user = db.get(User, int(payload["sub"]))
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
     return UserProfileResponse(
         id=user.id,
         full_name=user.full_name,

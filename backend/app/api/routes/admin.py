@@ -1,3 +1,5 @@
+import hmac
+
 from fastapi import APIRouter, File, Form, Header, HTTPException, UploadFile
 from pydantic import BaseModel
 
@@ -9,22 +11,24 @@ router = APIRouter()
 
 def verify_admin_token(x_admin_token: str = Header(...)):
     """Validate the admin token from the request header."""
-    if x_admin_token != ADMIN_TOKEN:
+    if not ADMIN_TOKEN:
+        raise HTTPException(status_code=503, detail="Admin endpoints are disabled")
+    if not x_admin_token or not hmac.compare_digest(x_admin_token, ADMIN_TOKEN):
         raise HTTPException(status_code=403, detail="Invalid admin token")
     return True
 
 
 class UploadResponse(BaseModel):
     ok: bool
-    saved_path: str = None
-    error: str = None
+    saved_path: str | None = None
+    error: str | None = None
 
 
 class ReindexResponse(BaseModel):
     ok: bool
     files_indexed: int = 0
     chunks_indexed: int = 0
-    error: str = None
+    error: str | None = None
 
 
 @router.post("/upload", response_model=UploadResponse)

@@ -1,233 +1,113 @@
-# 📚 BoardMate
+# BoardMate
 
-**AI-Powered Study Assistant for Pakistani Board Students**
+BoardMate is an AI study assistant for Pakistani board students. It combines a React frontend with a FastAPI backend and a RAG pipeline built on textbook content.
 
-BoardMate is a RAG (Retrieval-Augmented Generation) based educational assistant that helps students study textbook content for Pakistani board exams (Sindh, Punjab, Federal, KPK, Balochistan).
+## Stack
 
----
+- Frontend: React 18, Vite, React Router
+- Backend: FastAPI, SQLAlchemy
+- AI: Groq, LangChain, ChromaDB, sentence-transformers
 
-## 🎯 Features
+## Project Structure
 
-- **Board-Specific Content**: Tailored for all Pakistani boards
-- **Chapter-wise Learning**: Organized study material by chapters
-- **AI Chat Assistant**: Ask questions and get instant explanations
-- **Textbook-Based Answers**: Responses grounded in actual textbook content
-
----
-
-## 🛠️ Tech Stack
-
-| Layer | Technology |
-|-------|------------|
-| Frontend | React 18 + Vite |
-| Backend | FastAPI (Python) + LangChain |
-| LLM | Groq (Llama 3.1) |
-| Vector DB | ChromaDB (via LangChain) |
-| Embeddings | sentence-transformers |
-| Requirements | CPU-only, 8GB RAM |
-
----
-
-## 📁 Project Structure
-
-```
+```text
 boardmate/
-├── frontend/               # React frontend (Vite)
-│   ├── src/
-│   │   ├── components/     # Reusable UI components
-│   │   ├── pages/          # Page components
-│   │   └── styles/         # CSS files
-│   └── package.json
-│
-├── backend/                # FastAPI backend
-│   ├── app/
-│   │   ├── api/            # API routes
-│   │   ├── core/           # Config & settings
-│   │   ├── rag/            # RAG pipeline
-│   │   ├── services/       # Business logic
-│   │   └── storage/        # Vector DB storage
-│   └── pyproject.toml
-│
-├── data/                   # Textbook files
-├── .env                    # Environment variables (not in git)
-├── .env.example            # Environment template
-└── README.md
+|-- backend/
+|   |-- app/
+|   |   |-- api/
+|   |   |-- core/
+|   |   |-- db/
+|   |   |-- rag/
+|   |   |-- services/
+|   |   `-- storage/
+|   |-- pyproject.toml
+|   `-- requirements.txt
+|-- frontend/
+|   |-- public/
+|   |-- src/
+|   |   |-- api/
+|   |   |-- assets/
+|   |   |-- components/
+|   |   |-- pages/
+|   |   |-- styles/
+|   |   `-- utils/
+|   `-- package.json
+|-- Books/
+|-- .env.example
+`-- run-backend.bat
 ```
 
----
+## Textbook Layout
 
-## 📖 Data Folder Structure
+BoardMate reads content from the `Books/` directory by default.
 
-**Note**: You can now configure a custom data folder path using the `DATA_DIR` environment variable in `.env`. If not specified, the default `data/` folder will be used.
-
-Place your textbook files in your data folder following this structure:
-
-```
-data/
-├── Sindh/
-│   ├── 9/
-│   │   ├── Physics/
-│   │   │   ├── chapter1.txt
-│   │   │   ├── chapter2.txt
-│   │   │   └── ...
-│   │   ├── Chemistry/
-│   │   ├── Biology/
-│   │   ├── Mathematics/
-│   │   ├── English/
-│   │   ├── Urdu/
-│   │   └── Computer-Science/
-│   ├── 10/
-│   ├── 11/
-│   └── 12/
-├── Punjab/
-├── Federal/
-├── KPK/
-└── Balochistan/
+```text
+Books/
+`-- Board/
+    `-- Class/
+        `-- Subject/
+            |-- All_Chapters_Extracted/
+            |   `-- Chapter1.html
+            `-- All_Chapters_PDFs/
+                `-- Chapter1.pdf
 ```
 
-**File Format**: `.txt` (plain text)
+You can point the backend to another dataset location with `DATA_DIR`.
 
-**File Naming**: `chapter1.txt`, `chapter2.txt`, etc.
+## Setup
 
----
+### 1. Backend
 
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Python 3.10+
-- Node.js 18+
-- 8GB RAM minimum
-
-### Backend Setup
-
-```bash
-cd backend
-
-# Create virtual environment once (from project root)
+```powershell
 py -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r backend\requirements.txt
+Copy-Item .env.example .env
+```
 
-# Install dependencies once
-..\.venv\Scripts\python.exe -m pip install -r requirements.txt
+Fill in `.env` with at least:
 
-# Run server
+- `SECRET_KEY`
+- `GROQ_API_KEY`
+- `ADMIN_TOKEN` if you want admin upload and reindex endpoints enabled
+
+Run the API:
+
+```powershell
+cd backend
 ..\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000
 ```
 
-### Frontend Setup
+Or use:
 
-```bash
+```powershell
+.\run-backend.bat
+```
+
+### 2. Frontend
+
+```powershell
 cd frontend
-
-# Install dependencies
 npm install
-
-# Run development server
+Copy-Item .env.example .env
 npm run dev
 ```
 
----
+Frontend env values:
 
-## 🌐 URLs
+- `VITE_API_URL` optional, leave empty in local development to use the Vite proxy
+- `VITE_ADMIN_TOKEN` required only if you use frontend admin actions
 
-| Service | URL |
-|---------|-----|
-| Frontend | http://localhost:5173 |
-| Backend API | http://localhost:8000 |
-| API Docs | http://localhost:8000/docs |
+## Production Notes
 
----
+- Set `APP_ENV=production`
+- Set a strong `SECRET_KEY`
+- Set `ADMIN_TOKEN` if admin routes should remain enabled
+- Set `CORS_ORIGINS` to your deployed frontend origins
+- Set `VITE_API_URL` in the frontend to your deployed backend base URL
+- Do not commit generated database files or vector store contents
 
-## 📡 API Endpoints
+## Useful URLs
 
-### Public
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/health` | Health check |
-| POST | `/chat/ask` | Ask a question |
-
-### Admin (requires `X-ADMIN-TOKEN: admin123`)
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/admin/upload` | Upload textbook file |
-| POST | `/admin/reindex` | Re-index all textbooks |
-
----
-
-## 📝 Usage
-
-1. **Add Textbooks**: Place `.txt` files in `data/` folder following the structure above
-2. **Start Servers**: Run both backend and frontend
-3. **Index Content**: Go to Admin → Click "Re-index"
-4. **Start Learning**: Select Board → Class → Subject → Chat!
-
----
-
-## 🔧 Configuration
-
-Environment variables (copy `.env.example` to `.env` in project root):
-
-```env
-# Admin Security
-ADMIN_TOKEN=your_secure_token
-
-# Data Directory (optional - leave empty to use default ./data folder)
-# Example: DATA_DIR=D:/my_textbooks
-DATA_DIR=
-
-# Groq LLM Settings (get your key from https://console.groq.com)
-GROQ_API_KEY=your_groq_api_key
-GROQ_MODEL=llama-3.1-8b-instant
-
-# Embedding Model
-EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
-
-# RAG Settings
-CHUNK_SIZE=400
-CHUNK_OVERLAP=60
-TOP_K_RESULTS=5
-```
-
----
-
-## 📦 Build for Production
-
-### Frontend
-
-```bash
-cd frontend
-npm run build
-# Output: frontend/dist/
-```
-
-### Backend
-
-```bash
-cd backend
-uv run uvicorn app.main:app --host 0.0.0.0 --port 8000
-```
-
----
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License.
-
----
-
-## 👨‍💻 Author
-
-Built with ❤️ for Pakistani students
-- RAG retrieves top 3 similar chunks per query
+- Frontend: `http://localhost:5173`
+- Backend: `http://localhost:8000`
+- API docs: `http://localhost:8000/docs`

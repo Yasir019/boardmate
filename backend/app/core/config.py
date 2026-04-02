@@ -1,38 +1,114 @@
 """Application configuration loaded from environment variables."""
 
-import os
 from pathlib import Path
 
-from dotenv import load_dotenv
+from pydantic import Field, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Directory layout
 BASE_DIR = Path(__file__).resolve().parent.parent
 PROJECT_ROOT = BASE_DIR.parent.parent
+DEFAULT_SQLITE_DB_PATH = BASE_DIR / "storage" / "app.db"
 
-load_dotenv(PROJECT_ROOT / ".env")
 
-# Data directory
-_data_dir_env = os.getenv("DATA_DIR")
-DATA_DIR = Path(_data_dir_env) if _data_dir_env else PROJECT_ROOT / "Books"
+class Settings(BaseSettings):
+    """Typed application settings with production-safe validation."""
+
+    model_config = SettingsConfigDict(
+        env_file=PROJECT_ROOT / ".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+    app_env: str = Field(default="development", alias="APP_ENV")
+    data_dir: Path = Field(default=PROJECT_ROOT / "Books", alias="DATA_DIR")
+    database_url: str = Field(
+        default=f"sqlite:///{DEFAULT_SQLITE_DB_PATH.as_posix()}",
+        alias="DATABASE_URL",
+    )
+    cors_origins: list[str] = Field(
+        default_factory=lambda: [
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+        ],
+        alias="CORS_ORIGINS",
+    )
+
+    admin_token: str | None = Field(default=None, alias="ADMIN_TOKEN")
+    secret_key: str = Field(default="dev-secret-key-change-me", alias="SECRET_KEY")
+    algorithm: str = "HS256"
+    access_token_expire_minutes: int = Field(default=60, alias="ACCESS_TOKEN_EXPIRE_MINUTES")
+
+    embedding_model: str = Field(
+        default="sentence-transformers/all-MiniLM-L6-v2",
+        alias="EMBEDDING_MODEL",
+    )
+    chunk_size: int = Field(default=400, alias="CHUNK_SIZE")
+    chunk_overlap: int = Field(default=60, alias="CHUNK_OVERLAP")
+    top_k_results: int = Field(default=5, alias="TOP_K_RESULTS")
+    collection_name: str = "boardmate_textbooks"
+
+    groq_api_key: str | None = Field(default=None, alias="GROQ_API_KEY")
+    groq_model: str = Field(default="llama-3.1-8b-instant", alias="GROQ_MODEL")
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, value: str | list[str]) -> list[str]:
+        if isinstance(value, list):
+            return value
+        if not value:
+            return []
+        return [origin.strip() for origin in value.split(",") if origin.strip()]
+
+    @field_validator("data_dir", mode="before")
+    @classmethod
+    def resolve_data_dir(cls, value: str | Path | None) -> Path:
+        if value in (None, ""):
+            return PROJECT_ROOT / "Books"
+        return Path(value).expanduser().resolve()
+
+    @field_validator("secret_key")
+    @classmethod
+    def validate_secret_key(cls, value: str, info) -> str:
+        app_env = info.data.get("app_env", "development")
+        if app_env.lower() == "production" and value == "dev-secret-key-change-me":
+            raise ValueError("SECRET_KEY must be set in production")
+        return value
+
+    @field_validator("admin_token")
+    @classmethod
+    def validate_admin_token(cls, value: str | None, info) -> str | None:
+        app_env = info.data.get("app_env", "development")
+        if app_env.lower() == "production" and not value:
+            raise ValueError("ADMIN_TOKEN must be set in production")
+        return value
+
+
+settings = Settings()
 
 # Storage
 VECTOR_DB_DIR = BASE_DIR / "storage" / "vector_db"
-SQLITE_DB_PATH = BASE_DIR / "storage" / "app.db"
-DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{SQLITE_DB_PATH.as_posix()}")
+SQLITE_DB_PATH = DEFAULT_SQLITE_DB_PATH
+DATABASE_URL = settings.database_url
 
 # Security
-ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "admin123")
-SECRET_KEY = os.getenv("SECRET_KEY", "change-this-secret-key-in-production")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
+ADMIN_TOKEN = settings.admin_token
+SECRET_KEY = settings.secret_key
+ALGORITHM = settings.algorithm
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.access_token_expire_minutes
+CORS_ORIGINS = settings.cors_origins
+
+# Data
+DATA_DIR = settings.data_dir
 
 # RAG settings
-EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
-CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", "400"))
-CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "60"))
-TOP_K_RESULTS = int(os.getenv("TOP_K_RESULTS", "5"))
-COLLECTION_NAME = "boardmate_textbooks"
+EMBEDDING_MODEL = settings.embedding_model
+CHUNK_SIZE = settings.chunk_size
+CHUNK_OVERLAP = settings.chunk_overlap
+TOP_K_RESULTS = settings.top_k_results
+COLLECTION_NAME = settings.collection_name
 
 # Groq LLM
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
+GROQ_API_KEY = settings.groq_api_key
+GROQ_MODEL = settings.groq_model

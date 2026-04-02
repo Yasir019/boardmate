@@ -28,6 +28,13 @@ class ChaptersResponse(BaseModel):
     chapters: List[Chapter]
 
 
+def _resolve_subject_path(board: str, class_level: str, subject: str) -> Path:
+    subject_path = (DATA_DIR / board / class_level / subject).resolve()
+    if DATA_DIR.resolve() not in subject_path.parents:
+        raise HTTPException(status_code=400, detail="Invalid subject path")
+    return subject_path
+
+
 def _extract_title(html_file: Path, chapter_name: str) -> str:
     """Extract a clean chapter title from an HTML file."""
     try:
@@ -53,7 +60,7 @@ def _extract_title(html_file: Path, chapter_name: str) -> str:
 async def get_chapters(board: str, class_level: str, subject: str):
     """Return a list of chapters for a given board, class, and subject."""
     try:
-        subject_path = DATA_DIR / board / class_level / subject
+        subject_path = _resolve_subject_path(board, class_level, subject)
 
         if not subject_path.exists():
             raise HTTPException(
@@ -94,7 +101,6 @@ async def get_chapters(board: str, class_level: str, subject: str):
                     chapter_number=chapter_number,
                     chapter_title=title,
                     pdf_path=pdf_path,
-                    html_path=str(html_file),
                 )
             )
 
@@ -114,16 +120,16 @@ async def get_chapter_content(
 ):
     """Return the raw HTML content of a specific chapter."""
     try:
-        html_path = (
-            DATA_DIR / board / class_level / subject
-            / "All_Chapters_Extracted" / f"{chapter}.html"
-        )
+        subject_path = _resolve_subject_path(board, class_level, subject)
+        html_path = (subject_path / "All_Chapters_Extracted" / f"{chapter}.html").resolve()
+
+        if subject_path not in html_path.parents:
+            raise HTTPException(status_code=400, detail="Invalid chapter path")
 
         if not html_path.exists():
             raise HTTPException(status_code=404, detail="Chapter not found")
 
-        with open(html_path, "r", encoding="utf-8") as f:
-            content = f.read()
+        content = html_path.read_text(encoding="utf-8")
 
         return {"content": content}
 

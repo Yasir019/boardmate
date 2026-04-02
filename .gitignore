@@ -39,6 +39,8 @@ frontend/dist/
 # =====================
 backend/app/storage/vector_db/*
 !backend/app/storage/vector_db/.gitkeep
+backend/app/storage/*.db
+backend/app/storage/*.sqlite*
 
 # =====================
 # IDE & Editors
