@@ -1,51 +1,71 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import MessageBubble from './MessageBubble';
 import ChatInput from './ChatInput';
 
-function ChatPanel({ 
-  board, 
-  classLevel, 
-  subject, 
-  selectedChapter, 
-  messages, 
+function ChatPanel({
+  board,
+  classLevel,
+  subject,
+  selectedChapter,
+  messages,
   onSendMessage,
   isLoading = false,
-  chatEnabled = false
+  chatEnabled = false,
+  language = 'en',
+  onLanguageChange,
+  onStartVoiceInput,
+  onStopVoiceInput,
+  isListening = false,
+  speechRecognitionSupported = false,
+  speechSynthesisSupported = false,
+  onSpeakMessage,
+  voiceError = '',
+  inputPlaceholder = 'Ask me anything or use the microphone...',
 }) {
   const messagesContainerRef = useRef(null);
 
-  const scrollToBottom = () => {
+  useEffect(() => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
     }
-  };
-
-  useEffect(() => {
-    scrollToBottom();
   }, [messages]);
 
   return (
     <main className="chat-panel">
-      {/* Chat Header */}
       <div className="chat-header">
         <div className="chat-header-info">
           <h2>{subject?.name || 'Subject'}</h2>
-          <p>
-            {board?.name} • {classLevel?.name} 
-            {selectedChapter && ` • ${selectedChapter.name}`}
-          </p>
         </div>
-        {selectedChapter && (
-          <span className="chat-header-badge">
-            {selectedChapter.name.split(':')[0]}
-          </span>
-        )}
+
+        <div className="chat-header-controls">
+          <div className="language-toggle" role="group" aria-label="Language selection">
+            <button
+              type="button"
+              className={`language-chip ${language === 'en' ? 'active' : ''}`}
+              onClick={() => onLanguageChange?.('en')}
+            >
+              English
+            </button>
+            <button
+              type="button"
+              className={`language-chip ${language === 'ur' ? 'active' : ''}`}
+              onClick={() => onLanguageChange?.('ur')}
+            >
+              Urdu
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Messages */}
       <div className="messages-container" ref={messagesContainerRef}>
         {messages.map((message) => (
-          <MessageBubble key={message.id} message={message} />
+          <MessageBubble
+            key={message.id}
+            message={message}
+            showSpeakButton={message.type === 'bot' && speechSynthesisSupported}
+            onSpeak={onSpeakMessage}
+            language={language}
+          />
         ))}
         {isLoading && (
           <div className="message-bubble bot">
@@ -60,11 +80,17 @@ function ChatPanel({
         )}
       </div>
 
-      {/* Input */}
-      <ChatInput 
-        onSendMessage={onSendMessage} 
+      {voiceError && <div className="voice-status voice-status-error">{voiceError}</div>}
+
+      <ChatInput
+        onSendMessage={onSendMessage}
         disabled={!chatEnabled || isLoading}
-        placeholder={chatEnabled ? "Ask me anything..." : "Content coming soon..."}
+        placeholder={inputPlaceholder}
+        language={language}
+        onStartVoiceInput={onStartVoiceInput}
+        onStopVoiceInput={onStopVoiceInput}
+        isListening={isListening}
+        voiceSupported={speechRecognitionSupported}
       />
     </main>
   );

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Landing from './pages/Landing';
 import Dashboard from './pages/Dashboard';
@@ -28,9 +28,12 @@ function PublicOnly({ children }) {
 }
 
 function App() {
+  const location = useLocation();
+  const isChatPage = location.pathname.startsWith('/chat/');
+
   return (
     <div className="app">
-      <Navbar />
+      {!isChatPage && <Navbar />}
       <div className="app-main">
         <Routes>
           <Route path="/" element={<Landing />} />

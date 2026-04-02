@@ -3,13 +3,13 @@ import '../styles/pdfviewer.css';
 
 function PdfViewer({ pdfUrl, chapterTitle }) {
   const [error, setError] = useState(false);
-  const [zoom, setZoom] = useState(100);
+  const [zoom, setZoom] = useState(115);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const viewerRef = useRef(null);
 
   useEffect(() => {
     setError(false);
-    setZoom(100);
+    setZoom(115);
   }, [pdfUrl, chapterTitle]);
 
   const handleZoomIn = () => {
@@ -21,7 +21,7 @@ function PdfViewer({ pdfUrl, chapterTitle }) {
   };
 
   const handleZoomReset = () => {
-    setZoom(100);
+    setZoom(115);
   };
 
   const toggleFullscreen = useCallback(() => {

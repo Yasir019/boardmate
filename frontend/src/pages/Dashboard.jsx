@@ -26,11 +26,10 @@ function Dashboard() {
     setSelectedClass(null);
   };
 
-  // Build breadcrumb items
   const breadcrumbItems = [
-    { 
-      label: 'Boards', 
-      onClick: selectedBoard ? handleBackToBoards : null 
+    {
+      label: 'Boards',
+      onClick: selectedBoard ? handleBackToBoards : null,
     },
   ];
 
@@ -50,12 +49,11 @@ function Dashboard() {
 
   return (
     <div className="dashboard">
-      {/* Breadcrumbs */}
       {selectedBoard && <Breadcrumbs items={breadcrumbItems} />}
 
-      {/* Back Button */}
       {selectedBoard && (
-        <button 
+        <button
+          type="button"
           className="back-button"
           onClick={selectedClass ? handleBackToClasses : handleBackToBoards}
         >
@@ -63,22 +61,19 @@ function Dashboard() {
         </button>
       )}
 
-      {/* Content based on selection state */}
-      {!selectedBoard && (
-        <BoardGrid onSelectBoard={handleSelectBoard} />
-      )}
+      {!selectedBoard && <BoardGrid onSelectBoard={handleSelectBoard} />}
 
       {selectedBoard && !selectedClass && (
-        <ClassGrid 
-          board={selectedBoard} 
-          onSelectClass={handleSelectClass} 
+        <ClassGrid
+          board={selectedBoard}
+          onSelectClass={handleSelectClass}
         />
       )}
 
       {selectedBoard && selectedClass && (
-        <SubjectGrid 
-          board={selectedBoard} 
-          classLevel={selectedClass} 
+        <SubjectGrid
+          board={selectedBoard}
+          classLevel={selectedClass}
         />
       )}
     </div>

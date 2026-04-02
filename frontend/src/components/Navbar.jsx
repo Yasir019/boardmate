@@ -28,7 +28,8 @@ function Navbar() {
         <div className="v2-navbar-center">
           <a href={isLanding ? '#home' : '/#home'} className="v2-nav-link">Home</a>
           <a href={isLanding ? '#features' : '/#features'} className="v2-nav-link">Features</a>
-          <a href={isLanding ? '#pricing' : '/#pricing'} className="v2-nav-link">Pricing</a>
+          <a href={isLanding ? '#how-it-works' : '/#how-it-works'} className="v2-nav-link">How It Works</a>
+          <a href={isLanding ? '#pricing' : '/#pricing'} className="v2-nav-link">Get Started</a>
         </div>
 
         <div className="v2-navbar-right">

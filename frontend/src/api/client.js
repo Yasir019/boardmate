@@ -3,8 +3,12 @@
  * Handles all communication with the FastAPI backend
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-const ADMIN_TOKEN = import.meta.env.VITE_ADMIN_TOKEN || 'admin123';
+const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+const ADMIN_TOKEN = import.meta.env.VITE_ADMIN_TOKEN;
+
+function buildApiUrl(path) {
+  return API_BASE_URL ? `${API_BASE_URL}${path}` : path;
+}
 
 async function getErrorMessage(response, fallbackMessage) {
   try {
@@ -23,7 +27,7 @@ export const api = {
    * Check backend health status
    */
   async healthCheck() {
-    const response = await fetch(`${API_BASE_URL}/health`);
+    const response = await fetch(buildApiUrl('/health'));
     return response.json();
   },
 
@@ -34,7 +38,7 @@ export const api = {
    * @param {string} password - User password
    */
   async signUp(fullName, email, password) {
-    const response = await fetch(`${API_BASE_URL}/auth/signup`, {
+    const response = await fetch(buildApiUrl('/auth/signup'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -59,7 +63,7 @@ export const api = {
    * @param {string} password - User password
    */
   async signIn(email, password) {
-    const response = await fetch(`${API_BASE_URL}/auth/signin`, {
+    const response = await fetch(buildApiUrl('/auth/signin'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -82,7 +86,7 @@ export const api = {
    * @param {string} accessToken - JWT bearer token
    */
   async getMe(accessToken) {
-    const response = await fetch(`${API_BASE_URL}/auth/me`, {
+    const response = await fetch(buildApiUrl('/auth/me'), {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
@@ -103,8 +107,8 @@ export const api = {
    * @param {string} question - User's question
    * @param {string} chapter - Optional chapter filter
    */
-  async askQuestion(board, classLevel, subject, question, chapter = null) {
-    const response = await fetch(`${API_BASE_URL}/chat/ask`, {
+  async askQuestion(board, classLevel, subject, question, chapter = null, language = 'en') {
+    const response = await fetch(buildApiUrl('/chat/ask'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -115,6 +119,7 @@ export const api = {
         subject,
         question,
         chapter,
+        language,
       }),
     });
 
@@ -132,9 +137,12 @@ export const api = {
    * @param {string} subject - Subject name
    */
   async getChapters(board, classLevel, subject) {
-    const response = await fetch(
-      `${API_BASE_URL}/api/chapters/list?board=${encodeURIComponent(board)}&class_level=${encodeURIComponent(classLevel)}&subject=${encodeURIComponent(subject)}`
-    );
+    const query = new URLSearchParams({
+      board,
+      class_level: classLevel,
+      subject,
+    });
+    const response = await fetch(buildApiUrl(`/api/chapters/list?${query.toString()}`));
 
     if (!response.ok) {
       throw new Error(await getErrorMessage(response, 'Failed to fetch chapters'));
@@ -152,7 +160,7 @@ export const api = {
    */
   async getChapterContent(board, classLevel, subject, chapter) {
     const response = await fetch(
-      `${API_BASE_URL}/api/chapters/content/${encodeURIComponent(board)}/${encodeURIComponent(classLevel)}/${encodeURIComponent(subject)}/${encodeURIComponent(chapter)}`
+      buildApiUrl(`/api/chapters/content/${encodeURIComponent(board)}/${encodeURIComponent(classLevel)}/${encodeURIComponent(subject)}/${encodeURIComponent(chapter)}`)
     );
 
     if (!response.ok) {
@@ -170,7 +178,13 @@ export const api = {
    * @param {string} chapter - Chapter identifier
    */
   getPdfUrl(board, classLevel, subject, chapter) {
-    return `${API_BASE_URL}/api/chapters/pdf/${encodeURIComponent(board)}/${encodeURIComponent(classLevel)}/${encodeURIComponent(subject)}/${encodeURIComponent(chapter)}.pdf`;
+    return buildApiUrl(
+      `/api/chapters/pdf/${encodeURIComponent(board)}/${encodeURIComponent(classLevel)}/${encodeURIComponent(subject)}/${encodeURIComponent(chapter)}.pdf`
+    );
+  },
+
+  resolveUrl(path) {
+    return buildApiUrl(path);
   },
 
   /**
@@ -182,6 +196,10 @@ export const api = {
    * @param {File} file - Text file to upload
    */
   async uploadTextbook(board, classLevel, subject, chapter, file) {
+    if (!ADMIN_TOKEN) {
+      throw new Error('VITE_ADMIN_TOKEN is not configured');
+    }
+
     const formData = new FormData();
     formData.append('board', board);
     formData.append('class_level', classLevel);
@@ -189,7 +207,7 @@ export const api = {
     formData.append('chapter', chapter);
     formData.append('file', file);
 
-    const response = await fetch(`${API_BASE_URL}/admin/upload`, {
+    const response = await fetch(buildApiUrl('/admin/upload'), {
       method: 'POST',
       headers: {
         'X-ADMIN-TOKEN': ADMIN_TOKEN,
@@ -209,7 +227,11 @@ export const api = {
    * Processes all files in the data directory
    */
   async reindex() {
-    const response = await fetch(`${API_BASE_URL}/admin/reindex`, {
+    if (!ADMIN_TOKEN) {
+      throw new Error('VITE_ADMIN_TOKEN is not configured');
+    }
+
+    const response = await fetch(buildApiUrl('/admin/reindex'), {
       method: 'POST',
       headers: {
         'X-ADMIN-TOKEN': ADMIN_TOKEN,
