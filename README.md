@@ -1,6 +1,6 @@
 # BoardMate
 
-BoardMate is an AI Powered study assistant for Pakistani Board students. It combines a React frontend with a FastAPI backend and a RAG pipeline built on textbook content.
+BoardMate is an AI Powered study assistant for Pakistani Board students. It combines a React frontend with a FastAPI backend and a RAG pipeline built on board textbooks content.
 
 ## Tech Stack
 
