@@ -17,7 +17,11 @@ from app.core.config import (
 from app.rag.cleaner import clean_text
 from app.rag.loader import load_textbooks
 from app.rag.vector_store import VectorStore
-from app.services.llm_service import generate_response
+from app.services.llm_service import (
+    build_missing_context_response,
+    generate_response,
+    maybe_build_conversational_reply,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -131,6 +135,19 @@ class RAGPipeline:
         """
         self._ensure_models_loaded()
 
+        conversational_reply = maybe_build_conversational_reply(
+            question=question,
+            board=board,
+            class_level=class_level,
+            subject=subject,
+            language=language,
+        )
+        if conversational_reply:
+            return {
+                "answer": conversational_reply,
+                "sources": [],
+            }
+
         filters = {
             "board": board,
             "class_level": class_level,
@@ -147,10 +164,12 @@ class RAGPipeline:
 
         if not results:
             return {
-                "answer": (
-                    "I couldn't find information about this topic in the textbook. "
-                    "Please try rephrasing your question or check if this topic "
-                    "is covered in another chapter."
+                "answer": build_missing_context_response(
+                    board=board,
+                    class_level=class_level,
+                    subject=subject,
+                    chapter=chapter,
+                    language=language,
                 ),
                 "sources": [],
             }

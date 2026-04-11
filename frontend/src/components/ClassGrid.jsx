@@ -1,30 +1,26 @@
 import React from 'react';
-import Card from './Card';
-
-const classes = [
-  { id: '9th', name: '9th', description: 'Matriculation Part 1' },
-  { id: '10th', name: '10th', description: 'Matriculation Part 2' },
-  { id: '11th', name: '11th', description: 'Intermediate Part 1' },
-  { id: '12th', name: '12th', description: 'Intermediate Part 2' },
-];
 
 function ClassGrid({ board, onSelectClass }) {
   return (
     <div>
       <div className="section-header">
         <h1>Select Your Class</h1>
-        <p>Choose your class level for {board.name}</p>
+        <p>All class levels are visible for {board.name}. Available content is live, and the rest are marked coming soon.</p>
       </div>
       <div className="card-grid">
-        {classes.map((cls) => (
-          <Card
+        {board.classes.map((cls) => (
+          <button
             key={cls.id}
-            title={cls.name}
-            description={cls.description}
-            color={board.color}
-            onClick={() => onSelectClass(cls)}
-            className="class-card"
-          />
+            type="button"
+            className={`class-select-card ${cls.available ? 'is-live' : 'coming-soon'}`}
+            onClick={() => cls.available && onSelectClass(cls)}
+            disabled={!cls.available}
+            aria-disabled={!cls.available}
+          >
+            <div className="class-card-title">{cls.name}</div>
+            <div className="class-card-description">{cls.description}</div>
+            <div className="class-card-status">{cls.status}</div>
+          </button>
         ))}
       </div>
     </div>

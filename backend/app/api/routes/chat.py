@@ -54,6 +54,7 @@ class ChatSummaryResponse(BaseModel):
     board: str
     class_level: str
     subject: str
+    chapter: Optional[str] = None
     created_at: datetime
     updated_at: datetime
     message_count: int
@@ -67,7 +68,12 @@ class CreateChatRequest(BaseModel):
     board: str
     class_level: str
     subject: str
+    chapter: Optional[str] = None
     title: Optional[str] = None
+
+
+class UpdateChatRequest(BaseModel):
+    title: str
 
 
 def _build_chat_title(question: str, subject: str) -> str:
@@ -107,6 +113,7 @@ def _serialize_chat(chat: Chat) -> ChatSummaryResponse:
         board=chat.board,
         class_level=chat.class_level,
         subject=chat.subject,
+        chapter=chat.chapter,
         created_at=chat.created_at,
         updated_at=chat.updated_at,
         message_count=len(chat.messages),
@@ -143,6 +150,7 @@ def create_chat(
         board=payload.board.strip(),
         class_level=payload.class_level.strip(),
         subject=payload.subject.strip(),
+        chapter=(payload.chapter or "").strip() or None,
     )
     db.add(chat)
     db.commit()
@@ -160,6 +168,26 @@ def get_chat(
     return ChatDetailResponse(**_serialize_chat(chat).model_dump(), messages=[
         _serialize_message(message) for message in chat.messages
     ])
+
+
+@router.patch("/sessions/{chat_id}", response_model=ChatSummaryResponse)
+def update_chat(
+    chat_id: int,
+    payload: UpdateChatRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    chat = _get_owned_chat(chat_id, current_user.id, db)
+    next_title = payload.title.strip()
+    if not next_title:
+        raise HTTPException(status_code=422, detail="Title cannot be empty")
+
+    chat.title = next_title[:200]
+    chat.updated_at = datetime.utcnow()
+    db.add(chat)
+    db.commit()
+    db.refresh(chat)
+    return _serialize_chat(chat)
 
 
 @router.delete("/sessions/{chat_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -223,6 +251,7 @@ async def ask_question(
                     board=request.board.strip(),
                     class_level=request.class_level.strip(),
                     subject=request.subject.strip(),
+                    chapter=(request.chapter or "").strip() or None,
                 )
                 db.add(chat)
                 db.flush()

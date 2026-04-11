@@ -4,8 +4,8 @@ function Breadcrumbs({ items }) {
   return (
     <div className="breadcrumbs">
       {items.map((item, index) => (
-        <div key={index} className="breadcrumb-item">
-          {index > 0 && <span className="breadcrumb-separator">›</span>}
+        <div key={item.label} className="breadcrumb-item">
+          {index > 0 && <span className="breadcrumb-separator">&gt;</span>}
           {item.onClick ? (
             <span className="breadcrumb-link" onClick={item.onClick}>
               {item.label}

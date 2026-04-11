@@ -1,21 +1,14 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import chemistryImage from '../assets/images/Chemistry.jpg';
-import physicsImage from '../assets/images/Pysicslogog.jpg';
-import biologyImage from '../assets/images/Biologylogo.jpeg';
-import computerImage from '../assets/images/Computerlogo.jpg';
-
-const subjects = [
-  { id: 'Physics', name: 'Physics', color: '#3b82f6', image: physicsImage },
-  { id: 'Chemistry', name: 'Chemistry', color: '#10b981', image: chemistryImage },
-  { id: 'Biology', name: 'Biology', color: '#22c55e', image: biologyImage },
-  { id: 'Computer', name: 'Computer', color: '#06b6d4', image: computerImage },
-];
 
 function SubjectGrid({ board, classLevel }) {
   const navigate = useNavigate();
 
   const handleSelectSubject = (subject) => {
+    if (!subject.available) {
+      return;
+    }
+
     navigate(`/chat/${board.id}/${classLevel.id}/${subject.id}`);
   };
 
@@ -23,20 +16,34 @@ function SubjectGrid({ board, classLevel }) {
     <div>
       <div className="section-header">
         <h1>Select Your Subject</h1>
-        <p>Choose a subject for {classLevel.name} - {board.name}</p>
+        <p>All core subjects are visible for {classLevel.name} - {board.name}. Available content is live, and the rest are marked coming soon.</p>
       </div>
       <div className="subject-card-grid">
-        {subjects.map((subject) => (
+        {classLevel.subjects.map((subject) => (
           <button
             key={subject.id}
             type="button"
-            className="subject-select-card"
+            className={`subject-select-card${subject.available ? '' : ' coming-soon'}`}
             onClick={() => handleSelectSubject(subject)}
+            disabled={!subject.available}
+            aria-disabled={!subject.available}
           >
-            <div className="subject-card-media">
-              <img src={subject.image} alt={`${subject.name} subject`} />
+            <div className="subject-card-media-shell">
+              <div className="subject-card-media">
+                {subject.image ? (
+                  <img src={subject.image} alt={`${subject.name} subject`} />
+                ) : (
+                  <div className="subject-card-placeholder" style={{ '--subject-color': subject.color }}>
+                    {subject.shortLabel || subject.name.charAt(0)}
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="subject-card-name">{subject.name}</div>
+
+            <div className="subject-card-body">
+              <div className="subject-card-name">{subject.name}</div>
+              <div className="subject-card-status">{subject.status}</div>
+            </div>
           </button>
         ))}
       </div>

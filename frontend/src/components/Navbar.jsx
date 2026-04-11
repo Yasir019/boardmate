@@ -1,48 +1,111 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import boardMateLogo from '../assets/images/Boardmatelogo.jpg';
 import { clearSession, getUser, isAuthenticated } from '../utils/auth';
 
+const navItems = [
+  { label: 'Platform', id: 'platform' },
+  { label: 'Curriculum', id: 'curriculum' },
+  { label: 'AI Features', id: 'features' },
+  { label: 'Pricing', id: 'pricing' },
+];
+
 function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
   const isLanding = location.pathname === '/';
   const isSignedIn = isAuthenticated();
   const user = getUser();
 
+  const sectionHref = (id) => (isLanding ? `#${id}` : `/#${id}`);
+
   const handleLogout = () => {
     clearSession();
+    setMenuOpen(false);
     navigate('/signin');
   };
 
+  const closeMenu = () => setMenuOpen(false);
+
   return (
-    <nav className="navbar v2-navbar">
-      <div className="v2-navbar-inner">
-        <div className="v2-navbar-left">
-          <Link to="/" className="navbar-brand v2-navbar-brand">
-            <img src={boardMateLogo} alt="BoardMate" className="v2-brand-logo" />
-            <span>BoardMate</span>
-          </Link>
+    <nav className="navbar bm-nav">
+      <div className="bm-nav-inner">
+        <Link to="/" className="navbar-brand bm-nav-brand" onClick={closeMenu}>
+          <img src={boardMateLogo} alt="BoardMate" className="bm-nav-logo" />
+          <span>BoardMate</span>
+        </Link>
+
+        <div className="bm-nav-links" aria-label="Primary navigation">
+          {navItems.map((item, index) => (
+            <a
+              key={item.id}
+              href={sectionHref(item.id)}
+              className={`bm-nav-link${isLanding && index === 0 ? ' is-active' : ''}`}
+            >
+              {item.label}
+            </a>
+          ))}
         </div>
 
-        <div className="v2-navbar-center">
-          <a href={isLanding ? '#home' : '/#home'} className="v2-nav-link">Home</a>
-          <a href={isLanding ? '#features' : '/#features'} className="v2-nav-link">Features</a>
-          <a href={isLanding ? '#how-it-works' : '/#how-it-works'} className="v2-nav-link">How It Works</a>
-          <a href={isLanding ? '#pricing' : '/#pricing'} className="v2-nav-link">Get Started</a>
-        </div>
-
-        <div className="v2-navbar-right">
-          {!isSignedIn && <Link to="/signin" className="v2-nav-login">Login</Link>}
-          {!isSignedIn && <Link to="/signup" className="v2-nav-signup">Sign Up</Link>}
+        <div className="bm-nav-actions">
+          {!isSignedIn && (
+            <>
+              <Link to="/signin" className="bm-nav-login">Sign In</Link>
+              <Link to="/signup" className="bm-nav-cta">Get Started</Link>
+            </>
+          )}
           {isSignedIn && (
             <>
-              <span className="v2-nav-user">{user?.full_name || 'Student'}</span>
-              <button type="button" className="v2-nav-signup" onClick={handleLogout}>Logout</button>
+              <span className="bm-nav-user">{user?.full_name || 'Student'}</span>
+              <Link to="/dashboard" className="bm-nav-login">Dashboard</Link>
+              <button type="button" className="bm-nav-cta" onClick={handleLogout}>Logout</button>
             </>
           )}
         </div>
+
+        <button
+          type="button"
+          className="bm-nav-toggle"
+          onClick={() => setMenuOpen((open) => !open)}
+          aria-expanded={menuOpen}
+          aria-label="Toggle navigation"
+        >
+          Menu
+        </button>
       </div>
+
+      {menuOpen && (
+        <div className="bm-nav-drawer">
+          <div className="bm-nav-drawer-links">
+            {navItems.map((item) => (
+              <a
+                key={item.id}
+                href={sectionHref(item.id)}
+                className="bm-nav-drawer-link"
+                onClick={closeMenu}
+              >
+                {item.label}
+              </a>
+            ))}
+          </div>
+
+          <div className="bm-nav-drawer-actions">
+            {!isSignedIn && (
+              <>
+                <Link to="/signin" className="bm-nav-login" onClick={closeMenu}>Sign In</Link>
+                <Link to="/signup" className="bm-nav-cta" onClick={closeMenu}>Get Started</Link>
+              </>
+            )}
+            {isSignedIn && (
+              <>
+                <Link to="/dashboard" className="bm-nav-login" onClick={closeMenu}>Dashboard</Link>
+                <button type="button" className="bm-nav-cta" onClick={handleLogout}>Logout</button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </nav>
   );
 }

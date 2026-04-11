@@ -33,6 +33,7 @@ class Chat(Base):
     board: Mapped[str] = mapped_column(String(80), nullable=False, index=True)
     class_level: Mapped[str] = mapped_column(String(40), nullable=False, index=True)
     subject: Mapped[str] = mapped_column(String(120), nullable=False, index=True)
+    chapter: Mapped[str | None] = mapped_column(String(120), nullable=True, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime,

@@ -1,6 +1,5 @@
-import React from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
-import Navbar from './components/Navbar';
+import TopNavBar from './components/TopNavBar';
 import Landing from './pages/Landing';
 import Dashboard from './pages/Dashboard';
 import ChatLayout from './pages/ChatLayout';
@@ -8,7 +7,7 @@ import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
 import NotFound from './pages/NotFound';
 import { isAuthenticated } from './utils/auth';
-import './styles/global.css';
+import './styles/landing.css';
 import './styles/dashboard.css';
 import './styles/chat.css';
 import './styles/auth.css';
@@ -17,6 +16,7 @@ function RequireAuth({ children }) {
   if (!isAuthenticated()) {
     return <Navigate to="/signin" replace />;
   }
+
   return children;
 }
 
@@ -24,16 +24,18 @@ function PublicOnly({ children }) {
   if (isAuthenticated()) {
     return <Navigate to="/dashboard" replace />;
   }
+
   return children;
 }
 
 function App() {
   const location = useLocation();
-  const isChatPage = location.pathname.startsWith('/chat/');
+  const isChatRoute = location.pathname.startsWith('/chat/');
+  const hideTopNav = isChatRoute;
 
   return (
-    <div className="app">
-      {!isChatPage && <Navbar />}
+    <div className={`app ${isChatRoute ? 'chat-route' : ''}`}>
+      {!hideTopNav && <TopNavBar />}
       <div className="app-main">
         <Routes>
           <Route path="/" element={<Landing />} />

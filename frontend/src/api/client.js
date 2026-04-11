@@ -3,11 +3,20 @@
  * Handles all communication with the FastAPI backend
  */
 
+import { clearSession } from '../utils/auth';
+
 const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 const ADMIN_TOKEN = import.meta.env.VITE_ADMIN_TOKEN;
+const TOKEN_KEY = 'boardmate_access_token';
+const AUTH_EXPIRED_MESSAGE = 'Your session has expired. Please sign in again.';
 
 function buildApiUrl(path) {
   return API_BASE_URL ? `${API_BASE_URL}${path}` : path;
+}
+
+function getAuthHeaders() {
+  const token = typeof window !== 'undefined' ? window.localStorage.getItem(TOKEN_KEY) : null;
+  return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
 async function getErrorMessage(response, fallbackMessage) {
@@ -16,6 +25,22 @@ async function getErrorMessage(response, fallbackMessage) {
     return error.detail || fallbackMessage;
   } catch {
     return fallbackMessage;
+  }
+}
+
+async function getErrorDetail(response) {
+  try {
+    const error = await response.json();
+    return error?.detail || '';
+  } catch {
+    return '';
+  }
+}
+
+function handleAuthExpired() {
+  clearSession();
+  if (typeof window !== 'undefined') {
+    window.location.assign('/signin');
   }
 }
 
@@ -92,6 +117,11 @@ export const api = {
       },
     });
 
+    if (response.status === 401) {
+      handleAuthExpired();
+      throw new Error(AUTH_EXPIRED_MESSAGE);
+    }
+
     if (!response.ok) {
       throw new Error(await getErrorMessage(response, 'Failed to fetch profile'));
     }
@@ -107,11 +137,12 @@ export const api = {
    * @param {string} question - User's question
    * @param {string} chapter - Optional chapter filter
    */
-  async askQuestion(board, classLevel, subject, question, chapter = null, language = 'en') {
+  async askQuestion(board, classLevel, subject, question, chapter = null, language = 'en', chatId = null) {
     const response = await fetch(buildApiUrl('/chat/ask'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...getAuthHeaders(),
       },
       body: JSON.stringify({
         board,
@@ -119,9 +150,18 @@ export const api = {
         subject,
         question,
         chapter,
+        chat_id: chatId,
         language,
       }),
     });
+
+    if (response.status === 401) {
+      const detail = (await getErrorDetail(response)).toLowerCase();
+      if (detail.includes('expired token') || detail.includes('invalid or expired token')) {
+        handleAuthExpired();
+        throw new Error(AUTH_EXPIRED_MESSAGE);
+      }
+    }
 
     if (!response.ok) {
       throw new Error(await getErrorMessage(response, 'Request failed'));
@@ -146,6 +186,112 @@ export const api = {
 
     if (!response.ok) {
       throw new Error(await getErrorMessage(response, 'Failed to fetch chapters'));
+    }
+
+    return response.json();
+  },
+
+  async listChatSessions() {
+    const response = await fetch(buildApiUrl('/chat/sessions'), {
+      headers: {
+        ...getAuthHeaders(),
+      },
+    });
+
+    if (response.status === 401) {
+      handleAuthExpired();
+      throw new Error(AUTH_EXPIRED_MESSAGE);
+    }
+
+    if (!response.ok) {
+      throw new Error(await getErrorMessage(response, 'Failed to fetch chat sessions'));
+    }
+
+    return response.json();
+  },
+
+  async createChatSession(board, classLevel, subject, chapter = null, title = null) {
+    const response = await fetch(buildApiUrl('/chat/sessions'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify({
+        board,
+        class_level: classLevel,
+        subject,
+        chapter,
+        title,
+      }),
+    });
+
+    if (response.status === 401) {
+      handleAuthExpired();
+      throw new Error(AUTH_EXPIRED_MESSAGE);
+    }
+
+    if (!response.ok) {
+      throw new Error(await getErrorMessage(response, 'Failed to create chat session'));
+    }
+
+    return response.json();
+  },
+
+  async getChatSession(chatId) {
+    const response = await fetch(buildApiUrl(`/chat/sessions/${encodeURIComponent(chatId)}`), {
+      headers: {
+        ...getAuthHeaders(),
+      },
+    });
+
+    if (response.status === 401) {
+      handleAuthExpired();
+      throw new Error(AUTH_EXPIRED_MESSAGE);
+    }
+
+    if (!response.ok) {
+      throw new Error(await getErrorMessage(response, 'Failed to fetch chat session'));
+    }
+
+    return response.json();
+  },
+
+  async deleteChatSession(chatId) {
+    const response = await fetch(buildApiUrl(`/chat/sessions/${encodeURIComponent(chatId)}`), {
+      method: 'DELETE',
+      headers: {
+        ...getAuthHeaders(),
+      },
+    });
+
+    if (response.status === 401) {
+      handleAuthExpired();
+      throw new Error(AUTH_EXPIRED_MESSAGE);
+    }
+
+    if (!response.ok) {
+      throw new Error(await getErrorMessage(response, 'Failed to delete chat session'));
+    }
+  },
+
+  async renameChatSession(chatId, title) {
+    const response = await fetch(buildApiUrl(`/chat/sessions/${encodeURIComponent(chatId)}`), {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify({ title }),
+    });
+
+    if (response.status === 401) {
+      handleAuthExpired();
+      throw new Error(AUTH_EXPIRED_MESSAGE);
+    }
+
+    if (!response.ok) {
+      throw new Error(await getErrorMessage(response, 'Failed to rename chat session'));
     }
 
     return response.json();

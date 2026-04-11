@@ -1,284 +1,386 @@
-import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import '../styles/landing.css';
+import { isAuthenticated } from '../utils/auth';
 
-import punjabLogo from '../assets/images/Panjab board.jpeg';
-import sindhLogo from '../assets/images/SIndh board.jpeg';
-import federalLogo from '../assets/images/Fedral board.png';
-import kpkLogo from '../assets/images/KPK board.jpeg';
-import balochistanLogo from '../assets/images/Balouchistan board.jpeg';
-import chapterNavigationImage from '../assets/images/chapternavigation.png';
+const boards = ['Punjab', 'Sindh', 'Federal', 'KPK', 'Balochistan'];
+
+const features = [
+  {
+    icon: 'smart_toy',
+    title: 'AI Chat Tutor (RAG)',
+    description:
+      'Personalized tutoring using Retrieval-Augmented Generation based on your specific textbook.',
+  },
+  {
+    icon: 'keyboard_voice',
+    title: 'Voice Interaction',
+    description:
+      'Speak to BoardMate in Urdu or English and learn difficult concepts through natural conversation.',
+  },
+  {
+    icon: 'edit_note',
+    title: 'Smart Notes',
+    description:
+      'Generate revision summaries for every chapter with formulas, key definitions, and quick recalls.',
+  },
+  {
+    icon: 'fact_check',
+    title: 'Board-Specific',
+    description:
+      'Aligned with Punjab, Sindh, KPK, Federal, and Balochistan curriculum expectations.',
+  },
+];
+
+const journeySteps = [
+  {
+    number: '1',
+    title: 'Select Board',
+    description:
+      "Choose your regional board and class level so BoardMate can tailor its explanations and exam strategy.",
+  },
+  {
+    number: '2',
+    title: 'Ask Anything',
+    description:
+      'Upload questions, type your confusion, or share a past-paper problem to get step-by-step help.',
+  },
+  {
+    number: '3',
+    title: 'Master Concepts',
+    description:
+      'Practice with mock tests and targeted revision built around historical board paper patterns.',
+  },
+];
+
+const benefits = [
+  'Visual concept maps for complex science topics',
+  'Memory retention drills based on board patterns',
+  'Solved past papers with detailed explanations',
+  '24/7 access to your personal digital tutor',
+];
+
+const plans = [
+  {
+    name: 'Free Plan',
+    price: 'PKR 0',
+    cadence: '/mo',
+    description: 'Perfect for occasional help.',
+    featured: false,
+    cta: 'Get Started',
+    items: ['10 AI Chats / Day', 'Single Board Access', 'Standard Response Speed'],
+  },
+  {
+    name: 'Premium Plan',
+    price: 'PKR 1,499',
+    cadence: '/mo',
+    description: 'For the top-rank achievers.',
+    featured: true,
+    cta: 'Go Premium',
+    items: [
+      'Unlimited AI Chats',
+      'Access to All Boards',
+      'Priority AI Responses',
+      'Mock Paper Generator',
+    ],
+  },
+];
+
+const testimonials = [
+  {
+    quote:
+      'BoardMate helped me understand complex Organic Chemistry concepts in days that I struggled with for months. The Urdu voice support is amazing!',
+    name: 'Ahmed Ali',
+    role: 'Grade 12 Student, Lahore',
+  },
+  {
+    quote:
+      'As a teacher, I recommend BoardMate to my students for practice. The AI-generated mock papers are remarkably close to the actual Federal Board pattern.',
+    name: 'Ms. Sara Khan',
+    role: 'Lecturer, Islamabad',
+  },
+  {
+    quote:
+      'I went from a B grade to an A* in my Physics final. The smart notes feature saved me dozens of hours during revision week.',
+    name: 'Zainab Jamil',
+    role: 'Grade 10 Student, Karachi',
+  },
+];
+
+const footerLinks = {
+  Product: ['Platform', 'Curriculum', 'AI Features', 'Pricing'],
+  Company: ['About Us', 'Careers'],
+  Legal: ['Privacy Policy', 'Terms of Service'],
+};
+
+function Icon({ name, filled = false }) {
+  return (
+    <span
+      className="material-symbols-outlined"
+      style={{ fontVariationSettings: `'FILL' ${filled ? 1 : 0}, 'wght' 500, 'GRAD' 0, 'opsz' 24` }}
+      aria-hidden="true"
+    >
+      {name}
+    </span>
+  );
+}
 
 function Landing() {
-  const howItWorksRef = useRef(null);
-  const [stepAnimationState, setStepAnimationState] = useState('idle');
-
-  useEffect(() => {
-    const target = howItWorksRef.current;
-    if (!target) {
-      return undefined;
-    }
-
-    setStepAnimationState('pending');
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setStepAnimationState('visible');
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      {
-        threshold: 0.32,
-        rootMargin: '0px 0px -8% 0px',
-      }
-    );
-
-    observer.observe(target);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, []);
-
-  const boardItems = [
-    { name: 'Punjab Board', logo: punjabLogo },
-    { name: 'Sindh Board', logo: sindhLogo },
-    { name: 'Federal Board', logo: federalLogo },
-    { name: 'KPK Board', logo: kpkLogo },
-    { name: 'Balochistan', logo: balochistanLogo },
-  ];
-
-  const proofItems = [
-    { value: '5 Boards', label: 'Board coverage at launch' },
-    { value: 'Chapter-based', label: 'Study flow built around textbooks' },
-    { value: '24/7', label: 'Ask questions any time' },
-  ];
+  const ctaTarget = isAuthenticated() ? '/dashboard' : '/signup';
+  const secondaryTarget = isAuthenticated() ? '/dashboard' : '/signin';
 
   return (
-    <div className="landing-v2-page">
-      <section id="home" className="landing-v2-hero-wrap">
-        <div className="landing-v2-hero">
-          <div className="landing-v2-hero-left">
-            <span className="landing-v2-hero-kicker">Built for Pakistani board students</span>
-            <h1>
-              <span className="hero-line-one">Study your textbook</span>
-              <span className="hero-line-two">with an AI tutor</span>
-            </h1>
-            <p>
-              Ask better questions, understand faster, and stay close to your syllabus.
-            </p>
-            <div className="landing-v2-hero-actions">
-              <Link to="/signup" className="v2-btn-primary">Start Free</Link>
-              <a href="#how-it-works" className="v2-btn-secondary">See how it works</a>
-            </div>
-            <div className="landing-v2-proof-row" aria-label="BoardMate proof points">
-              {proofItems.map((item) => (
-                <div key={item.label} className="v2-proof-item">
-                  <strong>{item.value}</strong>
-                  <span>{item.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <aside className="landing-v2-hero-visual" aria-label="Student using AI to study">
-            <div className="v2-hero-image-frame">
-              <img src="/images/heroimage.png" alt="Student studying with a laptop while using AI" />
-            </div>
-            <div className="v2-hero-result-badge" aria-label="BoardMate study support summary">
-              <span className="v2-hero-result-dot" aria-hidden="true">&#10003;</span>
-              <div>
-                <strong>Board + class + chapter</strong>
-                <small>Faster path from question to explanation</small>
+    <div className="page-shell">
+      <main>
+        <section className="hero-section" id="hero">
+          <div className="container hero-grid">
+            <div className="hero-copy">
+              <span className="eyebrow">Pakistani Board Exam Prep (Grades 9-12)</span>
+              <h1>
+                Master Your Board Exams with <span>AI Intelligence</span>
+              </h1>
+              <p>
+                Leverage board-specific RAG and advanced NLP to solve past papers, clarify
+                concepts, and ace your matric and intermediate finals.
+              </p>
+              <div className="hero-actions">
+                <Link className="button button-hero" to={ctaTarget}>
+                  Start Learning Free
+                </Link>
+                <a className="button button-muted" href="#features">
+                  <Icon name="play_circle" />
+                  Watch Demo
+                </a>
               </div>
             </div>
-          </aside>
-        </div>
-      </section>
 
-      <section className="landing-v2-boards-strip" aria-label="Supported education boards">
-        <p>Designed around Pakistan&apos;s major education boards</p>
-        <div className="v2-carousel">
-          <div className="v2-carousel-track">
-            <div className="v2-carousel-group">
-              {boardItems.map((board) => (
-                <div key={board.name} className="v2-board-chip">
-                  <img src={board.logo} alt={board.name} />
-                  <span>{board.name}</span>
+            <div className="hero-visual">
+              <div className="orb orb-primary" />
+              <div className="hero-card">
+                <img
+                  src="https://lh3.googleusercontent.com/aida/ADBb0ujt7W5UaZ3pr9G884VgPXv7vs76jHm5lXReYNwXJ0BU9_KAsJLAY1s2_VVe7ihxCYVgWEy3ce93ZsAlh4h-PXXxeHaCt7zmY1yXeoD5erJvSqbcpm2q7fPEI0nv8oHjwcdr9qA0FpPbPBq6KZyR-cjk0VR1_sx1ihNsBhGfaz8IunXO-wJlWVttqDV2Qg26DNJrN1HEPpuptfZT--fq4794WOydD6Qvtt3ZSXQh069zYmdTf74yoL1EfPUSCEW6maR2LcNp2PCzLuY"
+                  alt="BoardMate dashboard preview"
+                />
+                <div className="floating-quote">
+                  <div className="status-row">
+                    <span className="status-dot" />
+                    <span>AI Chat Active</span>
+                  </div>
+                  <p>
+                    &quot;BoardMate correctly identified the Physics 2023 Punjab Board pattern
+                    for Section C.&quot;
+                  </p>
                 </div>
-              ))}
-            </div>
-            <div className="v2-carousel-group" aria-hidden="true">
-              {boardItems.map((board) => (
-                <div key={`${board.name}-clone`} className="v2-board-chip">
-                  <img src={board.logo} alt={board.name} />
-                  <span>{board.name}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section id="features" className="landing-v2-features">
-        <h2>Everything students need to stay on track</h2>
-        <p className="landing-v2-section-subtitle">
-          Built for focused revision.
-        </p>
-        <div className="landing-v2-feature-grid">
-          <article className="v2-feature-card">
-            <div className="v2-feature-image v2-feature-image-books">
-              <img src="/images/officialtexbooks.webp" alt="Official textbooks feature" />
-            </div>
-            <div className="v2-feature-content">
-              <h3>Official Textbooks</h3>
-              <p>Ground explanations in the same textbook material students are already expected to study.</p>
-            </div>
-          </article>
-          <article className="v2-feature-card">
-            <div className="v2-feature-image v2-feature-image-ai">
-              <img src="/images/tutor24.jpeg" alt="AI tutor feature" />
-            </div>
-            <div className="v2-feature-content">
-              <h3>AI Tutor 24/7</h3>
-              <p>Ask follow-up questions in plain language and get quick explanations when a topic does not click the first time.</p>
-            </div>
-          </article>
-          <article className="v2-feature-card">
-            <div className="v2-feature-image v2-feature-image-chapters">
-              <img src={chapterNavigationImage} alt="Chapter navigation feature" />
-            </div>
-            <div className="v2-feature-content">
-              <h3>Chapter Navigation</h3>
-              <p>Navigate by chapter so each answer stays tied to the topic the student is revising right now.</p>
-            </div>
-          </article>
-        </div>
-      </section>
-
-      <section id="how-it-works" className="landing-v2-steps">
-        <h2>How it works</h2>
-        <div className="landing-v2-steps-grid">
-          <div className="landing-v2-steps-copy">
-            <p>
-              Start with your board. End with a clearer answer.
-            </p>
-            <ol
-              ref={howItWorksRef}
-              className={`v2-steps-sequence ${stepAnimationState === 'pending' ? 'is-pending' : ''} ${stepAnimationState === 'visible' ? 'is-visible' : ''}`}
-            >
-              <li><span>1</span>Select your Board and Class</li>
-              <li><span>2</span>Ask questions from your textbook</li>
-              <li><span>3</span>Get instant AI explanations</li>
-            </ol>
-          </div>
-          <div className="v2-steps-image-card" aria-label="Student success story">
-            <img src="/images/Student.png" alt="Student writing notes while studying" />
-            <div className="v2-steps-image-overlay">
-              <strong>Use BoardMate beside your textbook, not instead of it.</strong>
-              <small>Designed to support revision and concept clarity</small>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section id="pricing" className="landing-v2-cta-wrap">
-        <div className="landing-v2-plans-head">
-          <h2>Start simple</h2>
-          <p>
-            Choose the path that fits you best.
-          </p>
-        </div>
-        <div className="landing-v2-plan-grid">
-          <article className="v2-plan-card v2-plan-card-highlight">
-            <span className="v2-plan-eyebrow">Best first step</span>
-            <h3>Free account</h3>
-            <p>Start asking textbook questions in minutes.</p>
-            <ul>
-              <li>Board, class, and subject selection</li>
-              <li>Chapter-based study flow</li>
-              <li>Fast AI explanations for revision</li>
-            </ul>
-            <Link to="/signup" className="v2-cta-btn">Create Free Account</Link>
-          </article>
-
-          <article className="v2-plan-card">
-            <span className="v2-plan-eyebrow">Why it matters</span>
-            <h3>Focused learning</h3>
-            <p>Stay close to the exact syllabus you need to finish.</p>
-            <ul>
-              <li>Less context switching during revision</li>
-              <li>More confidence in chapter coverage</li>
-              <li>Better support for weak concepts</li>
-            </ul>
-            <a href="#features" className="v2-cta-btn v2-cta-btn-alt">Review Features</a>
-          </article>
-
-          <article className="v2-plan-card">
-            <span className="v2-plan-eyebrow">Need access now?</span>
-            <h3>Already registered</h3>
-            <p>Jump back in and continue studying.</p>
-            <ul>
-              <li>Return to your saved session</li>
-              <li>Pick up from the current subject</li>
-              <li>Keep learning without setup friction</li>
-            </ul>
-            <Link to="/signin" className="v2-cta-btn v2-cta-btn-alt">Sign In</Link>
-          </article>
-        </div>
-      </section>
-
-      <footer className="bm4-footer" aria-label="BoardMate footer">
-        <div className="bm4-footer-inner">
-          <div className="bm4-footer-grid">
-            <section className="bm4-footer-col bm4-footer-brand" aria-label="BoardMate brand">
-              <h3>BoardMate</h3>
-              <p>AI-assisted study support for board students who want a clearer path through official subjects and chapters.</p>
-              <div className="bm4-socials" aria-label="BoardMate quick links">
-                <Link to="/signup" className="bm4-social-link bm4-text-link">Sign up</Link>
-                <Link to="/signin" className="bm4-social-link bm4-text-link">Sign in</Link>
               </div>
-            </section>
+            </div>
+          </div>
+        </section>
 
-            <section className="bm4-footer-col" aria-label="All boards">
-              <h4>All Boards</h4>
-              <ul>
-                <li><a href="#home">Federal Board</a></li>
-                <li><a href="#home">Punjab Board</a></li>
-                <li><a href="#home">Sindh Board</a></li>
-                <li><a href="#home">KPK Board</a></li>
-                <li><a href="#home">Balochistan Board</a></li>
-              </ul>
-            </section>
+        <section className="boards-strip" id="platform">
+          <div className="container">
+            <p className="section-kicker">Trusted by Students Across Pakistan Boards</p>
+            <div className="boards-list">
+              {boards.map((board) => (
+                <span key={board}>{board}</span>
+              ))}
+            </div>
+          </div>
+        </section>
 
-            <section className="bm4-footer-col" aria-label="Product links">
-              <h4>Product</h4>
-              <ul>
-                <li><a href="#features">Features</a></li>
-                <li><a href="#how-it-works">How it Works</a></li>
-                <li><a href="#pricing">Get Started</a></li>
-              </ul>
-            </section>
+        <section className="section" id="features">
+          <div className="container">
+            <div className="section-heading">
+              <h2>Everything You Need to Ace Your Exams</h2>
+              <p>
+                Our AI is specifically trained on Pakistani board curricula, from Karachi to
+                Peshawar.
+              </p>
+            </div>
+            <div className="feature-grid">
+              {features.map((feature) => (
+                <article className="feature-card" key={feature.title}>
+                  <div className="icon-wrap">
+                    <Icon name={feature.icon} />
+                  </div>
+                  <h3>{feature.title}</h3>
+                  <p>{feature.description}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
 
-            <section className="bm4-footer-col" aria-label="Company links">
-              <h4>Company</h4>
-              <ul>
-                <li><a href="mailto:hello@boardmate.pk">Contact</a></li>
-                <li><a href="mailto:hello@boardmate.pk?subject=BoardMate%20Support">Support</a></li>
-              </ul>
-            </section>
+        <section className="section section-muted" id="curriculum">
+          <div className="container narrow">
+            <div className="section-heading centered">
+              <h2>Your Path to Excellence</h2>
+            </div>
+            <div className="steps-list">
+              {journeySteps.map((step) => (
+                <article className="step-item" key={step.number}>
+                  <div className="step-badge">{step.number}</div>
+                  <div>
+                    <h3>{step.title}</h3>
+                    <p>{step.description}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="section">
+          <div className="container split-section">
+            <div className="image-column">
+              <div className="orb orb-secondary" />
+              <img
+                className="benefit-image"
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuA0CHCAdC1pyOx8-iqL4Jarlb1TsRXboI1QHO0V1nIECTBUL9sqpC8qpcQW24AoETz7sbhFs2LmcaHgGufb_SvJt4lq33YBTklQMgF8ImJthQb6aOLXNIfo3Whp5MxcMO1otE2eOFIySKLwWrduOPlkM4DMdaT9M2I6nc0bqYf8TbwgvzWdJoEf1bGQJ_xZfzTTTjhhjYfXfxPDtMG9yyxOBlksYUcHzeZW9QGT8fLCOEjfVtyEF7CCQj7V3Xals3V_Tr556SECs93l"
+                alt="Student studying with BoardMate"
+              />
+            </div>
+            <div className="benefit-copy">
+              <h2>
+                Don&apos;t Just Memorize,
+                <br />
+                <span>Actually Learn.</span>
+              </h2>
+              <div className="benefit-list">
+                {benefits.map((benefit) => (
+                  <div className="benefit-item" key={benefit}>
+                    <Icon name="check_circle" />
+                    <p>{benefit}</p>
+                  </div>
+                ))}
+              </div>
+              <Link className="button button-primary" to={ctaTarget}>
+                Experience BoardMate AI
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        <section className="section section-muted" id="pricing">
+          <div className="container narrow">
+            <div className="section-heading centered">
+              <h2>Invest in Your Future</h2>
+              <p>Simple plans for every student&apos;s budget.</p>
+            </div>
+            <div className="pricing-grid">
+              {plans.map((plan) => (
+                <article
+                  className={`pricing-card${plan.featured ? ' pricing-card-featured' : ''}`}
+                  key={plan.name}
+                >
+                  {plan.featured && <div className="pricing-ribbon">Recommended</div>}
+                  <h3>{plan.name}</h3>
+                  <p className="pricing-description">{plan.description}</p>
+                  <div className="pricing-value">
+                    {plan.price} <span>{plan.cadence}</span>
+                  </div>
+                  <ul>
+                    {plan.items.map((item) => (
+                      <li key={item}>
+                        <Icon name="check" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Link
+                    className={`button ${plan.featured ? 'button-hero' : 'button-outline'}`}
+                    to={ctaTarget}
+                  >
+                    {plan.cta}
+                  </Link>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="section">
+          <div className="container">
+            <div className="section-heading centered">
+              <h2>Results Speak Louder</h2>
+            </div>
+            <div className="testimonial-grid">
+              {testimonials.map((testimonial) => (
+                <article className="testimonial-card" key={testimonial.name}>
+                  <div className="stars" aria-label="5 star rating">
+                    {Array.from({ length: 5 }).map((_, index) => (
+                      <Icon key={`${testimonial.name}-${index + 1}`} name="star" filled />
+                    ))}
+                  </div>
+                  <p className="testimonial-quote">&quot;{testimonial.quote}&quot;</p>
+                  <div className="testimonial-person">
+                    <div className="avatar" aria-hidden="true" />
+                    <div>
+                      <strong>{testimonial.name}</strong>
+                      <span>{testimonial.role}</span>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="section">
+          <div className="container">
+            <div className="cta-panel" id="cta">
+              <div className="cta-grid" aria-hidden="true" />
+              <h2>
+                Start Your AI Learning
+                <br />
+                Journey Today
+              </h2>
+              <p>
+                Join thousands of Pakistani students using BoardMate to transform their board exam
+                preparation.
+              </p>
+              <div className="hero-actions centered-actions">
+                <Link className="button button-light" to={ctaTarget}>
+                  Start Learning Free
+                </Link>
+                <Link className="button button-ghost" to={secondaryTarget}>
+                  Chat with BoardMate
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer className="site-footer">
+        <div className="container footer-grid">
+          <div className="footer-brand">
+            <a className="brand footer-logo" href="#hero">
+              BoardMate
+            </a>
+            <p>
+              Empowering the next generation of Pakistan&apos;s leaders through board-specific AI
+              learning technologies.
+            </p>
           </div>
 
-          <div className="bm4-footer-bottom">
-            <span>&copy; 2026 BoardMate</span>
-            <div className="bm4-footer-bottom-links" aria-label="Legal links">
-              <a href="mailto:hello@boardmate.pk?subject=BoardMate%20Privacy">Privacy</a>
-              <span aria-hidden="true">&bull;</span>
-              <a href="mailto:hello@boardmate.pk?subject=BoardMate%20Terms">Terms</a>
+          {Object.entries(footerLinks).map(([title, links]) => (
+            <div key={title}>
+              <h3>{title}</h3>
+              <ul className="footer-links">
+                {links.map((link) => (
+                  <li key={link}>
+                    <a href="#hero">{link}</a>
+                  </li>
+                ))}
+              </ul>
             </div>
+          ))}
+        </div>
+
+        <div className="container footer-bottom">
+          <p>Copyright 2024 BoardMate. All rights reserved.</p>
+          <div className="social-links">
+            <a href="#hero">Twitter</a>
+            <a href="#hero">LinkedIn</a>
+            <a href="#hero">Instagram</a>
           </div>
         </div>
       </footer>

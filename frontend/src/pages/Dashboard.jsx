@@ -57,7 +57,7 @@ function Dashboard() {
           className="back-button"
           onClick={selectedClass ? handleBackToClasses : handleBackToBoards}
         >
-          ← Back
+          Back
         </button>
       )}
 

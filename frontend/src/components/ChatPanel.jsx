@@ -19,6 +19,7 @@ function ChatPanel({
   speechRecognitionSupported = false,
   speechSynthesisSupported = false,
   onSpeakMessage,
+  activeSpeechMessageId = null,
   voiceError = '',
   inputPlaceholder = 'Ask me anything or use the microphone...',
 }) {
@@ -64,6 +65,7 @@ function ChatPanel({
             message={message}
             showSpeakButton={message.type === 'bot' && speechSynthesisSupported}
             onSpeak={onSpeakMessage}
+            isSpeaking={activeSpeechMessageId === message.id}
             language={language}
           />
         ))}

@@ -61,6 +61,8 @@ def _ensure_chats_table_columns() -> None:
         )
     if "subject" not in chat_columns:
         statements.append("ALTER TABLE chats ADD COLUMN subject VARCHAR(120) NOT NULL DEFAULT ''")
+    if "chapter" not in chat_columns:
+        statements.append("ALTER TABLE chats ADD COLUMN chapter VARCHAR(120)")
     if "updated_at" not in chat_columns:
         statements.append(
             "ALTER TABLE chats ADD COLUMN updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP"

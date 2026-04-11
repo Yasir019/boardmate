@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import '../styles/pdfviewer.css';
 
-function PdfViewer({ pdfUrl, chapterTitle }) {
+function PdfViewer({ pdfUrl, chapterTitle, onCollapsePanel }) {
   const [error, setError] = useState(false);
-  const [zoom, setZoom] = useState(115);
+  const [zoom, setZoom] = useState(140);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const viewerRef = useRef(null);
 
   useEffect(() => {
     setError(false);
-    setZoom(115);
+    setZoom(140);
   }, [pdfUrl, chapterTitle]);
 
   const handleZoomIn = () => {
@@ -21,7 +21,7 @@ function PdfViewer({ pdfUrl, chapterTitle }) {
   };
 
   const handleZoomReset = () => {
-    setZoom(115);
+    setZoom(140);
   };
 
   const toggleFullscreen = useCallback(() => {
@@ -81,7 +81,18 @@ function PdfViewer({ pdfUrl, chapterTitle }) {
   return (
     <div className="pdf-viewer" ref={viewerRef}>
       <div className="pdf-header">
-        <h3>{chapterTitle || 'Chapter PDF'}</h3>
+        <div className="pdf-title-group">
+          <button
+            type="button"
+            className="panel-collapse-btn"
+            onClick={() => onCollapsePanel?.()}
+            title="Hide book panel"
+            aria-label="Hide book panel"
+          >
+            <span aria-hidden="true">&rsaquo;</span>
+          </button>
+          <h3>{chapterTitle || 'Chapter PDF'}</h3>
+        </div>
         <div className="pdf-controls">
           <button 
             onClick={handleZoomOut} 
@@ -159,15 +170,9 @@ function PdfViewer({ pdfUrl, chapterTitle }) {
       </div>
       <div className="pdf-container">
         <iframe
-          src={`${pdfUrl}#toolbar=0&navpanes=0&scrollbar=1`}
+          src={`${pdfUrl}#toolbar=0&navpanes=0&scrollbar=1&zoom=${zoom}&view=FitH`}
           title={chapterTitle || 'Chapter PDF'}
           className="pdf-iframe"
-          style={{
-            transform: `scale(${zoom / 100})`,
-            transformOrigin: 'top left',
-            width: `${10000 / zoom}%`,
-            height: `${10000 / zoom}%`,
-          }}
           onError={(e) => {
             console.error('PDF iframe error:', e);
             setError(true);

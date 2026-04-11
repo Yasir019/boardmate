@@ -43,7 +43,7 @@ export function stopSpeaking() {
   }
 }
 
-export function speakText(text, language = 'en') {
+export function speakText(text, language = 'en', options = {}) {
   if (!browserSupportsSpeechSynthesis() || !text?.trim()) {
     return false;
   }
@@ -62,6 +62,13 @@ export function speakText(text, language = 'en') {
   );
   if (matchingVoice) {
     utterance.voice = matchingVoice;
+  }
+
+  if (typeof options.onEnd === 'function') {
+    utterance.onend = options.onEnd;
+  }
+  if (typeof options.onError === 'function') {
+    utterance.onerror = options.onError;
   }
 
   window.speechSynthesis.speak(utterance);

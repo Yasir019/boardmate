@@ -1,6 +1,7 @@
 """LLM service using LangChain with the Groq API."""
 
 import logging
+import re
 from functools import lru_cache
 
 from langchain_core.prompts import ChatPromptTemplate
@@ -14,11 +15,11 @@ SYSTEM_PROMPT = (
     "You are BoardMate, an AI educational assistant for Pakistani board students "
     "(Sindh, Punjab, Federal, KPK, Balochistan boards).\n\n"
     "Your role:\n"
-    "- Answer questions based ONLY on the provided context from textbooks\n"
+    "- Use the provided textbook context as your primary source for academic answers\n"
     "- Explain concepts clearly and simply\n"
     "- Help with exercises and numerical problems\n"
-    "- If the answer is not in the context, say "
-    '"I don\'t have information about this topic in my knowledge base."\n\n'
+    "- Reply naturally to simple greetings or app-help requests without forcing textbook citations\n"
+    "- If the textbook context is weak or missing for a study question, say that clearly and offer the next best helpful step\n\n"
     "Guidelines:\n"
     "- Be accurate and educational\n"
     "- Use simple language suitable for 9th-12th grade students\n"
@@ -26,7 +27,16 @@ SYSTEM_PROMPT = (
     "- Give step-by-step explanations for problems\n"
     "- Cite which chapter/topic the information comes from when possible\n"
     "- Respond in the student's requested language when specified\n"
-    "- For Urdu responses, use clear and natural Urdu script"
+    "- Never write Roman Urdu. If Urdu is requested, use Urdu script only\n"
+    "- Adapt structure to the question:\n"
+    "  - Use bullet points for lists, key facts, and summaries\n"
+    "  - Use numbered steps for procedures and problem-solving\n"
+    "  - Use short explanatory paragraphs for concept-building\n"
+    "- Use markdown formatting for readability\n"
+    "- Add at most 1-2 meaningful emojis when they improve clarity (not in every line)\n"
+    "- End with a short helpful next-step prompt when appropriate\n"
+    "- Avoid generic filler. Be specific, practical, and exam-focused\n"
+    "- For direct definition-type questions, keep the answer concise first, then add key points"
 )
 
 PROMPT_TEMPLATE = ChatPromptTemplate.from_messages([
@@ -34,10 +44,151 @@ PROMPT_TEMPLATE = ChatPromptTemplate.from_messages([
     ("user", (
         "Context from textbook:\n---\n{context}\n---\n\n"
         "Student Question: {question}\n\n"
-        "Please answer the question based on the context provided above. "
-        "If the context doesn't contain relevant information, let the student know."
+        "Use the context above when it is relevant. "
+        "If this is just a greeting or simple conversational message, respond naturally. "
+        "If the context doesn't contain relevant academic information, say that clearly and guide the student on what to ask next."
     )),
 ])
+
+GREETING_PATTERNS = (
+    r"hi",
+    r"hello",
+    r"hey",
+    r"hy",
+    r"salam",
+    r"assalam(?:u alaikum| o alaikum|ualaikum)?",
+    r"aoa",
+    r"good morning",
+    r"good afternoon",
+    r"good evening",
+)
+THANKS_PATTERNS = (
+    r"thanks",
+    r"thank you",
+    r"thx",
+    r"jazakallah(?: khair)?",
+    r"shukriya",
+)
+HELP_PATTERNS = (
+    r"help",
+    r"what can you do",
+    r"how can you help",
+    r"can you help me",
+)
+IDENTITY_PATTERNS = (
+    r"who are you",
+    r"what are you",
+    r"tell me about yourself",
+)
+STATUS_PATTERNS = (
+    r"how are you",
+    r"how r u",
+)
+FAREWELL_PATTERNS = (
+    r"bye",
+    r"goodbye",
+    r"allah hafiz",
+    r"see you",
+)
+
+CONCISE_INTENT_PATTERNS = (
+    r"what is .+",
+    r"define .+",
+    r"meaning of .+",
+    r"who is .+",
+)
+
+STEPWISE_INTENT_PATTERNS = (
+    r"how to .+",
+    r"steps? .+",
+    r"process .+",
+    r"solve .+",
+    r"calculate .+",
+    r"find .+",
+    r"numerical .+",
+)
+
+COMPARE_INTENT_PATTERNS = (
+    r"difference between .+",
+    r"compare .+",
+    r".+ vs .+",
+)
+
+
+def _normalize_message(text: str) -> str:
+    return re.sub(r"\s+", " ", (text or "").strip().lower())
+
+
+def _matches_any_pattern(message: str, patterns: tuple[str, ...]) -> bool:
+    return any(re.fullmatch(rf"(?:{pattern})[!.? ]*", message) for pattern in patterns)
+
+
+def _study_scope(board: str = None, class_level: str = None, subject: str = None) -> str:
+    parts = [part for part in [board, class_level, subject] if part]
+    return " / ".join(parts) if parts else "your selected subject"
+
+
+def maybe_build_conversational_reply(
+    question: str,
+    board: str = None,
+    class_level: str = None,
+    subject: str = None,
+    language: str = "en",
+) -> str | None:
+    """Return a natural response for greetings and small talk in English."""
+    message = _normalize_message(question)
+    if not message:
+        return None
+
+    scope = _study_scope(board, class_level, subject)
+
+    if _matches_any_pattern(message, GREETING_PATTERNS):
+        return f"Hi! I'm BoardMate 👋. I can help with {scope}. Send your topic or question."
+
+    if _matches_any_pattern(message, STATUS_PATTERNS):
+        return "I'm doing great and ready to help. Share your topic, chapter, or question."
+
+    if _matches_any_pattern(message, THANKS_PATTERNS):
+        return "You're welcome! Send the next question whenever you're ready."
+
+    if _matches_any_pattern(message, HELP_PATTERNS) or _matches_any_pattern(message, IDENTITY_PATTERNS):
+        return (
+            f"I'm BoardMate. I help with {scope}: explanations, summaries, formulas, and step-by-step solutions."
+        )
+
+    if _matches_any_pattern(message, FAREWELL_PATTERNS):
+        return "See you soon! Come back anytime and we'll continue your study session."
+
+    return None
+
+
+def _infer_response_style(question: str) -> str:
+    message = _normalize_message(question)
+    if _matches_any_pattern(message, COMPARE_INTENT_PATTERNS):
+        return "comparison-bullets"
+    if _matches_any_pattern(message, STEPWISE_INTENT_PATTERNS):
+        return "numbered-steps"
+    if _matches_any_pattern(message, CONCISE_INTENT_PATTERNS):
+        return "concise-then-key-points"
+    return "explain-clearly"
+
+
+def build_missing_context_response(
+    board: str = None,
+    class_level: str = None,
+    subject: str = None,
+    chapter: str = None,
+    language: str = "en",
+) -> str:
+    """Return a helpful fallback when textbook evidence is missing (English only)."""
+    scope = _study_scope(board, class_level, subject)
+    chapter_hint = f" in {chapter}" if chapter else ""
+
+    return (
+        f"I couldn't find a clear match for that in the selected {scope} textbook{chapter_hint}. "
+        "Try rephrasing the question, switching to the relevant chapter, or ask me for a concept explanation, "
+        "summary, formula, or step-by-step solution."
+    )
 
 
 @lru_cache(maxsize=1)
@@ -78,9 +229,10 @@ def generate_response(
         enhanced_question = question
         language_map = {
             "en": "English",
-            "ur": "Urdu",
+            "ur": "Urdu (Urdu script only, never Roman Urdu)",
         }
         requested_language = language_map.get((language or "en").lower(), "English")
+        response_style = _infer_response_style(question)
 
         context_prefix = []
         if board or class_level:
@@ -88,6 +240,8 @@ def generate_response(
                 f"[Board: {board or 'Any'}, Class: {class_level or 'Any'}]"
             )
         context_prefix.append(f"[Respond in: {requested_language}]")
+        context_prefix.append(f"[Response style: {response_style}]")
+        context_prefix.append("[Quality: clear, exam-focused, avoid generic text]")
         enhanced_question = "\n".join(context_prefix) + f"\n\n{question}"
 
         response = chain.invoke({
