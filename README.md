@@ -10,7 +10,7 @@ BoardMate is an AI-Powered study assistant for Pakistani Board students. It comb
 
 ## Project Structure
 
-'''text
+```text
 
 boardmate/
 |-- backend/
