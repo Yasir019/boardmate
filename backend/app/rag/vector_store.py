@@ -34,6 +34,14 @@ class VectorStore:
             persist_directory=str(persist_directory),
         )
 
+    def _reconnect(self):
+        """Recreate the Chroma client handle while keeping persisted data."""
+        self.vectorstore = Chroma(
+            collection_name=self.collection_name,
+            embedding_function=self.embeddings,
+            persist_directory=str(self.persist_directory),
+        )
+
     def clear(self):
         """Delete all documents from the collection and recreate it."""
         try:
@@ -90,14 +98,25 @@ class VectorStore:
                     ]
                 }
 
-        if where:
-            results = self.vectorstore.similarity_search_with_score(
-                query=query, k=top_k, filter=where
-            )
-        else:
-            results = self.vectorstore.similarity_search_with_score(
+        def _run_search():
+            if where:
+                return self.vectorstore.similarity_search_with_score(
+                    query=query, k=top_k, filter=where
+                )
+            return self.vectorstore.similarity_search_with_score(
                 query=query, k=top_k
             )
+
+        try:
+            results = _run_search()
+        except Exception as e:
+            # Chroma/httpx can surface transient closed-client errors after restarts.
+            if "client has been closed" in str(e).lower():
+                logger.warning("Vector search client was closed, reconnecting and retrying once")
+                self._reconnect()
+                results = _run_search()
+            else:
+                raise
 
         return [
             {

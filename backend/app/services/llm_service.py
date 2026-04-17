@@ -228,11 +228,24 @@ def _build_enhanced_question(
 
 def _generate_cloud_response(question: str, context: str) -> str:
     chain = PROMPT_TEMPLATE | get_llm()
-    response = chain.invoke({
-        "context": context,
-        "question": question,
-    })
-    return response.content
+    try:
+        response = chain.invoke({
+            "context": context,
+            "question": question,
+        })
+        return response.content
+    except Exception as e:
+        if "client has been closed" not in str(e).lower():
+            raise
+
+        logger.warning("Cloud LLM client was closed, refreshing cached client and retrying once")
+        get_llm.cache_clear()
+        retry_chain = PROMPT_TEMPLATE | get_llm()
+        response = retry_chain.invoke({
+            "context": context,
+            "question": question,
+        })
+        return response.content
 
 
 def _build_local_prompt(context: str, question: str) -> str:

@@ -3,6 +3,10 @@
 BoardMate is an AI study assistant for Pakistani Board students.
 It uses a React frontend, FastAPI backend, and RAG pipeline over textbook data.
 
+## Live Product
+
+- https://boardmate-nu.vercel.app
+
 ## Tech Stack
 
 - Frontend: React 18, Vite, React Router
