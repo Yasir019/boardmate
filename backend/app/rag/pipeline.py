@@ -19,11 +19,17 @@ from app.rag.loader import load_textbooks
 from app.rag.vector_store import VectorStore
 from app.services.llm_service import (
     build_missing_context_response,
-    generate_response,
+    generate_response_with_provider,
     maybe_build_conversational_reply,
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _normalize_key(value: str | None) -> str:
+    if value is None:
+        return ""
+    return " ".join(str(value).strip().lower().split())
 
 
 class RAGPipeline:
@@ -87,6 +93,10 @@ class RAGPipeline:
                     "class_level": textbook["class_level"],
                     "subject": textbook["subject"],
                     "chapter": textbook["chapter"],
+                    "board_key": _normalize_key(textbook["board"]),
+                    "class_level_key": _normalize_key(textbook["class_level"]),
+                    "subject_key": _normalize_key(textbook["subject"]),
+                    "chapter_key": _normalize_key(textbook["chapter"]),
                     "chapter_number": textbook["chapter_number"],
                     "chapter_title": textbook["chapter_title"],
                     "pdf_path": textbook.get("pdf_path", ""),
@@ -146,15 +156,16 @@ class RAGPipeline:
             return {
                 "answer": conversational_reply,
                 "sources": [],
+                "llm_provider": "rule-based",
             }
 
         filters = {
-            "board": board,
-            "class_level": class_level,
-            "subject": subject,
+            "board_key": _normalize_key(board),
+            "class_level_key": _normalize_key(class_level),
+            "subject_key": _normalize_key(subject),
         }
         if chapter:
-            filters["chapter"] = chapter
+            filters["chapter_key"] = _normalize_key(chapter)
 
         results = self.vector_store.search(
             query=question,
@@ -172,11 +183,12 @@ class RAGPipeline:
                     language=language,
                 ),
                 "sources": [],
+                "llm_provider": "rule-based",
             }
 
         context = "\n\n---\n\n".join(r["text"] for r in results)
 
-        answer = generate_response(
+        answer, llm_provider = generate_response_with_provider(
             question=question,
             context=context,
             board=board,
@@ -201,7 +213,7 @@ class RAGPipeline:
                 })
                 seen_chapters.add(chapter_key)
 
-        return {"answer": answer, "sources": sources}
+        return {"answer": answer, "sources": sources, "llm_provider": llm_provider}
 
 
 rag_pipeline = RAGPipeline()

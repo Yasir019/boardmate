@@ -3,7 +3,7 @@ import hmac
 from fastapi import APIRouter, File, Form, Header, HTTPException, UploadFile
 from pydantic import BaseModel
 
-from app.core.config import ADMIN_TOKEN
+from app.core.config import ADMIN_TOKEN, ADMIN_UPLOAD_MAX_MB
 from app.services.indexing_service import indexing_service
 
 router = APIRouter()
@@ -50,6 +50,12 @@ async def upload_textbook(
 
     try:
         content = await file.read()
+        max_bytes = ADMIN_UPLOAD_MAX_MB * 1024 * 1024
+        if len(content) > max_bytes:
+            raise HTTPException(
+                status_code=413,
+                detail=f"File too large. Max allowed size is {ADMIN_UPLOAD_MAX_MB} MB",
+            )
         content = content.decode("utf-8")
 
         result = indexing_service.save_uploaded_file(

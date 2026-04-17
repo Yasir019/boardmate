@@ -5,7 +5,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
 from app.api.routes import health, chat, admin, chapters, auth
-from app.core.config import CORS_ORIGINS, DATA_DIR, DATABASE_URL, SQLITE_DB_PATH
+from app.core.config import (
+    APP_ENV,
+    CORS_ORIGINS,
+    DATA_DIR,
+    DATABASE_URL,
+    GROQ_API_KEY,
+    LLM_MODE,
+    LOCAL_LLM_MODEL,
+    SQLITE_DB_PATH,
+)
 from app.db.init_db import initialize_database
 
 logging.basicConfig(level=logging.INFO)
@@ -64,12 +73,23 @@ async def startup_event():
     """Initialize services on startup."""
     initialize_database()
     logger.info("BoardMate API starting up")
+    logger.info("App environment: %s", APP_ENV)
+    logger.info("LLM mode: %s", LLM_MODE)
+    logger.info("Local LLM model: %s", LOCAL_LLM_MODEL)
     logger.info("Data directory: %s", DATA_DIR)
     logger.info("Vector DB location: app/storage/vector_db/")
     if DATABASE_URL.startswith("sqlite"):
         logger.info("SQLite DB location: %s", SQLITE_DB_PATH)
     else:
         logger.info("Database configured via DATABASE_URL")
+
+    if not DATA_DIR.exists():
+        logger.warning("Books directory is missing: %s", DATA_DIR)
+    elif not any(DATA_DIR.iterdir()):
+        logger.warning("Books directory is empty: %s", DATA_DIR)
+
+    if not GROQ_API_KEY:
+        logger.warning("GROQ_API_KEY is not set. Chat answers will fail until it is configured.")
 
 
 @app.on_event("shutdown")

@@ -1,7 +1,33 @@
 import { Link } from 'react-router-dom';
 import { isAuthenticated } from '../utils/auth';
 
-const boards = ['Punjab', 'Sindh', 'Federal', 'KPK', 'Balochistan'];
+const boards = [
+  {
+    name: 'Punjab',
+    image: new URL('../assets/images/Panjab board.jpeg', import.meta.url).href,
+    scale: 1,
+  },
+  {
+    name: 'Sindh',
+    image: new URL('../assets/images/SIndh board.jpeg', import.meta.url).href,
+    scale: 1.34,
+  },
+  {
+    name: 'Balochistan',
+    image: new URL('../assets/images/Balouchistan board.jpeg', import.meta.url).href,
+    scale: 1,
+  },
+  {
+    name: 'Federal',
+    image: new URL('../assets/images/Fedral board.png', import.meta.url).href,
+    scale: 1,
+  },
+  {
+    name: 'KPK',
+    image: new URL('../assets/images/KPK board.jpeg', import.meta.url).href,
+    scale: 1,
+  },
+];
 
 const features = [
   {
@@ -156,7 +182,7 @@ function Landing() {
               <div className="orb orb-primary" />
               <div className="hero-card">
                 <img
-                  src="https://lh3.googleusercontent.com/aida/ADBb0ujt7W5UaZ3pr9G884VgPXv7vs76jHm5lXReYNwXJ0BU9_KAsJLAY1s2_VVe7ihxCYVgWEy3ce93ZsAlh4h-PXXxeHaCt7zmY1yXeoD5erJvSqbcpm2q7fPEI0nv8oHjwcdr9qA0FpPbPBq6KZyR-cjk0VR1_sx1ihNsBhGfaz8IunXO-wJlWVttqDV2Qg26DNJrN1HEPpuptfZT--fq4794WOydD6Qvtt3ZSXQh069zYmdTf74yoL1EfPUSCEW6maR2LcNp2PCzLuY"
+                  src="/images/heroimage.png"
                   alt="BoardMate dashboard preview"
                 />
                 <div className="floating-quote">
@@ -176,10 +202,17 @@ function Landing() {
 
         <section className="boards-strip" id="platform">
           <div className="container">
-            <p className="section-kicker">Trusted by Students Across Pakistan Boards</p>
-            <div className="boards-list">
+            <p className="section-kicker">Supported by Major Boards</p>
+            <div className="boards-logos" aria-label="Pakistan board logos">
               {boards.map((board) => (
-                <span key={board}>{board}</span>
+                <img
+                  className="board-logo-img"
+                  key={board.name}
+                  src={board.image}
+                  alt={`${board.name} board logo`}
+                  loading="lazy"
+                  style={{ '--logo-scale': String(board.scale ?? 1) }}
+                />
               ))}
             </div>
           </div>

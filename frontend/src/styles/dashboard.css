@@ -348,9 +348,38 @@
   width: 100%;
 }
 
+@media (max-width: 1080px) {
+  .dashboard {
+    padding: 1.4rem;
+  }
+
+  .section-header {
+    margin-bottom: 1.5rem;
+  }
+
+  .board-card-grid,
+  .subject-card-grid,
+  .card-grid {
+    gap: 1.15rem;
+  }
+
+  .board-select-card {
+    min-height: 204px;
+  }
+
+  .subject-select-card {
+    min-height: 250px;
+  }
+}
+
 @media (max-width: 768px) {
   .dashboard {
     padding: 1rem;
+  }
+
+  .breadcrumbs {
+    font-size: 0.86rem;
+    margin-bottom: 0.85rem;
   }
 
   .board-card-grid,
@@ -409,6 +438,11 @@
   .section-header h1 {
     font-size: 1.7rem;
   }
+
+  .section-header p {
+    font-size: 0.92rem;
+    line-height: 1.55;
+  }
 }
 
 @media (max-width: 480px) {
@@ -431,5 +465,27 @@
   .card {
     min-height: 138px;
     padding: 1rem 0.85rem;
+  }
+
+  .board-select-card,
+  .subject-select-card,
+  .card,
+  .class-select-card {
+    border-radius: 18px;
+  }
+
+  .board-card-name,
+  .subject-card-name,
+  .card-title,
+  .class-card-title {
+    font-size: 0.98rem;
+  }
+
+  .board-card-status,
+  .subject-card-status,
+  .class-card-status,
+  .card-description,
+  .class-card-description {
+    font-size: 0.78rem;
   }
 }

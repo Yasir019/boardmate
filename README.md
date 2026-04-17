@@ -1,6 +1,7 @@
 # BoardMate
 
-BoardMate is an AI-Powered study assistant for Pakistani Board students. It combines a React frontend with a FastAPI backend and a RAG pipeline built on board textbooks content.
+BoardMate is an AI study assistant for Pakistani Board students.
+It uses a React frontend, FastAPI backend, and RAG pipeline over textbook data.
 
 ## Tech Stack
 
@@ -11,7 +12,6 @@ BoardMate is an AI-Powered study assistant for Pakistani Board students. It comb
 ## Project Structure
 
 ```text
-
 boardmate/
 |-- backend/
 |   |-- app/
@@ -38,53 +38,61 @@ boardmate/
 `-- run-backend.bat
 ```
 
-## Textbook Layout
+Stop all BoardMate dev servers:
 
-BoardMate reads content from the `Books/` directory by default.
-
-```text
-Books/
-`-- Board/
-    `-- Class/
-        `-- Subject/
-            |-- All_Chapters_Extracted/
-            |   `-- Chapter1.html
-            `-- All_Chapters_PDFs/
-                `-- Chapter1.pdf
+```powershell
+.\stop-all.bat
 ```
 
-You can point the backend to another dataset location with `DATA_DIR`.
+If you prefer separate terminals:
 
-## Setup
+```powershell
+.\run-backend.bat
+.\run-frontend.bat
+```
 
-### 1. Backend
+### 1. Prerequisites
+
+- Python 3.10+
+- Node.js 18+
+- Git
+- Project cloned with Books data present
+
+### 2. Configure Environment
+
+From project root:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Then edit `.env` and set at least:
+
+- `GROQ_API_KEY=...`
+- `SECRET_KEY=...` (any long random string for development)
+
+Optional:
+
+- `ADMIN_TOKEN=...` if you need admin upload/reindex routes
+- `ADMIN_UPLOAD_MAX_MB=25` to control upload limit
+- `LLM_MODE=auto` to use online first and local fallback
+- `LOCAL_LLM_BASE_URL=http://localhost:11434`
+- `LOCAL_LLM_MODEL=...` for your local model (for example qwen2.5:3b-instruct)
+
+### 3. Start Backend
 
 ```powershell
 py -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r backend\requirements.txt
-Copy-Item .env.example .env
-```
-
-Fill in `.env` with at least:
-
-- `SECRET_KEY`
-- `GROQ_API_KEY`
-- `ADMIN_TOKEN` if you want admin upload and reindex endpoints enabled
-
-Run the API:
-
-```powershell
-cd backend
-..\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000
-```
-
-Or use:
-
-```powershell
 .\run-backend.bat
 ```
 
-### 2. Frontend
+Backend starts on:
+
+- http://localhost:8000
+- http://localhost:8000/docs
+
+### 4. Start Frontend
 
 ```powershell
 cd frontend
@@ -93,22 +101,51 @@ Copy-Item .env.example .env
 npm run dev
 ```
 
-Frontend env values:
+Frontend runs on:
 
-- `VITE_API_URL` optional, leave empty in local development to use the Vite proxy
-- `VITE_ADMIN_TOKEN` required only if you use frontend admin actions
+- http://localhost:5173
+
+### 5. Stop Services
+
+- Stop frontend terminal with Ctrl+C
+- Stop backend terminal with Ctrl+C
+
+## Textbook Layout
+
+BoardMate reads content from `Books/` by default:
+
+```text
+Books/
+    Board/
+        Class/
+            Subject/
+                All_Chapters_Extracted/
+                    Chapter1.html
+                All_Chapters_PDFs/
+                    Chapter1.pdf
+```
+
+## Common Issues and Fast Fixes
+
+1. Frontend loads but API calls fail:
+Set `GROQ_API_KEY` in `.env` and ensure backend is running on port 8000.
+
+2. Port already in use:
+Stop old processes using the same ports, then restart backend and frontend terminals.
+
+3. Admin endpoints return disabled:
+Set `ADMIN_TOKEN` in `.env` and send `X-ADMIN-TOKEN` from frontend/admin calls.
+
+4. Chat says no textbook context:
+Verify `Books/` directory exists and contains extracted chapter HTML files.
+
+5. Online model fails:
+Use `LLM_MODE=auto` or `LLM_MODE=local` and ensure local LLM service is running.
 
 ## Production Notes
 
 - Set `APP_ENV=production`
-- Set a strong `SECRET_KEY`
-- Set `ADMIN_TOKEN` if admin routes should remain enabled
-- Set `CORS_ORIGINS` to your deployed frontend origins
-- Set `VITE_API_URL` in the frontend to your deployed backend base URL
-- Do not commit generated database files or vector store contents
-
-## Useful URLs
-
-- Frontend: `http://localhost:5173`
-- Backend: `http://localhost:8000`
-- API docs: `http://localhost:8000/docs`
+- Set strong `SECRET_KEY`
+- Set `ADMIN_TOKEN` if admin routes stay enabled
+- Set `CORS_ORIGINS` to deployed frontend origins
+- Set frontend `VITE_API_URL` to deployed backend base URL

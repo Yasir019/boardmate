@@ -2,6 +2,7 @@
 
 import logging
 import re
+import threading
 from typing import Dict
 
 from app.core.config import DATA_DIR
@@ -22,9 +23,17 @@ def _safe_path_segment(value: str, field_name: str) -> str:
 class IndexingService:
     """Manage textbook indexing operations."""
 
-    @staticmethod
-    def reindex_all() -> Dict:
+    def __init__(self):
+        self._reindex_lock = threading.Lock()
+
+    def reindex_all(self) -> Dict:
         """Re-index all textbooks in the data directory."""
+        if not self._reindex_lock.acquire(blocking=False):
+            return {
+                "ok": False,
+                "error": "Reindex already in progress. Please wait for it to finish.",
+            }
+
         try:
             result = rag_pipeline.index_textbooks()
             return {
@@ -35,6 +44,8 @@ class IndexingService:
         except Exception as e:
             logger.error("Indexing error: %s", e)
             return {"ok": False, "error": str(e)}
+        finally:
+            self._reindex_lock.release()
 
     @staticmethod
     def save_uploaded_file(

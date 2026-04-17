@@ -1,7 +1,4 @@
-cd D:\boardmate\backend
-..\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000cd D:\boardmate\backend
-..\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000cd D:\boardmate\backend
-..\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000[project]
+[project]
 name = "boardmate-backend"
 version = "1.0.0"
 description = "RAG-based education assistant for board students"
@@ -23,7 +20,7 @@ dependencies = [
     "beautifulsoup4>=4.12.0",
     "lxml>=4.9.0",
     "sqlalchemy>=2.0.0",
-    "passlib[bcrypt]>=1.7.4",
+    "passlib>=1.7.4",
     "python-jose[cryptography]>=3.3.0",
     "email-validator>=2.1.0",
 ]

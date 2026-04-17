@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     )
 
     admin_token: str | None = Field(default=None, alias="ADMIN_TOKEN")
+    admin_upload_max_mb: int = Field(default=25, alias="ADMIN_UPLOAD_MAX_MB")
     secret_key: str = Field(default="dev-secret-key-change-me", alias="SECRET_KEY")
     algorithm: str = "HS256"
     access_token_expire_minutes: int = Field(default=60, alias="ACCESS_TOKEN_EXPIRE_MINUTES")
@@ -51,6 +52,10 @@ class Settings(BaseSettings):
 
     groq_api_key: str | None = Field(default=None, alias="GROQ_API_KEY")
     groq_model: str = Field(default="llama-3.1-8b-instant", alias="GROQ_MODEL")
+    llm_mode: str = Field(default="auto", alias="LLM_MODE")
+    local_llm_base_url: str = Field(default="http://127.0.0.1:11434", alias="LOCAL_LLM_BASE_URL")
+    local_llm_model: str = Field(default="qwen2.5:3b-instruct", alias="LOCAL_LLM_MODEL")
+    local_llm_timeout_seconds: int = Field(default=45, alias="LOCAL_LLM_TIMEOUT_SECONDS")
 
     @field_validator("cors_origins", mode="before")
     @classmethod
@@ -84,6 +89,14 @@ class Settings(BaseSettings):
             raise ValueError("ADMIN_TOKEN must be set in production")
         return value
 
+    @field_validator("llm_mode")
+    @classmethod
+    def validate_llm_mode(cls, value: str) -> str:
+        normalized = (value or "").strip().lower()
+        if normalized not in {"auto", "cloud", "local"}:
+            raise ValueError("LLM_MODE must be one of: auto, cloud, local")
+        return normalized
+
 
 settings = Settings()
 
@@ -94,10 +107,12 @@ DATABASE_URL = settings.database_url
 
 # Security
 ADMIN_TOKEN = settings.admin_token
+ADMIN_UPLOAD_MAX_MB = settings.admin_upload_max_mb
 SECRET_KEY = settings.secret_key
 ALGORITHM = settings.algorithm
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.access_token_expire_minutes
 CORS_ORIGINS = settings.cors_origins
+APP_ENV = settings.app_env
 
 # Data
 DATA_DIR = settings.data_dir
@@ -112,3 +127,7 @@ COLLECTION_NAME = settings.collection_name
 # Groq LLM
 GROQ_API_KEY = settings.groq_api_key
 GROQ_MODEL = settings.groq_model
+LLM_MODE = settings.llm_mode
+LOCAL_LLM_BASE_URL = settings.local_llm_base_url
+LOCAL_LLM_MODEL = settings.local_llm_model
+LOCAL_LLM_TIMEOUT_SECONDS = settings.local_llm_timeout_seconds

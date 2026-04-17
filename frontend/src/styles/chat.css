@@ -46,10 +46,18 @@
 @media (max-width: 768px) {
   .chat-layout.three-panel {
     grid-template-columns: 1fr;
+    position: relative;
   }
 
   .chapter-panel {
-    display: none;
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: min(86vw, 360px);
+    max-width: 100%;
+    height: 100%;
+    z-index: 40;
+    border-right: 1px solid rgba(188, 203, 185, 0.82);
+    box-shadow: 12px 0 28px rgba(19, 27, 46, 0.14);
   }
 }
 
@@ -371,6 +379,9 @@
   font-size: 1.05rem;
   font-weight: 800;
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .chat-header-controls {
@@ -799,6 +810,14 @@
     padding: 0.7rem 1rem;
   }
 
+  .chat-header-info {
+    width: 100%;
+  }
+
+  .chat-header-info h2 {
+    font-size: 0.96rem;
+  }
+
   .chat-header-controls {
     width: 100%;
     margin-left: 0;
@@ -812,6 +831,14 @@
     height: 28px;
   }
 
+  .panel-reopen-handle.left {
+    left: 8px;
+  }
+
+  .panel-reopen-handle.right {
+    right: 8px;
+  }
+
   .chat-layout.three-panel.hide-left-panel .chat-panel,
   .chat-layout.three-panel.hide-right-panel .chat-panel,
   .chat-layout.three-panel.hide-left-panel.hide-right-panel .chat-panel {
@@ -821,6 +848,7 @@
 
   .message-bubble {
     max-width: 88%;
+    font-size: 0.9rem;
   }
 
   .messages-container {
@@ -828,6 +856,62 @@
   }
 
   .chat-input-container {
-    padding: 0.55rem 0.75rem 0.8rem;
+    padding: 0.55rem 0.75rem calc(0.8rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .chat-input-form {
+    border-radius: 18px;
+    padding: 0.35rem 0.35rem 0.35rem 0.8rem;
+  }
+
+  .language-toggle {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .language-chip {
+    flex: 1;
+    text-align: center;
+    padding: 0.38rem 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .chapter-panel {
+    width: 100%;
+  }
+
+  .back-link-row {
+    grid-template-columns: 1fr auto;
+  }
+
+  .back-link {
+    font-size: 0.8rem;
+    padding: 0.85rem 0.75rem;
+  }
+
+  .chapter-header {
+    padding: 0.75rem 0.8rem;
+  }
+
+  .chapter-list {
+    padding: 0.35rem;
+  }
+
+  .chat-history-panel {
+    padding: 0.6rem;
+  }
+
+  .chat-input {
+    font-size: 0.88rem;
+  }
+
+  .dialog-actions {
+    justify-content: stretch;
+  }
+
+  .dialog-btn {
+    flex: 1;
+    justify-content: center;
   }
 }

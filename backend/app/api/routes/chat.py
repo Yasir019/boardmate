@@ -37,6 +37,7 @@ class ChatResponse(BaseModel):
     answer: str
     sources: List[Source]
     chat_id: Optional[int] = None
+    llm_provider: Optional[str] = None
 
 
 class MessageResponse(BaseModel):
@@ -275,6 +276,11 @@ async def ask_question(
             db.commit()
             chat_id = chat.id
 
-        return ChatResponse(answer=result["answer"], sources=sources, chat_id=chat_id)
+        return ChatResponse(
+            answer=result["answer"],
+            sources=sources,
+            chat_id=chat_id,
+            llm_provider=result.get("llm_provider"),
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Query error: {str(e)}")

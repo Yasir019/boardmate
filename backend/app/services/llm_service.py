@@ -1,13 +1,23 @@
 """LLM service using LangChain with the Groq API."""
 
+import json
 import logging
 import re
+from urllib import error as urlerror
+from urllib import request as urlrequest
 from functools import lru_cache
 
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_groq import ChatGroq
 
-from app.core.config import GROQ_API_KEY, GROQ_MODEL
+from app.core.config import (
+    GROQ_API_KEY,
+    GROQ_MODEL,
+    LLM_MODE,
+    LOCAL_LLM_BASE_URL,
+    LOCAL_LLM_MODEL,
+    LOCAL_LLM_TIMEOUT_SECONDS,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -191,6 +201,114 @@ def build_missing_context_response(
     )
 
 
+def _build_enhanced_question(
+    question: str,
+    board: str = None,
+    class_level: str = None,
+    language: str = "en",
+) -> str:
+    language_map = {
+        "en": "English",
+        "ur": "Urdu (Urdu script only, never Roman Urdu)",
+    }
+    requested_language = language_map.get((language or "en").lower(), "English")
+    response_style = _infer_response_style(question)
+
+    context_prefix = []
+    if board or class_level:
+        context_prefix.append(
+            f"[Board: {board or 'Any'}, Class: {class_level or 'Any'}]"
+        )
+    context_prefix.append(f"[Respond in: {requested_language}]")
+    context_prefix.append(f"[Response style: {response_style}]")
+    context_prefix.append("[Quality: clear, exam-focused, avoid generic text]")
+
+    return "\n".join(context_prefix) + f"\n\n{question}"
+
+
+def _generate_cloud_response(question: str, context: str) -> str:
+    chain = PROMPT_TEMPLATE | get_llm()
+    response = chain.invoke({
+        "context": context,
+        "question": question,
+    })
+    return response.content
+
+
+def _build_local_prompt(context: str, question: str) -> str:
+    return (
+        f"{SYSTEM_PROMPT}\n\n"
+        f"Context from textbook:\n---\n{context}\n---\n\n"
+        f"Student Question: {question}\n\n"
+        "Use the context above when it is relevant. "
+        "If this is just a greeting or simple conversational message, respond naturally. "
+        "If the context doesn't contain relevant academic information, say that clearly and guide the student on what to ask next."
+    )
+
+
+def _generate_local_response(question: str, context: str) -> str:
+    endpoint = f"{LOCAL_LLM_BASE_URL.rstrip('/')}/api/generate"
+    payload = {
+        "model": LOCAL_LLM_MODEL,
+        "prompt": _build_local_prompt(context=context, question=question),
+        "stream": False,
+    }
+
+    req = urlrequest.Request(
+        endpoint,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+
+    try:
+        with urlrequest.urlopen(req, timeout=LOCAL_LLM_TIMEOUT_SECONDS) as response:
+            data = json.loads(response.read().decode("utf-8"))
+    except urlerror.URLError as e:
+        raise RuntimeError(f"Local LLM request failed: {e}") from e
+
+    answer = (data.get("response") or "").strip()
+    if not answer:
+        raise RuntimeError("Local LLM returned an empty response")
+    return answer
+
+
+def generate_response_with_provider(
+    question: str,
+    context: str,
+    board: str = None,
+    class_level: str = None,
+    language: str = "en",
+) -> tuple[str, str]:
+    """Generate response and include the provider used (cloud or local)."""
+    enhanced_question = _build_enhanced_question(
+        question=question,
+        board=board,
+        class_level=class_level,
+        language=language,
+    )
+    mode = (LLM_MODE or "auto").strip().lower()
+
+    try:
+        if mode == "cloud":
+            return _generate_cloud_response(enhanced_question, context), "cloud"
+
+        if mode == "local":
+            return _generate_local_response(enhanced_question, context), "local"
+
+        if GROQ_API_KEY:
+            try:
+                return _generate_cloud_response(enhanced_question, context), "cloud"
+            except Exception as cloud_error:
+                logger.warning("Cloud LLM failed in auto mode, falling back to local: %s", cloud_error)
+
+        return _generate_local_response(enhanced_question, context), "local"
+
+    except Exception as e:
+        logger.error("Error generating response: %s", e)
+        return f"Error generating response: {str(e)}", "error"
+
+
 @lru_cache(maxsize=1)
 def get_llm() -> ChatGroq:
     """Return the configured LangChain LLM instance."""
@@ -224,35 +342,14 @@ def generate_response(
     Returns:
         The generated answer string.
     """
-    try:
-        chain = PROMPT_TEMPLATE | get_llm()
-        enhanced_question = question
-        language_map = {
-            "en": "English",
-            "ur": "Urdu (Urdu script only, never Roman Urdu)",
-        }
-        requested_language = language_map.get((language or "en").lower(), "English")
-        response_style = _infer_response_style(question)
-
-        context_prefix = []
-        if board or class_level:
-            context_prefix.append(
-                f"[Board: {board or 'Any'}, Class: {class_level or 'Any'}]"
-            )
-        context_prefix.append(f"[Respond in: {requested_language}]")
-        context_prefix.append(f"[Response style: {response_style}]")
-        context_prefix.append("[Quality: clear, exam-focused, avoid generic text]")
-        enhanced_question = "\n".join(context_prefix) + f"\n\n{question}"
-
-        response = chain.invoke({
-            "context": context,
-            "question": enhanced_question,
-        })
-        return response.content
-
-    except Exception as e:
-        logger.error("Error generating response: %s", e)
-        return f"Error generating response: {str(e)}"
+    answer, _provider = generate_response_with_provider(
+        question=question,
+        context=context,
+        board=board,
+        class_level=class_level,
+        language=language,
+    )
+    return answer
 
 
 def test_connection() -> bool:

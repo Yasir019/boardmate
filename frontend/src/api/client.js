@@ -15,8 +15,19 @@ function buildApiUrl(path) {
 }
 
 function getAuthHeaders() {
-  const token = typeof window !== 'undefined' ? window.localStorage.getItem(TOKEN_KEY) : null;
+  const token = getStoredToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+function getStoredToken() {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+  try {
+    return window.localStorage.getItem(TOKEN_KEY);
+  } catch {
+    return null;
+  }
 }
 
 async function getErrorMessage(response, fallbackMessage) {
@@ -34,6 +45,23 @@ async function getErrorDetail(response) {
     return error?.detail || '';
   } catch {
     return '';
+  }
+}
+
+function toNetworkError(error, actionLabel) {
+  if (error instanceof TypeError) {
+    const backendHint = API_BASE_URL || 'the configured backend';
+    return new Error(
+      `Unable to ${actionLabel}. Cannot reach backend at ${backendHint}. Start backend and verify CORS/API URL settings.`,
+    );
+  }
+  return error;
+}
+
+function assertAuthOrThrow(response) {
+  if (response.status === 401) {
+    handleAuthExpired();
+    throw new Error(AUTH_EXPIRED_MESSAGE);
   }
 }
 
@@ -88,16 +116,21 @@ export const api = {
    * @param {string} password - User password
    */
   async signIn(email, password) {
-    const response = await fetch(buildApiUrl('/auth/signin'), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email,
-        password,
-      }),
-    });
+    let response;
+    try {
+      response = await fetch(buildApiUrl('/auth/signin'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+    } catch (error) {
+      throw toNetworkError(error, 'sign in');
+    }
 
     if (!response.ok) {
       throw new Error(await getErrorMessage(response, 'Sign in failed'));
@@ -184,6 +217,8 @@ export const api = {
     });
     const response = await fetch(buildApiUrl(`/api/chapters/list?${query.toString()}`));
 
+    assertAuthOrThrow(response);
+
     if (!response.ok) {
       throw new Error(await getErrorMessage(response, 'Failed to fetch chapters'));
     }
@@ -198,10 +233,7 @@ export const api = {
       },
     });
 
-    if (response.status === 401) {
-      handleAuthExpired();
-      throw new Error(AUTH_EXPIRED_MESSAGE);
-    }
+    assertAuthOrThrow(response);
 
     if (!response.ok) {
       throw new Error(await getErrorMessage(response, 'Failed to fetch chat sessions'));
@@ -226,10 +258,7 @@ export const api = {
       }),
     });
 
-    if (response.status === 401) {
-      handleAuthExpired();
-      throw new Error(AUTH_EXPIRED_MESSAGE);
-    }
+    assertAuthOrThrow(response);
 
     if (!response.ok) {
       throw new Error(await getErrorMessage(response, 'Failed to create chat session'));
@@ -245,10 +274,7 @@ export const api = {
       },
     });
 
-    if (response.status === 401) {
-      handleAuthExpired();
-      throw new Error(AUTH_EXPIRED_MESSAGE);
-    }
+    assertAuthOrThrow(response);
 
     if (!response.ok) {
       throw new Error(await getErrorMessage(response, 'Failed to fetch chat session'));
@@ -265,10 +291,7 @@ export const api = {
       },
     });
 
-    if (response.status === 401) {
-      handleAuthExpired();
-      throw new Error(AUTH_EXPIRED_MESSAGE);
-    }
+    assertAuthOrThrow(response);
 
     if (!response.ok) {
       throw new Error(await getErrorMessage(response, 'Failed to delete chat session'));
@@ -285,10 +308,7 @@ export const api = {
       body: JSON.stringify({ title }),
     });
 
-    if (response.status === 401) {
-      handleAuthExpired();
-      throw new Error(AUTH_EXPIRED_MESSAGE);
-    }
+    assertAuthOrThrow(response);
 
     if (!response.ok) {
       throw new Error(await getErrorMessage(response, 'Failed to rename chat session'));
