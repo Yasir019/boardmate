@@ -919,7 +919,15 @@ function ChatLayout() {
             title="Show chapters panel"
             aria-label="Show chapters panel"
           >
-            <span aria-hidden="true">&rsaquo;</span>
+            <svg
+              className="panel-toggle-icon"
+              viewBox="0 0 20 20"
+              fill="none"
+              aria-hidden="true"
+            >
+              <rect x="2" y="2" width="16" height="16" rx="2.8" />
+              <path d="M10 2v16" />
+            </svg>
           </button>
         )}
 
@@ -953,7 +961,15 @@ function ChatLayout() {
             title="Show book panel"
             aria-label="Show book panel"
           >
-            <span aria-hidden="true">&lsaquo;</span>
+            <svg
+              className="panel-toggle-icon"
+              viewBox="0 0 20 20"
+              fill="none"
+              aria-hidden="true"
+            >
+              <rect x="2" y="2" width="16" height="16" rx="2.8" />
+              <path d="M10 2v16" />
+            </svg>
           </button>
         )}
 

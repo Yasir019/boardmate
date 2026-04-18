@@ -189,39 +189,31 @@ function Landing() {
     <div className="page-shell">
       <main>
         <section className="hero-section" id="hero">
-          <div className="container hero-grid">
-            <div className="hero-copy">
+          <div className="container hero-grid hero-grid-centered">
+            <div className="hero-copy hero-copy-centered">
               <h1>
-                Master Your Board Exams with <span>AI Intelligence</span>
+                Master Your Board Exams with <span className="hero-highlight-ai">AI</span>
               </h1>
               <p>
-                Leverage board-specific RAG and advanced NLP to solve past papers, clarify
-                concepts, and ace your matric and intermediate finals.
+                Board-specific learning, AI chat, quizzes, summaries, and past paper solving - all in one workspace.
               </p>
               <div className="hero-actions">
                 <Link className="button button-hero" to={ctaTarget}>
                   Start Learning Free
                 </Link>
-                <a className="button button-muted" href="#features">
+                <a className="button button-hero-secondary" href="#features">
                   <Icon name="play_circle" />
                   Watch Demo
                 </a>
               </div>
             </div>
 
-            <div className="hero-visual">
-              <div className="orb orb-primary" />
-              <div className="hero-card">
+            <div className="hero-showcase" role="presentation">
+              <div className="hero-showcase-frame">
                 <img
-                  src="/images/heroimage.png"
-                  alt="BoardMate dashboard preview"
+                  src="/images/HEro.png"
+                  alt="BoardMate dashboard with chapters, chat, and studio"
                 />
-                <div className="floating-quote">
-                  <div className="status-row">
-                    <span className="status-dot" />
-                    <span>AI Chat Active</span>
-                  </div>
-                </div>
               </div>
             </div>
           </div>

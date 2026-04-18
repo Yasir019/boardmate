@@ -83,7 +83,15 @@ function ChapterList({
           title="Hide chapters panel"
           aria-label="Hide chapters panel"
         >
-          <span aria-hidden="true">&lsaquo;</span>
+          <svg
+            className="panel-toggle-icon"
+            viewBox="0 0 20 20"
+            fill="none"
+            aria-hidden="true"
+          >
+            <rect x="2" y="2" width="16" height="16" rx="2.8" />
+            <path d="M10 2v16" />
+          </svg>
         </button>
       </div>
       <div className="chapter-list">

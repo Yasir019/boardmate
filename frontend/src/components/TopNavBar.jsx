@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { clearSession } from '../utils/auth';
+import { clearSession, isAuthenticated } from '../utils/auth';
 
 const navItems = [
   { label: 'Home', id: 'hero' },
   { label: 'Curriculum', id: 'platform' },
-  { label: 'AI Features', id: 'features' },
+  { label: 'Features', id: 'features' },
   { label: 'Pricing', id: 'pricing' },
 ];
 
@@ -13,7 +13,9 @@ function TopNavBar() {
   const location = useLocation();
   const navigate = useNavigate();
   const isLanding = location.pathname === '/';
+  const isSignedIn = isAuthenticated();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   const handleLogout = () => {
     clearSession();
@@ -35,6 +37,22 @@ function TopNavBar() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  useEffect(() => {
+    if (!isLanding) {
+      setIsScrolled(false);
+      return undefined;
+    }
+
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 14);
+    };
+
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isLanding]);
+
   if (!isLanding) {
     return (
       <header className="topbar topbar-minimal">
@@ -43,9 +61,15 @@ function TopNavBar() {
             <img className="brand-icon" src="/images/book.png" alt="BoardMate" />
             <span className="brand-wordmark"><span className="brand-board">Board</span><span className="brand-mate">Mate</span></span>
           </Link>
-          <button type="button" className="topbar-minimal-logout" onClick={handleLogout}>
-            Logout
-          </button>
+          {isSignedIn ? (
+            <button type="button" className="topbar-minimal-logout" onClick={handleLogout}>
+              Logout
+            </button>
+          ) : (
+            <Link className="topbar-back-link" to="/signin">
+              Login
+            </Link>
+          )}
         </div>
       </header>
     );
@@ -54,7 +78,7 @@ function TopNavBar() {
   const closeMenu = () => setIsMenuOpen(false);
 
   return (
-    <header className="topbar">
+    <header className={`topbar ${isLanding ? 'topbar-landing' : ''} ${isScrolled ? 'is-scrolled' : ''}`}>
       <div className="container nav-row">
         <Link className="brand" to="/">
           <img className="brand-icon" src="/images/book.png" alt="BoardMate" />
@@ -70,12 +94,26 @@ function TopNavBar() {
         </nav>
 
         <div className="topbar-actions topbar-actions-desktop">
-          <Link className="button button-outline topbar-login" to="/signin">
-            Sign In
-          </Link>
-          <Link className="button button-primary nav-cta" to="/signup">
-            Get Started
-          </Link>
+          {!isSignedIn && (
+            <>
+              <Link className="button button-outline topbar-login" to="/signin">
+                Login
+              </Link>
+              <Link className="button button-primary nav-cta" to="/signup">
+                Get Started
+              </Link>
+            </>
+          )}
+          {isSignedIn && (
+            <>
+              <button type="button" className="button button-outline topbar-login" onClick={handleLogout}>
+                Logout
+              </button>
+              <Link className="button button-primary nav-cta" to="/dashboard">
+                Get Started
+              </Link>
+            </>
+          )}
         </div>
 
         <button
@@ -101,12 +139,26 @@ function TopNavBar() {
           </nav>
 
           <div className="topbar-actions topbar-actions-mobile">
-            <Link className="button button-outline topbar-login" to="/signin" onClick={closeMenu}>
-              Sign In
-            </Link>
-            <Link className="button button-primary nav-cta" to="/signup" onClick={closeMenu}>
-              Get Started
-            </Link>
+            {!isSignedIn && (
+              <>
+                <Link className="button button-outline topbar-login" to="/signin" onClick={closeMenu}>
+                  Login
+                </Link>
+                <Link className="button button-primary nav-cta" to="/signup" onClick={closeMenu}>
+                  Get Started
+                </Link>
+              </>
+            )}
+            {isSignedIn && (
+              <>
+                <button type="button" className="button button-outline topbar-login" onClick={handleLogout}>
+                  Logout
+                </button>
+                <Link className="button button-primary nav-cta" to="/dashboard" onClick={closeMenu}>
+                  Get Started
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>

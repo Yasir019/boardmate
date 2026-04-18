@@ -32,10 +32,11 @@ function App() {
   const location = useLocation();
   const isChatRoute = location.pathname.startsWith('/chat/');
   const isAuthRoute = location.pathname === '/signin' || location.pathname === '/signup';
+  const isLandingRoute = location.pathname === '/';
   const hideTopNav = isChatRoute || isAuthRoute;
 
   return (
-    <div className={`app ${isChatRoute ? 'chat-route' : ''} ${isAuthRoute ? 'auth-route' : ''}`}>
+    <div className={`app ${isChatRoute ? 'chat-route' : ''} ${isAuthRoute ? 'auth-route' : ''} ${isLandingRoute ? 'landing-route' : ''}`}>
       {!hideTopNav && <TopNavBar />}
       <div className="app-main">
         <Routes>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import boardMateLogo from '../assets/images/Boardmatelogo.jpg';
-import { clearSession, getUser, isAuthenticated } from '../utils/auth';
+import { clearSession, isAuthenticated } from '../utils/auth';
 
 const navItems = [
   { label: 'Platform', id: 'platform' },
@@ -16,7 +16,6 @@ function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const isLanding = location.pathname === '/';
   const isSignedIn = isAuthenticated();
-  const user = getUser();
 
   const sectionHref = (id) => (isLanding ? `#${id}` : `/#${id}`);
 
@@ -51,15 +50,14 @@ function Navbar() {
         <div className="bm-nav-actions">
           {!isSignedIn && (
             <>
-              <Link to="/signin" className="bm-nav-login">Sign In</Link>
+              <Link to="/signin" className="bm-nav-login">Login</Link>
               <Link to="/signup" className="bm-nav-cta">Get Started</Link>
             </>
           )}
           {isSignedIn && (
             <>
-              <span className="bm-nav-user">{user?.full_name || 'Student'}</span>
-              <Link to="/dashboard" className="bm-nav-login">Dashboard</Link>
-              <button type="button" className="bm-nav-cta" onClick={handleLogout}>Logout</button>
+              <button type="button" className="bm-nav-login" onClick={handleLogout}>Logout</button>
+              <Link to="/dashboard" className="bm-nav-cta">Get Started</Link>
             </>
           )}
         </div>
@@ -93,14 +91,14 @@ function Navbar() {
           <div className="bm-nav-drawer-actions">
             {!isSignedIn && (
               <>
-                <Link to="/signin" className="bm-nav-login" onClick={closeMenu}>Sign In</Link>
+                <Link to="/signin" className="bm-nav-login" onClick={closeMenu}>Login</Link>
                 <Link to="/signup" className="bm-nav-cta" onClick={closeMenu}>Get Started</Link>
               </>
             )}
             {isSignedIn && (
               <>
-                <Link to="/dashboard" className="bm-nav-login" onClick={closeMenu}>Dashboard</Link>
-                <button type="button" className="bm-nav-cta" onClick={handleLogout}>Logout</button>
+                <button type="button" className="bm-nav-login" onClick={handleLogout}>Logout</button>
+                <Link to="/dashboard" className="bm-nav-cta" onClick={closeMenu}>Get Started</Link>
               </>
             )}
           </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { api } from '../api/client';
 import '../styles/pdfviewer.css';
 
@@ -533,6 +534,8 @@ function PdfViewer({
     summary: false,
     exercise: false,
   });
+  const [openHistoryMenuId, setOpenHistoryMenuId] = useState(null);
+  const [historyMenuPosition, setHistoryMenuPosition] = useState({ top: 0, left: 0 });
   const viewerRef = useRef(null);
 
   useEffect(() => {
@@ -548,7 +551,51 @@ function PdfViewer({
       summary: false,
       exercise: false,
     });
+    setOpenHistoryMenuId(null);
+    setHistoryMenuPosition({ top: 0, left: 0 });
   }, [pdfUrl, chapterTitle, chapterId, board, classLevel, subject]);
+
+  useEffect(() => {
+    if (!openHistoryMenuId) {
+      return undefined;
+    }
+
+    const handleOutsideClick = (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) {
+        setOpenHistoryMenuId(null);
+        return;
+      }
+
+      if (target.closest('.pdf-studio-history-menu') || target.closest('.pdf-studio-history-more')) {
+        return;
+      }
+
+      setOpenHistoryMenuId(null);
+    };
+
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        setOpenHistoryMenuId(null);
+      }
+    };
+
+    const handleViewportChange = () => {
+      setOpenHistoryMenuId(null);
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('keydown', handleEscape);
+    window.addEventListener('resize', handleViewportChange);
+    window.addEventListener('scroll', handleViewportChange, true);
+
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('keydown', handleEscape);
+      window.removeEventListener('resize', handleViewportChange);
+      window.removeEventListener('scroll', handleViewportChange, true);
+    };
+  }, [openHistoryMenuId]);
 
   const activeStudioItem = useMemo(
     () => studioItems.find((item) => item.id === activeStudioItemId) || null,
@@ -594,28 +641,35 @@ function PdfViewer({
     (item) => item.type === type && item.status === 'processing'
   );
 
-  const handleDeleteStudioItem = (itemId) => {
-    setStudioItems((prev) => prev.filter((item) => item.id !== itemId));
-    setQuizSessions((prev) => {
-      const next = { ...prev };
-      delete next[itemId];
-      return next;
-    });
-
-    if (activeStudioItemId === itemId) {
-      setActiveStudioItemId(null);
+  const positionHistoryMenu = (buttonElement) => {
+    if (!(buttonElement instanceof Element)) {
+      return;
     }
+
+    const rect = buttonElement.getBoundingClientRect();
+    const menuWidth = 124;
+    const menuHeight = 92;
+    const spacing = 8;
+
+    const left = Math.max(
+      spacing,
+      Math.min(rect.right - menuWidth, window.innerWidth - menuWidth - spacing)
+    );
+
+    let top = rect.top - menuHeight - 6;
+    if (top < spacing) {
+      top = Math.min(rect.bottom + 6, window.innerHeight - menuHeight - spacing);
+    }
+
+    setHistoryMenuPosition({ top, left });
   };
 
   const handleOpenStudioItem = (item) => {
     if (!item || item.status !== 'ready') {
       return;
     }
-    if (item.type === 'view') {
-      setIsDocumentVisible(true);
-      setActiveStudioItemId(null);
-      return;
-    }
+
+    setOpenHistoryMenuId(null);
 
     setActiveStudioItemId(item.id);
 
@@ -635,6 +689,88 @@ function PdfViewer({
       });
     }
   };
+
+  const formatRelativeTime = (timestamp) => {
+    if (!timestamp) {
+      return 'just now';
+    }
+
+    const now = Date.now();
+    const then = new Date(timestamp).getTime();
+    if (Number.isNaN(then)) {
+      return 'just now';
+    }
+
+    const diffMinutes = Math.max(0, Math.floor((now - then) / 60000));
+    if (diffMinutes < 1) {
+      return 'just now';
+    }
+    if (diffMinutes < 60) {
+      return `${diffMinutes}m ago`;
+    }
+
+    const diffHours = Math.floor(diffMinutes / 60);
+    if (diffHours < 24) {
+      return `${diffHours}h ago`;
+    }
+
+    const diffDays = Math.floor(diffHours / 24);
+    return `${diffDays}d ago`;
+  };
+
+  const getHistoryTypeLabel = (type) => {
+    if (type === 'quiz') {
+      return 'Quiz';
+    }
+    if (type === 'summary') {
+      return 'Summary';
+    }
+    if (type === 'exercise') {
+      return 'Exercise Solution';
+    }
+    return 'Item';
+  };
+
+  const handleRenameStudioItem = (itemId) => {
+    const item = studioItems.find((entry) => entry.id === itemId);
+    if (!item) {
+      return;
+    }
+
+    const nextTitle = window.prompt('Rename item', item.title || '')?.trim();
+    if (!nextTitle) {
+      return;
+    }
+
+    updateStudioItem(itemId, { title: nextTitle });
+    setOpenHistoryMenuId(null);
+  };
+
+  const handleDeleteStudioItem = (itemId) => {
+    const item = studioItems.find((entry) => entry.id === itemId);
+    if (!item) {
+      return;
+    }
+
+    const shouldDelete = window.confirm(`Delete "${item.title}"?`);
+    if (!shouldDelete) {
+      return;
+    }
+
+    setStudioItems((prev) => prev.filter((entry) => entry.id !== itemId));
+    setQuizSessions((prev) => {
+      const next = { ...prev };
+      delete next[itemId];
+      return next;
+    });
+
+    if (activeStudioItemId === itemId) {
+      setActiveStudioItemId(null);
+    }
+
+    setOpenHistoryMenuId(null);
+  };
+
 
   const handleCloseStudioDetail = () => {
     setActiveStudioItemId(null);
@@ -936,7 +1072,15 @@ function PdfViewer({
               title="Hide book panel"
               aria-label="Hide book panel"
             >
-              <span aria-hidden="true">&rsaquo;</span>
+              <svg
+                className="panel-toggle-icon"
+                viewBox="0 0 20 20"
+                fill="none"
+                aria-hidden="true"
+              >
+                <rect x="2" y="2" width="16" height="16" rx="2.8" />
+                <path d="M10 2v16" />
+              </svg>
             </button>
           </div>
         )}
@@ -1118,47 +1262,111 @@ function PdfViewer({
             </button>
           </div>
 
-          <div className="pdf-studio-history">
-            <div className="pdf-studio-history-title">History</div>
+          <div className="pdf-studio-history" aria-live="polite">
             <div className="pdf-studio-results">
-              {historyItems.length === 0 && (
-                <div className="pdf-studio-empty">Generated items will appear here.</div>
-              )}
-
-              {historyItems.map((item) => (
-                <div key={item.id} className={`pdf-studio-result-item status-${item.status}`}>
-                  <button
-                    type="button"
-                    className="pdf-studio-result-main"
-                    onClick={() => handleOpenStudioItem(item)}
-                    disabled={item.status !== 'ready'}
-                  >
-                    <div className="pdf-studio-result-title">{item.title}</div>
-                    <div className="pdf-studio-result-meta">
-                      {item.status === 'processing' && 'Processing...'}
-                      {item.status === 'ready' && 'Open'}
-                      {item.status === 'failed' && (item.error || 'Failed')}
-                    </div>
-                  </button>
-                  <button
-                    type="button"
-                    className="pdf-studio-result-delete"
-                    title="Delete item"
-                    aria-label="Delete item"
-                    onClick={() => handleDeleteStudioItem(item.id)}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <polyline points="3 6 5 6 21 6" />
-                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                      <path d="M10 11v6" />
-                      <path d="M14 11v6" />
-                      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+              {historyItems.length === 0 ? (
+                <div className="pdf-studio-empty-state">
+                  <div className="pdf-studio-empty-state-icon" aria-hidden="true">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M4.5 14.5l6.2-6.2a2 2 0 0 1 2.8 0l1.2 1.2a2 2 0 0 1 0 2.8l-6.2 6.2a2 2 0 0 1-2.8 0l-1.2-1.2a2 2 0 0 1 0-2.8z" />
+                      <path d="M12 7l1-1" />
+                      <path d="M17 3v2" />
+                      <path d="M17 9v2" />
+                      <path d="M14 6h2" />
+                      <path d="M18 6h2" />
                     </svg>
-                  </button>
+                  </div>
+                  <p className="pdf-studio-empty-state-title">Studio output will be saved here.</p>
+                  <p className="pdf-studio-empty-state-text">
+                    After adding sources, click to add Audio Overview, study guide, mind map and more.
+                  </p>
                 </div>
-              ))}
+              ) : (
+                historyItems.map((item) => {
+                  const itemTypeLabel = getHistoryTypeLabel(item.type);
+                  const isReady = item.status === 'ready';
+                  const isProcessing = item.status === 'processing';
+
+                  return (
+                    <article key={item.id} className={`pdf-studio-history-card status-${item.status}`}>
+                      <button
+                        type="button"
+                        className="pdf-studio-history-main"
+                        onClick={() => handleOpenStudioItem(item)}
+                        disabled={!isReady}
+                      >
+                        <span className="pdf-studio-history-icon" aria-hidden="true">
+                          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                            <line x1="8" y1="13" x2="16" y2="13" />
+                          </svg>
+                        </span>
+                        <span className="pdf-studio-history-copy">
+                          <span className="pdf-studio-history-item-title">
+                            {isProcessing ? `Generating ${itemTypeLabel.toLowerCase()}...` : item.title}
+                          </span>
+                          <span className="pdf-studio-history-item-meta">
+                            {isProcessing && 'based on 1 source'}
+                            {isReady && `1 source · ${formatRelativeTime(item.createdAt)}`}
+                            {item.status === 'failed' && (item.error || 'Failed to generate')}
+                          </span>
+                        </span>
+                      </button>
+
+                      <button
+                        type="button"
+                        className="pdf-studio-history-more"
+                        onClick={(event) => {
+                          event.preventDefault();
+                          if (openHistoryMenuId === item.id) {
+                            setOpenHistoryMenuId(null);
+                            return;
+                          }
+
+                          positionHistoryMenu(event.currentTarget);
+                          setOpenHistoryMenuId(item.id);
+                        }}
+                        title="Options"
+                        aria-label="Options"
+                        aria-haspopup="menu"
+                        aria-expanded={openHistoryMenuId === item.id}
+                      >
+                        &#8942;
+                      </button>
+                    </article>
+                  );
+                })
+              )}
             </div>
           </div>
+
+          {openHistoryMenuId && createPortal(
+            <div
+              className="pdf-studio-history-menu"
+              role="menu"
+              aria-label="History item actions"
+              style={{ top: `${historyMenuPosition.top}px`, left: `${historyMenuPosition.left}px` }}
+            >
+              <button
+                type="button"
+                className="pdf-studio-history-menu-item"
+                onClick={() => handleRenameStudioItem(openHistoryMenuId)}
+                role="menuitem"
+              >
+                Rename
+              </button>
+              <button
+                type="button"
+                className="pdf-studio-history-menu-item danger"
+                onClick={() => handleDeleteStudioItem(openHistoryMenuId)}
+                role="menuitem"
+              >
+                Delete
+              </button>
+            </div>,
+            document.body
+          )}
         </aside>
       </div>
 
