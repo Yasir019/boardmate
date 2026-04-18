@@ -42,7 +42,6 @@ function SignUp() {
     <div className="auth-page">
       <div className="auth-card">
         <h1>Create account</h1>
-        <p>Start learning with AI-powered explanations and textbook answers.</p>
 
         <form onSubmit={handleSubmit} className="auth-form">
           <label htmlFor="fullName">Full name</label>

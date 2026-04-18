@@ -110,6 +110,10 @@ a {
   padding-top: 0;
 }
 
+.app.auth-route .app-main {
+  padding-top: 0;
+}
+
 .not-found {
   display: grid;
   place-items: center;
@@ -199,6 +203,30 @@ a {
 
 .topbar-back-link:hover,
 .topbar-back-link:focus-visible {
+  background: rgba(216, 255, 224, 0.45);
+  border-color: rgba(0, 110, 47, 0.34);
+  transform: translateY(-1px);
+}
+
+.topbar-minimal-logout {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 110, 47, 0.2);
+  color: var(--primary);
+  background: transparent;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.topbar-minimal-logout:hover,
+.topbar-minimal-logout:focus-visible {
   background: rgba(216, 255, 224, 0.45);
   border-color: rgba(0, 110, 47, 0.34);
   transform: translateY(-1px);

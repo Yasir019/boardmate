@@ -1,6 +1,6 @@
 .auth-page {
-  min-height: calc(100vh - 90px);
-  min-height: calc(100dvh - 90px);
+  min-height: 100vh;
+  min-height: 100dvh;
   display: grid;
   place-items: center;
   padding: 2.5rem 1rem;
@@ -26,6 +26,7 @@
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 2rem;
   letter-spacing: -0.04em;
+  text-align: center;
 }
 
 .auth-card > p {

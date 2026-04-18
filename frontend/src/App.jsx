@@ -31,10 +31,11 @@ function PublicOnly({ children }) {
 function App() {
   const location = useLocation();
   const isChatRoute = location.pathname.startsWith('/chat/');
-  const hideTopNav = isChatRoute;
+  const isAuthRoute = location.pathname === '/signin' || location.pathname === '/signup';
+  const hideTopNav = isChatRoute || isAuthRoute;
 
   return (
-    <div className={`app ${isChatRoute ? 'chat-route' : ''}`}>
+    <div className={`app ${isChatRoute ? 'chat-route' : ''} ${isAuthRoute ? 'auth-route' : ''}`}>
       {!hideTopNav && <TopNavBar />}
       <div className="app-main">
         <Routes>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { clearSession } from '../utils/auth';
 
 const navItems = [
   { label: 'Home', id: 'hero' },
@@ -10,8 +11,14 @@ const navItems = [
 
 function TopNavBar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const isLanding = location.pathname === '/';
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const handleLogout = () => {
+    clearSession();
+    navigate('/', { replace: true });
+  };
 
   useEffect(() => {
     setIsMenuOpen(false);
@@ -32,13 +39,13 @@ function TopNavBar() {
     return (
       <header className="topbar topbar-minimal">
         <div className="container topbar-minimal-row">
-          <Link className="topbar-back-link" to="/">
-            Back to Home
-          </Link>
           <Link className="brand" to="/">
             <img className="brand-icon" src="/images/book.png" alt="BoardMate" />
             <span className="brand-wordmark"><span className="brand-board">Board</span><span className="brand-mate">Mate</span></span>
           </Link>
+          <button type="button" className="topbar-minimal-logout" onClick={handleLogout}>
+            Logout
+          </button>
         </div>
       </header>
     );

@@ -34,7 +34,6 @@ function SignIn() {
     <div className="auth-page">
       <div className="auth-card">
         <h1>Welcome back</h1>
-        <p>Sign in to continue your BoardMate study journey.</p>
 
         <form onSubmit={handleSubmit} className="auth-form">
           <label htmlFor="email">Email</label>
