@@ -126,11 +126,32 @@ const testimonials = [
   },
 ];
 
-const footerLinks = {
-  Product: ['Platform', 'Curriculum', 'AI Features', 'Pricing'],
-  Company: ['About Us', 'Careers'],
-  Legal: ['Privacy Policy', 'Terms of Service'],
-};
+const footerSections = [
+  {
+    title: 'All Boards',
+    links: [
+      { label: 'Panjab', href: 'https://hed.punjab.gov.pk/' },
+      { label: 'Sindh', href: 'https://www.bsek.edu.pk/' },
+      { label: 'KPK', href: 'https://www.bisep.edu.pk/' },
+      { label: 'Balouchistan', href: '#hero' },
+      { label: 'Fedral', href: 'https://www.fbise.edu.pk/' },
+    ],
+  },
+  {
+    title: 'Company',
+    links: [
+      { label: 'About Us', href: '#hero' },
+      { label: 'Careers', href: '#hero' },
+    ],
+  },
+  {
+    title: 'Legal',
+    links: [
+      { label: 'Privacy Policy', href: '#hero' },
+      { label: 'Terms of Service', href: '#hero' },
+    ],
+  },
+];
 
 function Icon({ name, filled = false }) {
   return (
@@ -388,13 +409,23 @@ function Landing() {
             </p>
           </div>
 
-          {Object.entries(footerLinks).map(([title, links]) => (
-            <div key={title}>
-              <h3>{title}</h3>
+          {footerSections.map((section) => (
+            <div key={section.title}>
+              <h3>{section.title}</h3>
               <ul className="footer-links">
-                {links.map((link) => (
-                  <li key={link}>
-                    <a href="#hero">{link}</a>
+                {section.links.map((link) => (
+                  <li key={link.label}>
+                    {link.to ? (
+                      <Link to={link.to}>{link.label}</Link>
+                    ) : (
+                      <a
+                        href={link.href || '#hero'}
+                        target={link.href?.startsWith('http') ? '_blank' : undefined}
+                        rel={link.href?.startsWith('http') ? 'noreferrer' : undefined}
+                      >
+                        {link.label}
+                      </a>
+                    )}
                   </li>
                 ))}
               </ul>
