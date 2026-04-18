@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Link } from 'react-router-dom';
 
 function ChapterList({
   chapters = [],
@@ -76,9 +75,7 @@ function ChapterList({
   return (
     <aside className="chapter-panel">
       <div className="back-link-row">
-        <Link to="/dashboard" className="back-link">
-          Back to Dashboard
-        </Link>
+        <h2>Chapters</h2>
         <button
           type="button"
           className="panel-collapse-btn"
@@ -88,14 +85,6 @@ function ChapterList({
         >
           <span aria-hidden="true">&lsaquo;</span>
         </button>
-      </div>
-      <div className="chapter-header">
-        <h2>
-          Chapters
-          {!isLoading && chapters.length > 0 && (
-            <span className="chapter-count"> ({chapters.length})</span>
-          )}
-        </h2>
       </div>
       <div className="chapter-list">
         {isLoading ? (

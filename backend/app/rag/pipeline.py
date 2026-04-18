@@ -215,5 +215,37 @@ class RAGPipeline:
 
         return {"answer": answer, "sources": sources, "llm_provider": llm_provider}
 
+    def retrieve_context_for_scope(
+        self,
+        board: str,
+        class_level: str,
+        subject: str,
+        chapter: str | None,
+        query: str,
+        top_k: int = 8,
+    ) -> Dict:
+        """Retrieve chapter-scoped context from vector embeddings for non-chat studio tasks."""
+        self._ensure_models_loaded()
+
+        filters = {
+            "board_key": _normalize_key(board),
+            "class_level_key": _normalize_key(class_level),
+            "subject_key": _normalize_key(subject),
+        }
+        if chapter:
+            filters["chapter_key"] = _normalize_key(chapter)
+
+        results = self.vector_store.search(
+            query=query,
+            top_k=max(1, top_k),
+            filters=filters,
+        )
+
+        if not results:
+            return {"context": "", "chunks": 0}
+
+        context = "\n\n---\n\n".join(r["text"] for r in results)
+        return {"context": context, "chunks": len(results)}
+
 
 rag_pipeline = RAGPipeline()

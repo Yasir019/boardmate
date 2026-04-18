@@ -2,12 +2,15 @@
 
 .dashboard {
   position: relative;
-  padding: 2.25rem;
+  padding: clamp(1rem, 2.2vw, 2.25rem);
   max-width: 1280px;
   margin: 0 auto;
   flex: 1;
   overflow-y: auto;
   width: 100%;
+  display: grid;
+  align-content: start;
+  gap: 1rem;
 }
 
 .dashboard::before {
@@ -25,9 +28,22 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 1.2rem;
+  margin: 0;
+  padding: 0.78rem 1rem;
+  border: 1px solid rgba(188, 203, 185, 0.68);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.74);
+  box-shadow: 0 10px 24px rgba(19, 27, 46, 0.04);
   font-size: 0.95rem;
   flex-wrap: wrap;
+}
+
+.dashboard-section {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
 }
 
 .breadcrumb-item {
@@ -57,7 +73,7 @@
 }
 
 .section-header {
-  margin-bottom: 2rem;
+  margin-bottom: clamp(1rem, 1.8vw, 1.5rem);
 }
 
 .section-header h1 {
@@ -79,7 +95,7 @@
 .card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.5rem;
+  gap: clamp(0.9rem, 1.8vw, 1.25rem);
   width: 100%;
 }
 
@@ -195,7 +211,7 @@
   color: var(--text-primary);
   font-size: 0.92rem;
   font-weight: 700;
-  margin-bottom: 1.25rem;
+  margin-bottom: 0;
   transition: all 0.2s ease;
 }
 
@@ -208,7 +224,7 @@
 .board-card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1.5rem;
+  gap: clamp(0.9rem, 1.8vw, 1.25rem);
   width: 100%;
 }
 

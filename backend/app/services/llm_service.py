@@ -21,6 +21,15 @@ from app.core.config import (
 
 logger = logging.getLogger(__name__)
 
+LOCAL_LLM_UNAVAILABLE_MESSAGE = (
+    "AI assistant is temporarily unavailable because the local model server is not running. "
+    "Please start your local LLM server (for example Ollama) or switch to cloud mode."
+)
+
+CLOUD_LLM_UNAVAILABLE_MESSAGE = (
+    "AI assistant is temporarily unavailable right now. Please try again in a moment."
+)
+
 SYSTEM_PROMPT = (
     "You are BoardMate, an AI educational assistant for Pakistani board students "
     "(Sindh, Punjab, Federal, KPK, Balochistan boards).\n\n"
@@ -48,6 +57,70 @@ SYSTEM_PROMPT = (
     "- Avoid generic filler. Be specific, practical, and exam-focused\n"
     "- For direct definition-type questions, keep the answer concise first, then add key points"
 )
+
+QUIZ_SYSTEM_PROMPT = """
+You are BoardMate Quiz Generator for Pakistani board students.
+
+Your task is to generate high-quality MCQs from textbook context.
+
+Rules:
+- Generate unique MCQs based on concepts from the chapter, not only by copying end-of-chapter exercises.
+- Use your understanding of the chapter to create fresh questions.
+- Questions must remain faithful to the textbook context.
+- Avoid repeating the same wording across quiz attempts.
+- Prioritize conceptual understanding, definitions, applications, comparisons, and reasoning.
+- Each MCQ must have exactly 4 options.
+- Only one option must be clearly correct.
+- Wrong options should be plausible but incorrect.
+- Keep questions suitable for board students.
+- Use simple, clear language.
+- Do not generate trick questions.
+- Avoid duplicate questions within the same quiz.
+- Avoid questions whose answer is directly revealed in the wording.
+- If the context is too weak, return fewer but better questions instead of guessing.
+
+Output format:
+Return ONLY valid JSON in this exact schema:
+
+{
+    "quiz_title": "string",
+    "variant_id": "string",
+    "questions": [
+        {
+            "question": "string",
+            "options": ["string", "string", "string", "string"],
+            "answer_index": 0,
+            "explanation": "string"
+        }
+    ]
+}
+
+Rules for formatting:
+- Output must be JSON only, no markdown/prose outside JSON.
+- Generate between 15 and 20 questions as requested by the prompt unless context is too weak.
+- Keep each question clear, readable, and exam-focused.
+- answer_index must be 0..3 and match the correct option.
+- Do not split sentences awkwardly.
+"""
+
+EXERCISE_SYSTEM_PROMPT = """
+You are BoardMate Exercise Solution Generator for Pakistani board students.
+
+Your task is to provide accurate, chapter-specific exercise solutions.
+
+Rules:
+- Use only the provided chapter context.
+- Provide complete answers, not hints.
+- Keep language simple, clear, and exam-oriented.
+- For numerical questions, include method steps and final answer.
+- For theory questions, provide concise but complete board-style responses.
+- Avoid unnecessary filler text.
+- Avoid Roman Urdu.
+
+Output format:
+Return ONLY valid JSON using the schema requested in the user prompt.
+Do not include markdown, headings, or prose outside JSON.
+"""
 
 PROMPT_TEMPLATE = ChatPromptTemplate.from_messages([
     ("system", SYSTEM_PROMPT),
@@ -226,8 +299,38 @@ def _build_enhanced_question(
     return "\n".join(context_prefix) + f"\n\n{question}"
 
 
-def _generate_cloud_response(question: str, context: str) -> str:
-    chain = PROMPT_TEMPLATE | get_llm()
+def _build_prompt_template(system_prompt: str) -> ChatPromptTemplate:
+    return ChatPromptTemplate.from_messages([
+        ("system", system_prompt),
+        ("user", (
+            "Context from textbook:\n---\n{context}\n---\n\n"
+            "Student Question: {question}\n\n"
+            "Use the context above when it is relevant. "
+            "If this is just a greeting or simple conversational message, respond naturally. "
+            "If the context doesn't contain relevant academic information, say that clearly and guide the student on what to ask next."
+        )),
+    ])
+
+
+def _generate_cloud_response(
+    question: str,
+    context: str,
+    system_prompt: str | None = None,
+    temperature: float | None = None,
+    max_tokens: int | None = None,
+) -> str:
+    prompt_template = PROMPT_TEMPLATE if not system_prompt else _build_prompt_template(system_prompt)
+    if temperature is None and max_tokens is None:
+        llm = get_llm()
+    else:
+        llm = ChatGroq(
+            api_key=GROQ_API_KEY,
+            model_name=GROQ_MODEL,
+            temperature=temperature if temperature is not None else 0.3,
+            max_tokens=max_tokens if max_tokens is not None else 1024,
+        )
+
+    chain = prompt_template | llm
     try:
         response = chain.invoke({
             "context": context,
@@ -240,7 +343,7 @@ def _generate_cloud_response(question: str, context: str) -> str:
 
         logger.warning("Cloud LLM client was closed, refreshing cached client and retrying once")
         get_llm.cache_clear()
-        retry_chain = PROMPT_TEMPLATE | get_llm()
+        retry_chain = prompt_template | get_llm()
         response = retry_chain.invoke({
             "context": context,
             "question": question,
@@ -248,9 +351,10 @@ def _generate_cloud_response(question: str, context: str) -> str:
         return response.content
 
 
-def _build_local_prompt(context: str, question: str) -> str:
+def _build_local_prompt(context: str, question: str, system_prompt: str | None = None) -> str:
+    prompt_system = system_prompt or SYSTEM_PROMPT
     return (
-        f"{SYSTEM_PROMPT}\n\n"
+        f"{prompt_system}\n\n"
         f"Context from textbook:\n---\n{context}\n---\n\n"
         f"Student Question: {question}\n\n"
         "Use the context above when it is relevant. "
@@ -259,12 +363,25 @@ def _build_local_prompt(context: str, question: str) -> str:
     )
 
 
-def _generate_local_response(question: str, context: str) -> str:
+def _generate_local_response(
+    question: str,
+    context: str,
+    system_prompt: str | None = None,
+    temperature: float | None = None,
+    top_p: float | None = None,
+    max_tokens: int | None = None,
+) -> str:
     endpoint = f"{LOCAL_LLM_BASE_URL.rstrip('/')}/api/generate"
     payload = {
         "model": LOCAL_LLM_MODEL,
-        "prompt": _build_local_prompt(context=context, question=question),
+        "prompt": _build_local_prompt(context=context, question=question, system_prompt=system_prompt),
         "stream": False,
+        "options": {
+            "temperature": temperature if temperature is not None else 0.3,
+            "top_p": top_p if top_p is not None else 0.9,
+            "repeat_penalty": 1.1,
+            "num_predict": max_tokens if max_tokens is not None else 1024,
+        },
     }
 
     req = urlrequest.Request(
@@ -286,12 +403,28 @@ def _generate_local_response(question: str, context: str) -> str:
     return answer
 
 
+def _is_local_connection_refused(error: Exception) -> bool:
+    msg = str(error).lower()
+    return (
+        "local llm request failed" in msg
+        and (
+            "10061" in msg
+            or "connection refused" in msg
+            or "actively refused" in msg
+        )
+    )
+
+
 def generate_response_with_provider(
     question: str,
     context: str,
     board: str = None,
     class_level: str = None,
     language: str = "en",
+    system_prompt: str | None = None,
+    temperature: float | None = None,
+    top_p: float | None = None,
+    max_tokens: int | None = None,
 ) -> tuple[str, str]:
     """Generate response and include the provider used (cloud or local)."""
     enhanced_question = _build_enhanced_question(
@@ -302,24 +435,99 @@ def generate_response_with_provider(
     )
     mode = (LLM_MODE or "auto").strip().lower()
 
-    try:
-        if mode == "cloud":
-            return _generate_cloud_response(enhanced_question, context), "cloud"
-
-        if mode == "local":
-            return _generate_local_response(enhanced_question, context), "local"
-
-        if GROQ_API_KEY:
+    if mode == "cloud":
+        try:
+            return _generate_cloud_response(
+                enhanced_question,
+                context,
+                system_prompt=system_prompt,
+                temperature=temperature,
+                max_tokens=max_tokens,
+            ), "cloud"
+        except Exception as cloud_error:
+            logger.error("Cloud LLM error in cloud mode: %s", cloud_error)
             try:
-                return _generate_cloud_response(enhanced_question, context), "cloud"
-            except Exception as cloud_error:
-                logger.warning("Cloud LLM failed in auto mode, falling back to local: %s", cloud_error)
+                return _generate_local_response(
+                    enhanced_question,
+                    context,
+                    system_prompt=system_prompt,
+                    temperature=temperature,
+                    top_p=top_p,
+                    max_tokens=max_tokens,
+                ), "local"
+            except Exception as local_error:
+                logger.error("Local fallback failed after cloud-mode error: %s", local_error)
+                if _is_local_connection_refused(local_error):
+                    return LOCAL_LLM_UNAVAILABLE_MESSAGE, "error"
+                return CLOUD_LLM_UNAVAILABLE_MESSAGE, "error"
 
-        return _generate_local_response(enhanced_question, context), "local"
+    if mode == "local":
+        try:
+            return _generate_local_response(
+                enhanced_question,
+                context,
+                system_prompt=system_prompt,
+                temperature=temperature,
+                top_p=top_p,
+                max_tokens=max_tokens,
+            ), "local"
+        except Exception as local_error:
+            logger.error("Local LLM error in local mode: %s", local_error)
+            if GROQ_API_KEY:
+                try:
+                    return _generate_cloud_response(
+                        enhanced_question,
+                        context,
+                        system_prompt=system_prompt,
+                        temperature=temperature,
+                        max_tokens=max_tokens,
+                    ), "cloud"
+                except Exception as cloud_error:
+                    logger.error("Cloud fallback failed after local-mode error: %s", cloud_error)
 
-    except Exception as e:
-        logger.error("Error generating response: %s", e)
-        return f"Error generating response: {str(e)}", "error"
+            if _is_local_connection_refused(local_error):
+                return LOCAL_LLM_UNAVAILABLE_MESSAGE, "error"
+            return CLOUD_LLM_UNAVAILABLE_MESSAGE, "error"
+
+    # auto mode: prefer cloud if configured, otherwise local.
+    if GROQ_API_KEY:
+        try:
+            return _generate_cloud_response(
+                enhanced_question,
+                context,
+                system_prompt=system_prompt,
+                temperature=temperature,
+                max_tokens=max_tokens,
+            ), "cloud"
+        except Exception as cloud_error:
+            logger.warning("Cloud LLM failed in auto mode, falling back to local: %s", cloud_error)
+
+    try:
+        return _generate_local_response(
+            enhanced_question,
+            context,
+            system_prompt=system_prompt,
+            temperature=temperature,
+            top_p=top_p,
+            max_tokens=max_tokens,
+        ), "local"
+    except Exception as local_error:
+        logger.error("Local LLM failed in auto mode: %s", local_error)
+        if _is_local_connection_refused(local_error):
+            if GROQ_API_KEY:
+                try:
+                    return _generate_cloud_response(
+                        enhanced_question,
+                        context,
+                        system_prompt=system_prompt,
+                        temperature=temperature,
+                        max_tokens=max_tokens,
+                    ), "cloud"
+                except Exception as cloud_error:
+                    logger.error("Cloud retry after local failure also failed: %s", cloud_error)
+            return LOCAL_LLM_UNAVAILABLE_MESSAGE, "error"
+
+        return CLOUD_LLM_UNAVAILABLE_MESSAGE, "error"
 
 
 @lru_cache(maxsize=1)

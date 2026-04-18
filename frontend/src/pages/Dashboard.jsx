@@ -72,16 +72,6 @@ function Dashboard() {
     <div className="dashboard">
       {selectedBoard && <Breadcrumbs items={breadcrumbItems} />}
 
-      {selectedBoard && (
-        <button
-          type="button"
-          className="back-button"
-          onClick={selectedClass ? handleBackToClasses : handleBackToBoards}
-        >
-          Back
-        </button>
-      )}
-
       {!selectedBoard && <BoardGrid onSelectBoard={handleSelectBoard} />}
 
       {selectedBoard && !selectedClass && (

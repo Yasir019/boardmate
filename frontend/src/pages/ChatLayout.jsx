@@ -866,6 +866,11 @@ function ChatLayout() {
         <PdfViewer
           pdfUrl={pdfUrl}
           chapterTitle={selectedChapter?.name}
+          board={board}
+          classLevel={classLevel}
+          subject={subject}
+          chapterId={selectedChapter?.chapter}
+          language={language}
           onCollapsePanel={handleTogglePdfPanel}
         />
       )}

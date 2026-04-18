@@ -33,7 +33,7 @@ const features = [
   },
   {
     icon: 'keyboard_voice',
-    title: 'Voice Interaction',
+    title: 'Quizz Generator',
     description:
       'Speak to BoardMate in Urdu or English and learn difficult concepts through natural conversation.',
   },
@@ -95,7 +95,7 @@ const plans = [
     cadence: '/mo',
     description: 'For the top-rank achievers.',
     featured: true,
-    cta: 'Go Premium',
+    cta: 'Soon',
     items: [
       'Unlimited AI Chats',
       'Access to All Boards',
@@ -108,21 +108,27 @@ const plans = [
 const testimonials = [
   {
     quote:
-      'BoardMate helped me understand complex Organic Chemistry concepts in days that I struggled with for months. The Urdu voice support is amazing!',
-    name: 'Ahmed Ali',
-    role: 'Grade 12 Student, Lahore',
+      'BoardMate helped me revise chapter concepts quickly and improved my exam confidence with clean summaries and practice flow.',
+    name: 'Jahanzaib Alamgeer',
+    role: 'Grade 12 Student',
+    image: '/images/JahanzaibAlamgeer.jpeg',
+    rating: 5,
   },
   {
     quote:
-      'As a teacher, I recommend BoardMate to my students for practice. The AI-generated mock papers are remarkably close to the actual Federal Board pattern.',
-    name: 'Ms. Sara Khan',
-    role: 'Lecturer, Islamabad',
+      'The platform keeps me focused on board-style preparation and makes difficult topics easier to understand.',
+    name: 'Muneeb Younis',
+    role: 'Student',
+    image: '/images/MuneebYounis.jpeg',
+    rating: 4,
   },
   {
     quote:
-      'I went from a B grade to an A* in my Physics final. The smart notes feature saved me dozens of hours during revision week.',
-    name: 'Zainab Jamil',
-    role: 'Grade 10 Student, Karachi',
+      'Practice tools and chapter-wise support made my prep more consistent and my paper attempts more accurate.',
+    name: 'sameer ahmed',
+    role: 'Student',
+    image: '/images/SameerAhmed.jpeg',
+    rating: 4,
   },
 ];
 
@@ -141,22 +147,32 @@ const footerSections = [
     title: 'Company',
     links: [
       { label: 'About Us', href: '#hero' },
-      { label: 'Careers', href: '#hero' },
+      { label: 'Careers', disabled: true },
     ],
   },
   {
-    title: 'Legal',
+    title: 'Contact Us',
     links: [
-      { label: 'Privacy Policy', href: '#hero' },
-      { label: 'Terms of Service', href: '#hero' },
+      {
+        label: 'Email Us',
+        value: 'muhammadyasirali.ai@gmail.com',
+        href: 'mailto:muhammadyasirali.ai@gmail.com',
+        icon: 'mail',
+      },
+      {
+        label: 'Contact Us',
+        value: '03041529500',
+        href: 'tel:03041529500',
+        icon: 'call',
+      },
     ],
   },
 ];
 
-function Icon({ name, filled = false }) {
+function Icon({ name, filled = false, className = '' }) {
   return (
     <span
-      className="material-symbols-outlined"
+      className={`material-symbols-outlined ${className}`.trim()}
       style={{ fontVariationSettings: `'FILL' ${filled ? 1 : 0}, 'wght' 500, 'GRAD' 0, 'opsz' 24` }}
       aria-hidden="true"
     >
@@ -175,7 +191,6 @@ function Landing() {
         <section className="hero-section" id="hero">
           <div className="container hero-grid">
             <div className="hero-copy">
-              <span className="eyebrow">Pakistani Board Exam Prep (Grades 9-12)</span>
               <h1>
                 Master Your Board Exams with <span>AI Intelligence</span>
               </h1>
@@ -206,10 +221,6 @@ function Landing() {
                     <span className="status-dot" />
                     <span>AI Chat Active</span>
                   </div>
-                  <p>
-                    &quot;BoardMate correctly identified the Physics 2023 Punjab Board pattern
-                    for Section C.&quot;
-                  </p>
                 </div>
               </div>
             </div>
@@ -281,7 +292,7 @@ function Landing() {
               <div className="orb orb-secondary" />
               <img
                 className="benefit-image"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuA0CHCAdC1pyOx8-iqL4Jarlb1TsRXboI1QHO0V1nIECTBUL9sqpC8qpcQW24AoETz7sbhFs2LmcaHgGufb_SvJt4lq33YBTklQMgF8ImJthQb6aOLXNIfo3Whp5MxcMO1otE2eOFIySKLwWrduOPlkM4DMdaT9M2I6nc0bqYf8TbwgvzWdJoEf1bGQJ_xZfzTTTjhhjYfXfxPDtMG9yyxOBlksYUcHzeZW9QGT8fLCOEjfVtyEF7CCQj7V3Xals3V_Tr556SECs93l"
+                src="/images/Student.png"
                 alt="Student studying with BoardMate"
               />
             </div>
@@ -318,7 +329,6 @@ function Landing() {
                   className={`pricing-card${plan.featured ? ' pricing-card-featured' : ''}`}
                   key={plan.name}
                 >
-                  {plan.featured && <div className="pricing-ribbon">Recommended</div>}
                   <h3>{plan.name}</h3>
                   <p className="pricing-description">{plan.description}</p>
                   <div className="pricing-value">
@@ -332,12 +342,22 @@ function Landing() {
                       </li>
                     ))}
                   </ul>
-                  <Link
-                    className={`button ${plan.featured ? 'button-hero' : 'button-outline'}`}
-                    to={ctaTarget}
-                  >
-                    {plan.cta}
-                  </Link>
+                  {plan.featured ? (
+                    <button
+                      type="button"
+                      className="button button-disabled"
+                      disabled
+                    >
+                      {plan.cta}
+                    </button>
+                  ) : (
+                    <Link
+                      className="button button-outline"
+                      to={ctaTarget}
+                    >
+                      {plan.cta}
+                    </Link>
+                  )}
                 </article>
               ))}
             </div>
@@ -352,14 +372,19 @@ function Landing() {
             <div className="testimonial-grid">
               {testimonials.map((testimonial) => (
                 <article className="testimonial-card" key={testimonial.name}>
-                  <div className="stars" aria-label="5 star rating">
+                  <div className="stars" aria-label={`${testimonial.rating} star rating`}>
                     {Array.from({ length: 5 }).map((_, index) => (
-                      <Icon key={`${testimonial.name}-${index + 1}`} name="star" filled />
+                      <Icon
+                        key={`${testimonial.name}-${index + 1}`}
+                        name="star"
+                        filled={index < testimonial.rating}
+                        className={index < testimonial.rating ? 'star-filled' : 'star-empty'}
+                      />
                     ))}
                   </div>
                   <p className="testimonial-quote">&quot;{testimonial.quote}&quot;</p>
                   <div className="testimonial-person">
-                    <div className="avatar" aria-hidden="true" />
+                    <img className="avatar" src={testimonial.image} alt={testimonial.name} loading="lazy" />
                     <div>
                       <strong>{testimonial.name}</strong>
                       <span>{testimonial.role}</span>
@@ -401,7 +426,7 @@ function Landing() {
         <div className="container footer-grid">
           <div className="footer-brand">
             <a className="brand footer-logo" href="#hero">
-              BoardMate
+              <span className="brand-wordmark"><span className="brand-board">Board</span><span className="brand-mate">Mate</span></span>
             </a>
             <p>
               Empowering the next generation of Pakistan&apos;s leaders through board-specific AI
@@ -415,15 +440,30 @@ function Landing() {
               <ul className="footer-links">
                 {section.links.map((link) => (
                   <li key={link.label}>
-                    {link.to ? (
+                    {link.disabled ? (
+                      <span className="footer-link-disabled" aria-disabled="true">{link.label}</span>
+                    ) : link.to ? (
                       <Link to={link.to}>{link.label}</Link>
                     ) : (
                       <a
+                        className={link.value ? 'footer-contact-link' : undefined}
                         href={link.href || '#hero'}
                         target={link.href?.startsWith('http') ? '_blank' : undefined}
                         rel={link.href?.startsWith('http') ? 'noreferrer' : undefined}
                       >
-                        {link.label}
+                        {link.icon ? (
+                          <span className="footer-contact-icon" aria-hidden="true">
+                            <Icon name={link.icon} />
+                          </span>
+                        ) : null}
+                        {link.value ? (
+                          <span className="footer-contact-text">
+                            <span className="footer-contact-label">{link.label}</span>
+                            <span className="footer-contact-value">{link.value}</span>
+                          </span>
+                        ) : (
+                          link.label
+                        )}
                       </a>
                     )}
                   </li>
@@ -436,9 +476,9 @@ function Landing() {
         <div className="container footer-bottom">
           <p>Copyright 2024 BoardMate. All rights reserved.</p>
           <div className="social-links">
-            <a href="#hero">Twitter</a>
-            <a href="#hero">LinkedIn</a>
-            <a href="#hero">Instagram</a>
+            <a href="https://www.linkedin.com/in/muhammad-yasir-ali-34143b266" target="_blank" rel="noreferrer">LinkedIn</a>
+            <a href="https://x.com/Yasir_023" target="_blank" rel="noreferrer">Twitter</a>
+            <a href="https://github.com/Yasir019" target="_blank" rel="noreferrer">GitHub</a>
           </div>
         </div>
       </footer>

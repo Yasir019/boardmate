@@ -5,7 +5,9 @@
   display: flex;
   flex-direction: column;
   background: #f6f8f6;
-  border-left: 1px solid var(--border-color);
+  border: 1px solid rgba(188, 203, 185, 0.72);
+  border-radius: 20px;
+  box-shadow: 0 14px 28px rgba(19, 27, 46, 0.05);
   position: relative;
   overflow: hidden;
 }
@@ -83,6 +85,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  min-height: var(--chat-header-height, 72px);
   padding: 0.7rem 1rem;
   background: rgba(255, 255, 255, 0.92);
   border-bottom: 1px solid rgba(188, 203, 185, 0.72);
@@ -113,12 +116,34 @@
   margin-right: 0;
 }
 
+.pdf-title-copy {
+  min-width: 0;
+  display: grid;
+  gap: 0.08rem;
+}
+
+.pdf-title-subtitle {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .pdf-controls {
   display: flex;
   align-items: center;
   gap: 0.375rem;
   flex-wrap: wrap;
   justify-content: flex-end;
+}
+
+.pdf-controls-minimal {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-secondary);
 }
 
 .pdf-control-btn {
@@ -172,7 +197,567 @@
   overflow: auto;
   background: #edf2ee;
   min-height: 0;
+  padding: 1.1rem;
+}
+
+.pdf-document-placeholder {
+  width: 100%;
+  height: 100%;
+  border: 1px dashed rgba(188, 203, 185, 0.85);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.78);
+  display: grid;
+  place-content: center;
+  text-align: center;
+  padding: 1.1rem;
+}
+
+.pdf-document-placeholder h4 {
+  margin: 0 0 0.45rem;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.pdf-document-placeholder p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.pdf-body {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+.pdf-body.document-mode .pdf-container {
+  height: 100%;
+}
+
+.pdf-body.document-mode .pdf-studio-panel {
+  display: none;
+}
+
+.pdf-body.studio-mode .pdf-container {
+  display: none;
+}
+
+.pdf-body.studio-mode .pdf-studio-panel {
+  height: 100%;
+  border-left: none;
+}
+
+.pdf-studio-panel {
+  border-left: 1px solid rgba(188, 203, 185, 0.72);
+  background: rgba(248, 251, 248, 0.95);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding-bottom: 0.75rem;
+}
+
+.pdf-studio-header {
+  padding: 0.8rem 0.85rem;
+  border-bottom: 1px solid rgba(188, 203, 185, 0.72);
+}
+
+.pdf-studio-header h4 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 0.96rem;
+  font-weight: 800;
+}
+
+.pdf-studio-card-grid {
+  padding: 0.75rem 0.62rem 0.62rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.42rem;
+}
+
+.pdf-studio-card {
+  border: 1px solid rgba(188, 203, 185, 0.75);
+  border-radius: 11px;
+  background: #ffffff;
+  text-align: left;
+  padding: 0.54rem 0.58rem;
+  display: grid;
+  gap: 0.12rem;
+  min-height: 54px;
+}
+
+.pdf-studio-card:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.pdf-studio-card-head {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.36rem;
+}
+
+.pdf-studio-card-icon {
+  width: 21px;
+  height: 21px;
+  border-radius: 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.72);
+  color: #27435f;
+}
+
+.pdf-studio-card:nth-child(1) {
+  background: #e8f3ff;
+}
+
+.pdf-studio-card:nth-child(2) {
+  background: #e9f9ed;
+}
+
+.pdf-studio-card:nth-child(3) {
+  grid-column: 1 / -1;
+  background: #f3ecff;
+}
+
+.pdf-studio-card:hover {
+  background: rgba(216, 255, 224, 0.35);
+  border-color: rgba(0, 110, 47, 0.28);
+}
+
+.pdf-studio-card.is-video {
+  background: rgba(224, 244, 255, 0.72);
+}
+
+.pdf-studio-card.is-video:hover {
+  background: rgba(214, 240, 255, 0.92);
+}
+
+.pdf-studio-card.is-paper {
+  background: rgba(255, 244, 224, 0.76);
+}
+
+.pdf-studio-card.is-paper:hover {
+  background: rgba(255, 236, 206, 0.94);
+}
+
+.pdf-studio-card.is-coming-soon {
+  background: rgba(245, 246, 251, 0.84);
+  opacity: 0.72;
+  cursor: not-allowed;
+}
+
+.pdf-studio-card.is-coming-soon:hover {
+  background: rgba(245, 246, 251, 0.84);
+  border-color: rgba(188, 203, 185, 0.75);
+}
+
+.pdf-studio-card-title {
+  color: var(--text-primary);
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.pdf-studio-card-sub {
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.pdf-studio-history {
+  margin-top: 0.72rem;
+  border-top: 1px solid rgba(188, 203, 185, 0.72);
+  padding-top: 0.68rem;
+  padding-left: 0.62rem;
+  padding-right: 0.62rem;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.pdf-studio-history-title {
+  margin-bottom: 0.5rem;
+  font-size: 0.74rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-secondary);
+}
+
+.pdf-studio-results {
+  display: grid;
+  gap: 0.45rem;
+  overflow-y: auto;
+  padding-right: 0.1rem;
+}
+
+.pdf-studio-empty {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.pdf-studio-result-item {
+  border: 1px solid rgba(188, 203, 185, 0.75);
+  border-radius: 10px;
+  background: #ffffff;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem;
+}
+
+.pdf-studio-result-main {
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 0.25rem;
+  display: grid;
+  gap: 0.18rem;
+  min-width: 0;
+}
+
+.pdf-studio-result-main:disabled {
+  opacity: 1;
+  cursor: default;
+}
+
+.pdf-studio-result-item.status-ready .pdf-studio-result-main {
+  cursor: pointer;
+}
+
+.pdf-studio-result-item.status-ready:hover {
+  border-color: rgba(0, 110, 47, 0.3);
+  background: rgba(216, 255, 224, 0.35);
+}
+
+.pdf-studio-result-delete {
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(188, 203, 185, 0.78);
+  border-radius: 9px;
+  background: #ffffff;
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pdf-studio-result-delete:hover {
+  border-color: rgba(185, 28, 28, 0.34);
+  color: #b91c1c;
+  background: rgba(255, 236, 236, 0.7);
+}
+
+.pdf-studio-result-item.status-failed {
+  border-color: rgba(185, 28, 28, 0.26);
+  background: rgba(255, 236, 236, 0.6);
+}
+
+.pdf-studio-result-title {
+  color: var(--text-primary);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.pdf-studio-result-meta {
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+}
+
+.pdf-studio-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  background: rgba(246, 249, 246, 0.97);
   padding: 1rem;
+}
+
+.pdf-studio-overlay-card {
+  height: 100%;
+  background: #ffffff;
+  border: 1px solid rgba(188, 203, 185, 0.78);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.pdf-studio-overlay-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  border-bottom: 1px solid rgba(188, 203, 185, 0.72);
+  padding: 0.75rem 0.9rem;
+}
+
+.pdf-studio-overlay-headings {
+  min-width: 0;
+}
+
+.pdf-studio-breadcrumb {
+  margin: 0 0 0.3rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.pdf-studio-overlay-actions {
+  display: inline-flex;
+  align-items: center;
+}
+
+.pdf-studio-overlay-header h3 {
+  margin: 0;
+  font-size: 0.94rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.pdf-studio-overlay-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0.9rem;
+}
+
+.quiz-sheet h4 {
+  margin: 0 0 0.7rem;
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.quiz-title-line {
+  margin: 0 0 0.9rem;
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.quiz-text-question-block {
+  margin-bottom: 0.85rem;
+  border: 1px solid rgba(188, 203, 185, 0.68);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 0.72rem 0.78rem;
+}
+
+.quiz-text-question {
+  margin: 0 0 0.45rem;
+  color: var(--text-primary);
+  font-size: 0.84rem;
+  line-height: 1.55;
+  font-weight: 700;
+}
+
+.quiz-text-options p {
+  margin: 0.22rem 0;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+
+.quiz-text-answer,
+.quiz-text-explanation {
+  margin: 0.45rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.quiz-text-answer {
+  color: var(--primary-color);
+  font-weight: 700;
+}
+
+.quiz-text-separator {
+  margin: 0.75rem 0 0;
+  color: #8ea196;
+  font-size: 0.74rem;
+}
+
+.quiz-pretty-output {
+  margin: 0;
+  white-space: pre-wrap;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-size: 0.82rem;
+  line-height: 1.7;
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(188, 203, 185, 0.72);
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+}
+
+.quiz-progress {
+  margin: 0 0 0.65rem;
+  font-size: 0.86rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.quiz-question-card {
+  border: 1px solid rgba(188, 203, 185, 0.68);
+  border-radius: 12px;
+  padding: 0.65rem 0.72rem;
+  margin-bottom: 0.55rem;
+}
+
+.quiz-question-title {
+  margin: 0 0 0.45rem;
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  font-weight: 700;
+}
+
+.quiz-options-list {
+  margin: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.quiz-option-btn {
+  border: 1px solid rgba(188, 203, 185, 0.72);
+  border-radius: 11px;
+  background: #f8faf8;
+  color: var(--text-primary);
+  text-align: left;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  padding: 0.7rem 0.75rem;
+}
+
+.quiz-option-btn:hover {
+  border-color: rgba(0, 110, 47, 0.3);
+  background: rgba(216, 255, 224, 0.35);
+}
+
+.quiz-option-btn.is-selected {
+  border-color: rgba(0, 110, 47, 0.34);
+  background: rgba(216, 255, 224, 0.5);
+}
+
+.quiz-option-btn.is-selected.is-correct {
+  border-color: rgba(0, 110, 47, 0.45);
+  background: rgba(209, 250, 229, 0.72);
+}
+
+.quiz-option-btn.is-selected.is-wrong {
+  border-color: rgba(185, 28, 28, 0.35);
+  background: rgba(254, 226, 226, 0.78);
+}
+
+.quiz-options-list li.is-answer {
+  color: var(--primary-color);
+  font-weight: 700;
+}
+
+.quiz-explanation {
+  margin: 0.4rem 0 0;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.quiz-nav-row {
+  margin-top: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.studio-raw-output {
+  margin: 0;
+  white-space: pre-wrap;
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  line-height: 1.65;
+  font-family: inherit;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(188, 203, 185, 0.72);
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+}
+
+.summary-structured h4 {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.summary-plain {
+  color: var(--text-primary);
+}
+
+.summary-plain-heading {
+  margin: 0.95rem 0 0.38rem;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.summary-plain-heading:first-child {
+  margin-top: 0;
+  font-size: 1rem;
+}
+
+.summary-plain-paragraph {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.72;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+}
+
+.summary-plain-line {
+  margin: 0.18rem 0;
+  font-size: 0.82rem;
+  line-height: 1.62;
+  color: var(--text-secondary);
+}
+
+.exercise-item {
+  margin: 0.55rem 0 0.75rem;
+  padding: 0.6rem 0.72rem;
+  border: 1px solid rgba(188, 203, 185, 0.62);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.86);
+}
+
+.summary-block {
+  border: 1px solid rgba(188, 203, 185, 0.68);
+  border-radius: 10px;
+  padding: 0.65rem 0.75rem;
+  margin-bottom: 0.6rem;
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.summary-block h5 {
+  margin: 0 0 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.summary-block p,
+.summary-block li {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.summary-block ul,
+.summary-block ol {
+  margin: 0;
+  padding-left: 1.05rem;
+  display: grid;
+  gap: 0.22rem;
 }
 
 .pdf-iframe {
@@ -228,5 +813,14 @@
 
   .pdf-iframe {
     border-radius: 14px;
+  }
+
+  .pdf-studio-panel {
+    border-left: none;
+    border-top: 1px solid rgba(188, 203, 185, 0.72);
+  }
+
+  .pdf-body.studio-mode .pdf-studio-panel {
+    border-top: none;
   }
 }

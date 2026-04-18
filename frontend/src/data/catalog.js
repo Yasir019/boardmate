@@ -7,6 +7,7 @@ import physicsImage from '../assets/images/Pysicslogog.jpg';
 import computerImage from '../assets/images/Computerlogo.jpg';
 import biologyImage from '../assets/images/Biologylogo.jpeg';
 import chemistryImage from '../assets/images/Chemistry.jpg';
+import mathImage from '../assets/images/mathimage.png';
 
 const allClasses = [
   { id: '9th', name: '9th', description: 'Matriculation Part 1' },
@@ -18,7 +19,7 @@ const allClasses = [
 const allSubjects = [
   { id: 'Computer', name: 'Computer', color: '#06b6d4', image: computerImage },
   { id: 'Physics', name: 'Physics', color: '#3b82f6', image: physicsImage },
-  { id: 'Math', name: 'Math', color: '#8b5cf6', image: null, shortLabel: 'M' },
+  { id: 'Math', name: 'Math', color: '#8b5cf6', image: mathImage, shortLabel: 'M' },
   { id: 'Biology', name: 'Biology', color: '#22c55e', image: biologyImage },
   { id: 'Chemistry', name: 'Chemistry', color: '#f97316', image: chemistryImage },
 ];

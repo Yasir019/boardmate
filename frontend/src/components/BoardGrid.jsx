@@ -3,10 +3,9 @@ import { boardCatalog } from '../data/catalog';
 
 function BoardGrid({ onSelectBoard }) {
   return (
-    <div>
+    <div className="dashboard-section">
       <div className="section-header">
         <h1>Select Your Board</h1>
-        <p>Punjab and Sindh are live right now. Federal, KPK, and Balochistan are shown here as coming soon.</p>
       </div>
       <div className="board-card-grid">
         {boardCatalog.map((board) => (

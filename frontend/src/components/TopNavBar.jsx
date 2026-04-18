@@ -36,7 +36,8 @@ function TopNavBar() {
             Back to Home
           </Link>
           <Link className="brand" to="/">
-            BoardMate
+            <img className="brand-icon" src="/images/book.png" alt="BoardMate" />
+            <span className="brand-wordmark"><span className="brand-board">Board</span><span className="brand-mate">Mate</span></span>
           </Link>
         </div>
       </header>
@@ -49,7 +50,8 @@ function TopNavBar() {
     <header className="topbar">
       <div className="container nav-row">
         <Link className="brand" to="/">
-          BoardMate
+          <img className="brand-icon" src="/images/book.png" alt="BoardMate" />
+          <span className="brand-wordmark"><span className="brand-board">Board</span><span className="brand-mate">Mate</span></span>
         </Link>
 
         <nav className="nav-links nav-links-desktop" aria-label="Primary">

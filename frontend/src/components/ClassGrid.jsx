@@ -2,10 +2,9 @@ import React from 'react';
 
 function ClassGrid({ board, onSelectClass }) {
   return (
-    <div>
+    <div className="dashboard-section">
       <div className="section-header">
         <h1>Select Your Class</h1>
-        <p>All class levels are visible for {board.name}. Available content is live, and the rest are marked coming soon.</p>
       </div>
       <div className="card-grid">
         {board.classes.map((cls) => (

@@ -35,7 +35,7 @@ function ChatPanel({
     <main className="chat-panel">
       <div className="chat-header">
         <div className="chat-header-info">
-          <h2>{subject?.name || 'Subject'}</h2>
+          <h2>Chat</h2>
         </div>
 
         <div className="chat-header-controls">

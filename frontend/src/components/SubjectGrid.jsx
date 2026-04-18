@@ -13,10 +13,9 @@ function SubjectGrid({ board, classLevel }) {
   };
 
   return (
-    <div>
+    <div className="dashboard-section">
       <div className="section-header">
         <h1>Select Your Subject</h1>
-        <p>All core subjects are visible for {classLevel.name} - {board.name}. Available content is live, and the rest are marked coming soon.</p>
       </div>
       <div className="subject-card-grid">
         {classLevel.subjects.map((subject) => (
