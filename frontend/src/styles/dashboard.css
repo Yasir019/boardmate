@@ -370,6 +370,15 @@
   .subject-select-card {
     min-height: 250px;
   }
+
+  .board-card-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .subject-card-grid,
+  .card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 768px) {
@@ -386,6 +395,11 @@
   .subject-card-grid {
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 1rem;
+  }
+
+  .back-button {
+    width: 100%;
+    justify-content: center;
   }
 
   .board-select-card {
@@ -449,12 +463,24 @@
   .board-card-grid,
   .subject-card-grid,
   .card-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
     gap: 0.9rem;
   }
 
+  .dashboard {
+    padding: 0.85rem;
+  }
+
+  .section-header {
+    margin-bottom: 1.25rem;
+  }
+
+  .section-header h1 {
+    font-size: 1.45rem;
+  }
+
   .subject-select-card {
-    min-height: 228px;
+    min-height: 216px;
   }
 
   .class-select-card {
@@ -472,6 +498,7 @@
   .card,
   .class-select-card {
     border-radius: 18px;
+    min-height: unset;
   }
 
   .board-card-name,
@@ -487,5 +514,24 @@
   .card-description,
   .class-card-description {
     font-size: 0.78rem;
+  }
+
+  .board-card-media {
+    min-height: 96px;
+  }
+
+  .board-card-media img {
+    width: min(132px, 86%);
+    height: 72px;
+  }
+
+  .subject-card-media-shell {
+    min-height: 88px;
+  }
+
+  .subject-card-media {
+    width: 84px;
+    height: 84px;
+    border-radius: 22px;
   }
 }

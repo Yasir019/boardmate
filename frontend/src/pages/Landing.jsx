@@ -5,27 +5,22 @@ const boards = [
   {
     name: 'Punjab',
     image: new URL('../assets/images/Panjab board.jpeg', import.meta.url).href,
-    scale: 1,
   },
   {
     name: 'Sindh',
     image: new URL('../assets/images/SIndh board.jpeg', import.meta.url).href,
-    scale: 1.34,
   },
   {
     name: 'Balochistan',
     image: new URL('../assets/images/Balouchistan board.jpeg', import.meta.url).href,
-    scale: 1,
   },
   {
     name: 'Federal',
     image: new URL('../assets/images/Fedral board.png', import.meta.url).href,
-    scale: 1,
   },
   {
     name: 'KPK',
     image: new URL('../assets/images/KPK board.jpeg', import.meta.url).href,
-    scale: 1,
   },
 ];
 
@@ -211,7 +206,6 @@ function Landing() {
                   src={board.image}
                   alt={`${board.name} board logo`}
                   loading="lazy"
-                  style={{ '--logo-scale': String(board.scale ?? 1) }}
                 />
               ))}
             </div>

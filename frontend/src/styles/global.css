@@ -101,7 +101,7 @@ a {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding-top: 84px;
+  padding-top: 92px;
 }
 
 .app.chat-route .app-main {
@@ -162,10 +162,12 @@ a {
   left: 0;
   right: 0;
   z-index: 20;
-  background: rgba(236, 243, 237, 0.72);
-  backdrop-filter: blur(18px);
-  border-bottom: none;
-  box-shadow: none;
+  background:
+    radial-gradient(circle at top left, rgba(74, 225, 118, 0.1), transparent 32%),
+    linear-gradient(180deg, rgba(252, 251, 255, 0.92) 0%, rgba(250, 248, 255, 0.78) 100%);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(204, 212, 236, 0.18);
+  box-shadow: 0 10px 30px rgba(19, 27, 46, 0.035);
 }
 
 .topbar-minimal {
@@ -373,7 +375,7 @@ a {
 }
 
 .hero-section {
-  padding: 4rem 0 6rem;
+  padding: 4.5rem 0 6rem;
   overflow: hidden;
 }
 
@@ -544,7 +546,7 @@ a {
 }
 
 .section-kicker {
-  margin: 0 0 1.4rem;
+  margin: 0 0 2.3rem;
   color: var(--text-muted);
   text-align: center;
   text-transform: uppercase;
@@ -580,20 +582,24 @@ a {
 }
 
 .board-logo-img {
-  width: 92px;
-  height: 92px;
+  width: 96px;
+  height: 96px;
   object-fit: contain;
   object-position: center;
   background: transparent;
   mix-blend-mode: multiply;
   filter: contrast(1.06) saturate(1.08);
   opacity: 1;
-  transform: scale(var(--logo-scale, 1));
   transition: transform 180ms ease, opacity 180ms ease;
 }
 
+.boards-logos .board-logo-img:nth-child(2) {
+  width: 132px;
+  height: 132px;
+}
+
 .board-logo-img:hover {
-  transform: translateY(-2px) scale(var(--logo-scale, 1));
+  transform: translateY(-2px);
   opacity: 1;
 }
 
@@ -957,7 +963,7 @@ a {
 
 @media (max-width: 1024px) {
   .app-main {
-    padding-top: 76px;
+    padding-top: 84px;
   }
 
   .nav-row {
@@ -1051,22 +1057,29 @@ a {
 }
 
 @media (max-width: 1080px) {
-  .feature-grid,
-    width: 100%;
-    flex-wrap: nowrap;
-    justify-content: space-between;
-    gap: 0.7rem;
+  .hero-grid,
+  .split-section {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-copy,
+  .benefit-copy,
+  .section-heading {
+    max-width: 100%;
+  }
+
+  .feature-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-    width: 52px;
-    height: 52px;
   .footer-grid {
     grid-template-columns: 1fr;
   }
 
   .hero-visual {
+    width: 100%;
     max-width: 42rem;
+    margin-inline: auto;
   }
 
   .benefit-copy {
@@ -1100,6 +1113,16 @@ a {
     margin-bottom: 1.5rem;
   }
 
+  .hero-card {
+    padding: 0.8rem;
+    border-radius: 1.5rem;
+  }
+
+  .hero-card img,
+  .benefit-image {
+    border-radius: 1.1rem;
+  }
+
   .boards-logos {
     width: 100%;
     flex-wrap: nowrap;
@@ -1117,10 +1140,15 @@ a {
   }
 
   .board-logo-img {
+    width: 72px;
+    height: 72px;
     flex: 0 0 auto;
-    width: 64px;
-    height: 64px;
     scroll-snap-align: center;
+  }
+
+  .boards-logos .board-logo-img:nth-child(2) {
+    width: 98px;
+    height: 98px;
   }
 
   .pricing-value {
@@ -1166,6 +1194,10 @@ a {
 @media (max-width: 560px) {
   .container {
     width: min(calc(100% - 1.4rem), var(--container));
+  }
+
+  .app-main {
+    padding-top: 78px;
   }
 
   .brand {
@@ -1216,14 +1248,23 @@ a {
     font-size: clamp(2rem, 10.5vw, 2.5rem);
   }
 
+  .hero-section {
+    padding-top: 3.4rem;
+  }
+
   .boards-logos {
     gap: 0.85rem;
     padding-inline: 0.1rem;
   }
 
   .board-logo-img {
-    width: 56px;
-    height: 56px;
+    width: 60px;
+    height: 60px;
+  }
+
+  .boards-logos .board-logo-img:nth-child(2) {
+    width: 82px;
+    height: 82px;
   }
 
   .feature-card,
@@ -1234,6 +1275,12 @@ a {
 
   .cta-panel {
     padding: 3rem 1.25rem;
+  }
+
+  .cta-panel h2,
+  .section-heading h2,
+  .benefit-copy h2 {
+    font-size: clamp(1.8rem, 9vw, 2.35rem);
   }
 
   .orb-primary,
@@ -1249,8 +1296,14 @@ a {
 
 @media (max-width: 780px) {
   .board-logo-img {
-    width: 82px;
-    height: 82px;
+    width: 72px;
+    height: 72px;
+    flex-basis: 72px;
+  }
+
+  .boards-logos .board-logo-img:nth-child(2) {
+    width: 98px;
+    height: 98px;
   }
 }
 
