@@ -4,17 +4,17 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: #f6f8f6;
-  border: 1px solid rgba(188, 203, 185, 0.72);
-  border-radius: 20px;
-  box-shadow: 0 14px 28px rgba(19, 27, 46, 0.05);
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 18px;
+  box-shadow: 0 10px 24px rgba(19, 27, 46, 0.04);
   position: relative;
   overflow: hidden;
 }
 
 /* Fullscreen overrides */
 .pdf-viewer:fullscreen {
-  background: #f6f8f6;
+  background: #ffffff;
   z-index: 9999;
 }
 
@@ -85,16 +85,16 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: var(--chat-header-height, 72px);
-  padding: 0.7rem 1rem;
-  background: rgba(255, 255, 255, 0.92);
-  border-bottom: 1px solid rgba(188, 203, 185, 0.72);
+  min-height: var(--chat-header-height, 52px);
+  padding: 0.2rem 0.85rem;
+  background: #ffffff;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.88);
   flex-shrink: 0;
 }
 
 .pdf-header h3 {
   margin: 0;
-  font-size: 0.92rem;
+  font-size: 1rem;
   font-weight: 800;
   color: var(--text-primary);
   flex: 1;
@@ -149,7 +149,7 @@
 .pdf-control-btn {
   padding: 0.35rem;
   background: #ffffff;
-  border: 1px solid rgba(188, 203, 185, 0.88);
+  border: 1px solid rgba(226, 232, 240, 0.95);
   border-radius: 10px;
   color: var(--text-secondary);
   cursor: pointer;
@@ -163,9 +163,9 @@
 }
 
 .pdf-control-btn:hover:not(:disabled) {
-  background: rgba(216, 255, 224, 0.4);
+  background: #f8fafc;
   color: var(--primary-color);
-  border-color: rgba(0, 110, 47, 0.24);
+  border-color: rgba(148, 163, 184, 0.45);
 }
 
 .pdf-control-btn:disabled {
@@ -195,7 +195,7 @@
   flex: 1;
   position: relative;
   overflow: auto;
-  background: #edf2ee;
+  background: #f8fafc;
   min-height: 0;
   padding: 1.1rem;
 }
@@ -250,8 +250,8 @@
 }
 
 .pdf-studio-panel {
-  border-left: 1px solid rgba(188, 203, 185, 0.72);
-  background: rgba(248, 251, 248, 0.95);
+  border-left: 1px solid rgba(226, 232, 240, 0.95);
+  background: #ffffff;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -271,21 +271,21 @@
 }
 
 .pdf-studio-card-grid {
-  padding: 0.75rem 0.62rem 0.62rem;
+  padding: 0.62rem 0.5rem 0.5rem;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.42rem;
+  gap: 0.34rem;
 }
 
 .pdf-studio-card {
-  border: 1px solid rgba(188, 203, 185, 0.75);
+  border: 1px solid rgba(226, 232, 240, 0.95);
   border-radius: 11px;
   background: #ffffff;
   text-align: left;
-  padding: 0.54rem 0.58rem;
+  padding: 0.46rem 0.5rem;
   display: grid;
-  gap: 0.12rem;
-  min-height: 54px;
+  gap: 0.1rem;
+  min-height: 48px;
 }
 
 .pdf-studio-card:disabled {
@@ -296,13 +296,13 @@
 .pdf-studio-card-head {
   display: inline-flex;
   align-items: center;
-  gap: 0.36rem;
+  gap: 0.3rem;
 }
 
 .pdf-studio-card-icon {
-  width: 21px;
-  height: 21px;
-  border-radius: 7px;
+  width: 19px;
+  height: 19px;
+  border-radius: 6px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -324,8 +324,8 @@
 }
 
 .pdf-studio-card:hover {
-  background: rgba(216, 255, 224, 0.35);
-  border-color: rgba(0, 110, 47, 0.28);
+  background: #f8fafc;
+  border-color: rgba(148, 163, 184, 0.38);
 }
 
 .pdf-studio-card.is-video {
@@ -357,22 +357,22 @@
 
 .pdf-studio-card-title {
   color: var(--text-primary);
-  font-size: 0.84rem;
+  font-size: 0.8rem;
   font-weight: 800;
 }
 
 .pdf-studio-card-sub {
   color: var(--text-secondary);
-  font-size: 0.76rem;
+  font-size: 0.72rem;
   font-weight: 600;
 }
 
 .pdf-studio-history {
   margin-top: 0.72rem;
-  border-top: 1px solid rgba(188, 203, 185, 0.72);
-  padding-top: 0.68rem;
-  padding-left: 0.62rem;
-  padding-right: 0.62rem;
+  border-top: 1px solid rgba(226, 232, 240, 0.95);
+  padding-top: 0.6rem;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -401,7 +401,7 @@
 }
 
 .pdf-studio-result-item {
-  border: 1px solid rgba(188, 203, 185, 0.75);
+  border: 1px solid rgba(226, 232, 240, 0.95);
   border-radius: 10px;
   background: #ffffff;
   display: grid;
@@ -431,8 +431,8 @@
 }
 
 .pdf-studio-result-item.status-ready:hover {
-  border-color: rgba(0, 110, 47, 0.3);
-  background: rgba(216, 255, 224, 0.35);
+  border-color: rgba(34, 197, 94, 0.28);
+  background: #f0fdf4;
 }
 
 .pdf-studio-result-delete {

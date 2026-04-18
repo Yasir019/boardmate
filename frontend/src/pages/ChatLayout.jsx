@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import ChapterList from '../components/ChapterList';
 import ChatPanel from '../components/ChatPanel';
 import PdfViewer from '../components/PdfViewer';
 import { api } from '../api/client';
-import { isAuthenticated } from '../utils/auth';
+import { clearSession, getUser, isAuthenticated } from '../utils/auth';
 import {
   browserSupportsSpeechRecognition,
   browserSupportsSpeechSynthesis,
@@ -53,6 +53,7 @@ const UI_TEXT = {
 };
 
 function ChatLayout() {
+  const navigate = useNavigate();
   const { board, classLevel, subject } = useParams();
   const [chapters, setChapters] = useState([]);
   const [selectedChapter, setSelectedChapter] = useState(null);
@@ -83,15 +84,18 @@ function ChatLayout() {
     error: '',
     isDeleting: false,
   });
+  const [isWorkspaceMenuOpen, setIsWorkspaceMenuOpen] = useState(false);
   const recognitionRef = useRef(null);
   const voiceStartTimeoutRef = useRef(null);
   const latestSessionLoadIdRef = useRef(0);
   const isSendingRef = useRef(false);
   const lastSendRef = useRef({ chapterKey: '', text: '', at: 0 });
+  const workspaceMenuRef = useRef(null);
 
   const boardData = { id: board, name: board };
   const classData = { id: classLevel, name: classLevel };
   const subjectData = { id: subject, name: subject };
+  const user = getUser();
   const speechRecognitionSupported = browserSupportsSpeechRecognition();
   const speechSynthesisSupported = browserSupportsSpeechSynthesis();
   const text = UI_TEXT[language] || UI_TEXT.en;
@@ -256,6 +260,32 @@ function ChatLayout() {
       voiceStartTimeoutRef.current = null;
     }
   };
+
+  useEffect(() => {
+    if (!isWorkspaceMenuOpen) {
+      return undefined;
+    }
+
+    const handlePointerDown = (event) => {
+      if (!workspaceMenuRef.current?.contains(event.target)) {
+        setIsWorkspaceMenuOpen(false);
+      }
+    };
+
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        setIsWorkspaceMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isWorkspaceMenuOpen]);
 
   useEffect(() => {
     latestSessionLoadIdRef.current += 1;
@@ -798,135 +828,200 @@ function ChatLayout() {
     setShowPdfPanel((prev) => !prev);
   };
 
+  const handleLogout = () => {
+    clearSession();
+    navigate('/signin', { replace: true });
+  };
+
+  const userDisplayName = user?.full_name?.trim() || user?.email?.trim() || 'BoardMate User';
+  const userEmail = user?.email?.trim().toLowerCase() || '';
+  const hasCustomProfileImage = userEmail === 'muhammadyasirali.ai@gmail.com';
+  const avatarLabel = userDisplayName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() || '')
+    .join('') || 'BM';
+
   return (
     <div className={layoutClasses}>
+      <header className="workspace-topbar">
+        <Link className="brand workspace-brand" to="/">
+          <img className="brand-icon workspace-brand-logo" src="/images/book.png" alt="BoardMate" />
+          <span className="brand-wordmark workspace-brand-name">
+            <span className="brand-board">Board</span>
+            <span className="brand-mate">Mate</span>
+          </span>
+        </Link>
+
+        <div className="workspace-actions" ref={workspaceMenuRef}>
+          <div className="workspace-avatar" aria-hidden="true">
+            {hasCustomProfileImage ? (
+              <img
+                src="/images/Myprofile.jpg"
+                alt=""
+                className="workspace-avatar-image"
+              />
+            ) : (
+              avatarLabel
+            )}
+          </div>
+
+          <button
+            type="button"
+            className="workspace-settings-btn"
+            onClick={() => setIsWorkspaceMenuOpen((prev) => !prev)}
+            aria-haspopup="menu"
+            aria-expanded={isWorkspaceMenuOpen}
+            aria-label="Open settings menu"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 .99-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 .99 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51.99H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51.99V15z" />
+            </svg>
+            <span>Settings</span>
+          </button>
+
+          {isWorkspaceMenuOpen && (
+            <div className="workspace-settings-menu" role="menu" aria-label="Workspace settings">
+              <button type="button" className="workspace-settings-item workspace-settings-item-upgrade" role="menuitem">
+                Upgrade to BoardMate
+              </button>
+              <button type="button" className="workspace-settings-item" role="menuitem" onClick={handleLogout}>
+                Logout
+              </button>
+            </div>
+          )}
+        </div>
+      </header>
+
       {showChapterPanel && (
         <ChapterList
           chapters={chapters}
+            selectedChapter={selectedChapter}
+            onSelectChapter={handleSelectChapter}
+            isLoading={isLoadingChapters}
+            chatSessions={currentChapterSessions}
+            activeChatId={activeChatId}
+            onSelectChat={handleSelectChat}
+            onNewChat={handleNewChat}
+            onRenameChat={handleRenameChat}
+            onDeleteChat={handleDeleteChat}
+            onCollapsePanel={handleToggleChapterPanel}
+          />
+        )}
+
+        {!showChapterPanel && (
+          <button
+            type="button"
+            className="panel-reopen-handle left"
+            onClick={handleToggleChapterPanel}
+            title="Show chapters panel"
+            aria-label="Show chapters panel"
+          >
+            <span aria-hidden="true">&rsaquo;</span>
+          </button>
+        )}
+
+        <ChatPanel
+          board={boardData}
+          classLevel={classData}
+          subject={subjectData}
           selectedChapter={selectedChapter}
-          onSelectChapter={handleSelectChapter}
-          isLoading={isLoadingChapters}
-          chatSessions={currentChapterSessions}
-          activeChatId={activeChatId}
-          onSelectChat={handleSelectChat}
-          onNewChat={handleNewChat}
-          onRenameChat={handleRenameChat}
-          onDeleteChat={handleDeleteChat}
-          onCollapsePanel={handleToggleChapterPanel}
-        />
-      )}
-
-      {!showChapterPanel && (
-        <button
-          type="button"
-          className="panel-reopen-handle left"
-          onClick={handleToggleChapterPanel}
-          title="Show chapters panel"
-          aria-label="Show chapters panel"
-        >
-          <span aria-hidden="true">&rsaquo;</span>
-        </button>
-      )}
-
-      <ChatPanel
-        board={boardData}
-        classLevel={classData}
-        subject={subjectData}
-        selectedChapter={selectedChapter}
-        messages={messages}
-        onSendMessage={handleSendMessage}
-        isLoading={isLoading || isLoadingSessions}
-        chatEnabled={true}
-        language={language}
-        onLanguageChange={setLanguage}
-        onStartVoiceInput={handleStartVoiceInput}
-        onStopVoiceInput={handleStopVoiceInput}
-        isListening={isListening}
-        speechRecognitionSupported={speechRecognitionSupported}
-        speechSynthesisSupported={speechSynthesisSupported}
-        onSpeakMessage={handleSpeakMessage}
-        activeSpeechMessageId={activeSpeechMessageId}
-        voiceError={voiceError}
-        inputPlaceholder={text.inputPlaceholder}
-      />
-
-      {!showPdfPanel && (
-        <button
-          type="button"
-          className="panel-reopen-handle right"
-          onClick={handleTogglePdfPanel}
-          title="Show book panel"
-          aria-label="Show book panel"
-        >
-          <span aria-hidden="true">&lsaquo;</span>
-        </button>
-      )}
-
-      {showPdfPanel && (
-        <PdfViewer
-          pdfUrl={pdfUrl}
-          chapterTitle={selectedChapter?.name}
-          board={board}
-          classLevel={classLevel}
-          subject={subject}
-          chapterId={selectedChapter?.chapter}
+          messages={messages}
+          onSendMessage={handleSendMessage}
+          isLoading={isLoading || isLoadingSessions}
+          chatEnabled={true}
           language={language}
-          onCollapsePanel={handleTogglePdfPanel}
+          onLanguageChange={setLanguage}
+          onStartVoiceInput={handleStartVoiceInput}
+          onStopVoiceInput={handleStopVoiceInput}
+          isListening={isListening}
+          speechRecognitionSupported={speechRecognitionSupported}
+          speechSynthesisSupported={speechSynthesisSupported}
+          onSpeakMessage={handleSpeakMessage}
+          activeSpeechMessageId={activeSpeechMessageId}
+          voiceError={voiceError}
+          inputPlaceholder={text.inputPlaceholder}
         />
-      )}
 
-      {renameDialog.open && (
-        <div className="dialog-backdrop" onClick={closeRenameDialog}>
-          <div className="dialog-card" role="dialog" aria-modal="true" aria-label="Rename chat" onClick={(event) => event.stopPropagation()}>
-            <h3>Rename chat</h3>
-            <input
-              type="text"
-              value={renameDialog.title}
-              onChange={(event) => setRenameDialog((prev) => ({ ...prev, title: event.target.value, error: '' }))}
-              className="dialog-input"
-              maxLength={200}
-              autoFocus
-            />
-            {renameDialog.error && <div className="dialog-error">{renameDialog.error}</div>}
-            <div className="dialog-actions">
-              <button type="button" className="dialog-btn" onClick={closeRenameDialog}>
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="dialog-btn primary"
-                onClick={confirmRenameChat}
-                disabled={renameDialog.isSaving}
-              >
-                {renameDialog.isSaving ? 'Saving...' : 'Save'}
-              </button>
+        {!showPdfPanel && (
+          <button
+            type="button"
+            className="panel-reopen-handle right"
+            onClick={handleTogglePdfPanel}
+            title="Show book panel"
+            aria-label="Show book panel"
+          >
+            <span aria-hidden="true">&lsaquo;</span>
+          </button>
+        )}
+
+        {showPdfPanel && (
+          <PdfViewer
+            pdfUrl={pdfUrl}
+            chapterTitle={selectedChapter?.name}
+            board={board}
+            classLevel={classLevel}
+            subject={subject}
+            chapterId={selectedChapter?.chapter}
+            language={language}
+            onCollapsePanel={handleTogglePdfPanel}
+          />
+        )}
+
+        {renameDialog.open && (
+          <div className="dialog-backdrop" onClick={closeRenameDialog}>
+            <div className="dialog-card" role="dialog" aria-modal="true" aria-label="Rename chat" onClick={(event) => event.stopPropagation()}>
+              <h3>Rename chat</h3>
+              <input
+                type="text"
+                value={renameDialog.title}
+                onChange={(event) => setRenameDialog((prev) => ({ ...prev, title: event.target.value, error: '' }))}
+                className="dialog-input"
+                maxLength={200}
+                autoFocus
+              />
+              {renameDialog.error && <div className="dialog-error">{renameDialog.error}</div>}
+              <div className="dialog-actions">
+                <button type="button" className="dialog-btn" onClick={closeRenameDialog}>
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="dialog-btn primary"
+                  onClick={confirmRenameChat}
+                  disabled={renameDialog.isSaving}
+                >
+                  {renameDialog.isSaving ? 'Saving...' : 'Save'}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {deleteDialog.open && (
-        <div className="dialog-backdrop" onClick={closeDeleteDialog}>
-          <div className="dialog-card" role="dialog" aria-modal="true" aria-label="Delete chat" onClick={(event) => event.stopPropagation()}>
-            <h3>Delete chat?</h3>
-            <p className="dialog-message">This will permanently delete "{deleteDialog.title}".</p>
-            {deleteDialog.error && <div className="dialog-error">{deleteDialog.error}</div>}
-            <div className="dialog-actions">
-              <button type="button" className="dialog-btn" onClick={closeDeleteDialog}>
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="dialog-btn danger"
-                onClick={confirmDeleteChat}
-                disabled={deleteDialog.isDeleting}
-              >
-                {deleteDialog.isDeleting ? 'Deleting...' : 'Delete'}
-              </button>
+        {deleteDialog.open && (
+          <div className="dialog-backdrop" onClick={closeDeleteDialog}>
+            <div className="dialog-card" role="dialog" aria-modal="true" aria-label="Delete chat" onClick={(event) => event.stopPropagation()}>
+              <h3>Delete chat?</h3>
+              <p className="dialog-message">This will permanently delete "{deleteDialog.title}".</p>
+              {deleteDialog.error && <div className="dialog-error">{deleteDialog.error}</div>}
+              <div className="dialog-actions">
+                <button type="button" className="dialog-btn" onClick={closeDeleteDialog}>
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="dialog-btn danger"
+                  onClick={confirmDeleteChat}
+                  disabled={deleteDialog.isDeleting}
+                >
+                  {deleteDialog.isDeleting ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
     </div>
   );
 }
