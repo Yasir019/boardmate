@@ -154,13 +154,13 @@ const footerSections = [
     title: 'Contact Us',
     links: [
       {
-        label: 'Email Us',
+        label: 'Email',
         value: 'muhammadyasirali.ai@gmail.com',
         href: 'mailto:muhammadyasirali.ai@gmail.com',
         icon: 'mail',
       },
       {
-        label: 'Contact Us',
+        label: 'Phone',
         value: '03041529500',
         href: 'tel:03041529500',
         icon: 'call',
@@ -302,7 +302,7 @@ function Landing() {
                   </div>
                 ))}
               </div>
-              <Link className="button button-primary" to={ctaTarget}>
+              <Link className="button button-hero" to={ctaTarget}>
                 Experience BoardMate AI
               </Link>
             </div>
@@ -344,7 +344,7 @@ function Landing() {
                     </button>
                   ) : (
                     <Link
-                      className="button button-outline"
+                      className="button button-hero"
                       to={ctaTarget}
                     >
                       {plan.cta}
@@ -418,6 +418,7 @@ function Landing() {
         <div className="container footer-grid">
           <div className="footer-brand">
             <a className="brand footer-logo" href="#hero">
+              <img className="brand-icon footer-brand-icon" src="/images/book.png" alt="BoardMate" />
               <span className="brand-wordmark"><span className="brand-board">Board</span><span className="brand-mate">Mate</span></span>
             </a>
             <p>
@@ -437,26 +438,29 @@ function Landing() {
                     ) : link.to ? (
                       <Link to={link.to}>{link.label}</Link>
                     ) : (
-                      <a
-                        className={link.value ? 'footer-contact-link' : undefined}
-                        href={link.href || '#hero'}
-                        target={link.href?.startsWith('http') ? '_blank' : undefined}
-                        rel={link.href?.startsWith('http') ? 'noreferrer' : undefined}
-                      >
-                        {link.icon ? (
-                          <span className="footer-contact-icon" aria-hidden="true">
-                            <Icon name={link.icon} />
-                          </span>
-                        ) : null}
-                        {link.value ? (
+                      link.value ? (
+                        <div className="footer-contact-row">
+                          {link.icon ? (
+                            <span className="footer-contact-icon" aria-hidden="true">
+                              <Icon name={link.icon} />
+                            </span>
+                          ) : null}
                           <span className="footer-contact-text">
                             <span className="footer-contact-label">{link.label}</span>
-                            <span className="footer-contact-value">{link.value}</span>
+                            <a className="footer-contact-value-link" href={link.href || '#hero'}>
+                              {link.value}
+                            </a>
                           </span>
-                        ) : (
-                          link.label
-                        )}
-                      </a>
+                        </div>
+                      ) : (
+                        <a
+                          href={link.href || '#hero'}
+                          target={link.href?.startsWith('http') ? '_blank' : undefined}
+                          rel={link.href?.startsWith('http') ? 'noreferrer' : undefined}
+                        >
+                          {link.label}
+                        </a>
+                      )
                     )}
                   </li>
                 ))}

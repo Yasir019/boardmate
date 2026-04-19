@@ -56,9 +56,9 @@ export const boardCatalog = [
     name: 'Sindh',
     color: '#2563eb',
     logo: sindhLogo,
-    available: true,
-    status: 'Available now',
-    classes: buildClasses('9th', ['Physics']),
+    available: false,
+    status: 'Coming Soon',
+    classes: [],
   },
   {
     id: 'Federal',
