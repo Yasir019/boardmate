@@ -26,6 +26,7 @@ from app.services.llm_service import (
     build_session_memory_context,
     generate_session_summary,
     generate_response_with_provider,
+    maybe_build_conversational_reply,
 )
 
 router = APIRouter()
@@ -632,7 +633,7 @@ async def generate_studio_content(
                 class_level=request.class_level,
                 subject=request.subject,
                 chapter=request.chapter,
-                top_k=max(16, retrieval_top_k),
+                top_k=max(32, retrieval_top_k * 2),
             )
         else:
             retrieval = rag_pipeline.retrieve_context_for_scope(
@@ -679,8 +680,8 @@ async def generate_studio_content(
             system_prompt = EXERCISE_SYSTEM_PROMPT
             temperature = 0.35
             top_p = 0.9
-            max_tokens = 4096
-            context_budgets = [22000, 14000]
+            max_tokens = 8192
+            context_budgets = [48000, 32000]
         else:
             raise HTTPException(status_code=422, detail=f"Unsupported studio task: {request.task}")
 
@@ -849,6 +850,21 @@ async def ask_question(
 ):
     """Ask a question about textbook content with session memory persistence."""
     try:
+        conversational_reply = maybe_build_conversational_reply(
+            question=request.question,
+            board=request.board,
+            class_level=request.class_level,
+            subject=request.subject,
+            language=request.language,
+        )
+        if conversational_reply:
+            return ChatResponse(
+                answer=conversational_reply,
+                sources=[],
+                chat_id=request.chat_id,
+                llm_provider="rule-based",
+            )
+
         auth_user = current_user
         chat: Chat | None = None
         chat_history_text = ""
@@ -859,9 +875,9 @@ async def ask_question(
             history_stmt = select(Message).where(Message.chat_id == chat.id)
             if request.chapter:
                 history_stmt = history_stmt.where(Message.chapter == request.chapter)
-            history_stmt = history_stmt.order_by(desc(Message.created_at)).limit(20)
+            history_stmt = history_stmt.order_by(desc(Message.created_at)).limit(12)
             recent_messages = list(reversed(db.scalars(history_stmt).all()))
-            chat_history_text = _build_chat_history_text(recent_messages, limit=12)
+            chat_history_text = _build_chat_history_text(recent_messages, limit=8)
             session_system_prompt = _build_session_prompt_system()
 
         result = rag_pipeline.query(

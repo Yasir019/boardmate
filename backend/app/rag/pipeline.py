@@ -280,7 +280,7 @@ class RAGPipeline:
         class_level: str,
         subject: str,
         chapter: str | None,
-        top_k: int = 18,
+        top_k: int = 32,
     ) -> Dict:
         """Retrieve exercise-focused chapter context, prioritizing exercise sections."""
         self._ensure_models_loaded()
@@ -295,7 +295,7 @@ class RAGPipeline:
 
         filtered_docs = self.vector_store.get_documents(
             filters=filters,
-            limit=max(48, top_k * 4),
+            limit=max(96, top_k * 6),
         )
 
         indexed_docs = list(enumerate(filtered_docs))

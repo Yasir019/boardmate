@@ -3,6 +3,7 @@
 import json
 import logging
 import re
+import time
 from urllib import error as urlerror
 from urllib import request as urlrequest
 from functools import lru_cache
@@ -32,10 +33,21 @@ CLOUD_LLM_UNAVAILABLE_MESSAGE = (
 
 # How long (seconds) to wait when probing internet connectivity.
 _INTERNET_PROBE_TIMEOUT = 3
+_INTERNET_PROBE_CACHE_TTL = 30
+_internet_probe_cache: dict[str, float | bool] = {
+    "checked_at": 0.0,
+    "is_available": False,
+}
 
 
 def _is_internet_available() -> bool:
     """Return True if we can reach the Groq API endpoint, False otherwise."""
+    now = time.time()
+    checked_at = float(_internet_probe_cache.get("checked_at") or 0.0)
+    if now - checked_at < _INTERNET_PROBE_CACHE_TTL:
+        return bool(_internet_probe_cache.get("is_available"))
+
+    is_available = False
     try:
         req = urlrequest.Request(
             "https://api.groq.com",
@@ -43,9 +55,13 @@ def _is_internet_available() -> bool:
             method="HEAD",
         )
         with urlrequest.urlopen(req, timeout=_INTERNET_PROBE_TIMEOUT):
-            return True
+            is_available = True
     except Exception:
-        return False
+        is_available = False
+
+    _internet_probe_cache["checked_at"] = now
+    _internet_probe_cache["is_available"] = is_available
+    return is_available
 
 SESSION_MEMORY_SYSTEM_PROMPT = """
 You are BoardMate, an AI educational assistant for Pakistani board students.
