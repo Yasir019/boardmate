@@ -127,6 +127,54 @@ class VectorStore:
             for doc, score in results
         ]
 
+    def get_documents(
+        self,
+        filters: Optional[Dict[str, str]] = None,
+        limit: int | None = None,
+    ) -> List[Dict]:
+        """Fetch documents by metadata filters without semantic similarity ranking."""
+        where = None
+        if filters:
+            valid_filters = {k: v for k, v in filters.items() if v is not None}
+            if len(valid_filters) == 1:
+                key, value = list(valid_filters.items())[0]
+                where = {key: {"$eq": value}}
+            elif len(valid_filters) > 1:
+                where = {
+                    "$and": [
+                        {k: {"$eq": v}} for k, v in valid_filters.items()
+                    ]
+                }
+
+        def _run_get():
+            kwargs = {
+                "where": where,
+                "include": ["documents", "metadatas"],
+            }
+            if limit and limit > 0:
+                kwargs["limit"] = limit
+            return self.vectorstore.get(**kwargs)
+
+        try:
+            data = _run_get()
+        except Exception as e:
+            if "client has been closed" in str(e).lower():
+                logger.warning("Vector client was closed during get_documents, reconnecting and retrying once")
+                self._reconnect()
+                data = _run_get()
+            else:
+                raise
+
+        documents = data.get("documents", []) or []
+        metadatas = data.get("metadatas", []) or []
+        results: List[Dict] = []
+        for idx, text in enumerate(documents):
+            if not text:
+                continue
+            metadata = metadatas[idx] if idx < len(metadatas) and isinstance(metadatas[idx], dict) else {}
+            results.append({"text": text, "metadata": metadata})
+        return results
+
     def as_retriever(self, search_kwargs: Dict = None):
         """Return a LangChain retriever interface."""
         return self.vectorstore.as_retriever(

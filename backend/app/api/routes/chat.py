@@ -3,19 +3,30 @@ from collections import defaultdict, deque
 from hashlib import sha1
 import json
 import random
+import re
 from uuid import uuid4
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
 from app.api.routes.auth import get_current_user, get_optional_current_user
 from app.db.models import Chat, Message, User
 from app.db.session import get_db
 from app.rag.pipeline import rag_pipeline
-from app.services.llm_service import EXERCISE_SYSTEM_PROMPT, QUIZ_SYSTEM_PROMPT, generate_response_with_provider
+from app.services.llm_service import (
+    CLOUD_LLM_UNAVAILABLE_MESSAGE,
+    EXERCISE_SYSTEM_PROMPT,
+    LOCAL_LLM_UNAVAILABLE_MESSAGE,
+    QUIZ_SYSTEM_PROMPT,
+    SUMMARY_SYSTEM_PROMPT,
+    SESSION_MEMORY_SYSTEM_PROMPT,
+    build_session_memory_context,
+    generate_session_summary,
+    generate_response_with_provider,
+)
 
 router = APIRouter()
 
@@ -213,6 +224,25 @@ def _extract_quiz_stems(answer: str) -> list[str]:
     return unique_stems[:10]
 
 
+def _count_quiz_questions(answer: str) -> int:
+    text = (answer or "").strip()
+    if not text:
+        return 0
+
+    parsed = _try_parse_json_object(text)
+    if parsed and isinstance(parsed.get("questions"), list):
+        return len(parsed.get("questions") or [])
+
+    count = 0
+    for line in text.splitlines():
+        cleaned = line.strip().lower()
+        if re.match(r"^##\s*question\s+\d+", cleaned):
+            count += 1
+        elif re.match(r"^q\d+[\).:]", cleaned):
+            count += 1
+    return count
+
+
 def _try_parse_json_object(answer: str) -> dict[str, Any] | None:
     text = (answer or "").strip()
     if not text:
@@ -300,83 +330,283 @@ def _extract_exercise_solutions(answer: str) -> list[dict[str, Any]]:
     return normalized
 
 
+def _extract_exercise_questions_from_context(context: str) -> list[dict[str, str]]:
+    lines = [line.strip() for line in (context or "").splitlines() if line.strip()]
+    if not lines:
+        return []
+
+    question_patterns = (
+        re.compile(r"^(?:q(?:uestion)?\s*)?(\d+[a-zA-Z]?)\s*[\)\.:\-]\s+(.+)$", re.IGNORECASE),
+        re.compile(r"^q\.?\s*(\d+[a-zA-Z]?)\s+(.+)$", re.IGNORECASE),
+        re.compile(r"^(\d+[a-zA-Z]?)\s+(.+\?)$", re.IGNORECASE),
+    )
+
+    extracted: list[dict[str, str]] = []
+    seen = set()
+    for line in lines:
+        for pattern in question_patterns:
+            match = pattern.match(line)
+            if not match:
+                continue
+
+            question_no = (match.group(1) or "").strip()
+            question_text = " ".join((match.group(2) or "").split()).strip()
+            if not question_text or len(question_text) < 8:
+                continue
+
+            signature = f"{question_no.lower()}::{question_text.lower()}"
+            if signature in seen:
+                continue
+
+            seen.add(signature)
+            extracted.append({
+                "question_no": question_no or str(len(extracted) + 1),
+                "question": question_text,
+            })
+            break
+
+    return extracted
+
+
+def _merge_exercise_batch_results(
+    batch_questions: list[dict[str, str]],
+    parsed_solutions: list[dict[str, Any]],
+    raw_answer: str,
+) -> list[dict[str, Any]]:
+    mapped = {
+        f"{str(item.get('question_no', '')).strip().lower()}::{' '.join(str(item.get('question', '')).split()).lower()}": item
+        for item in parsed_solutions
+        if isinstance(item, dict)
+    }
+
+    merged: list[dict[str, Any]] = []
+    fallback_text = " ".join((raw_answer or "").split())[:600]
+    for index, question_item in enumerate(batch_questions, start=1):
+        question_no = str(question_item.get("question_no") or index).strip()
+        question_text = " ".join(str(question_item.get("question") or "").split()).strip()
+        signature = f"{question_no.lower()}::{question_text.lower()}"
+
+        existing = mapped.get(signature)
+        if existing:
+            merged.append(existing)
+            continue
+
+        merged.append({
+            "question_no": question_no,
+            "question": question_text,
+            "answer": (
+                "Context-based detailed answer could not be parsed reliably from model output. "
+                "Please retry generation for this chapter."
+                + (f" Parsed excerpt: {fallback_text}" if fallback_text else "")
+            ),
+            "steps": [],
+            "key_points": ["Re-run generation for a cleaner structured answer if needed."],
+        })
+
+    return merged
+
+
+def _build_chat_history_text(messages: list[Message], limit: int = 12) -> str:
+    """Build conversation history with sliding window buffer for session continuity."""
+    if not messages:
+        return ""
+
+    clipped = messages[-limit:]
+    msg_dicts = []
+    for msg in clipped:
+        role = msg.role
+        content = " ".join((msg.content or "").split())
+        if not content:
+            continue
+        msg_dicts.append({"role": role, "content": content[:700]})
+    
+    return build_session_memory_context(msg_dicts, max_messages=limit, include_summary=True)
+
+
+def _build_session_prompt_system() -> str:
+    """Return the system prompt for session-persistent chat."""
+    return SESSION_MEMORY_SYSTEM_PROMPT
+
+
+def _raise_if_studio_llm_unavailable(answer: str, llm_provider: str | None) -> None:
+    if llm_provider != "error":
+        return
+
+    detail = (answer or "").strip() or CLOUD_LLM_UNAVAILABLE_MESSAGE
+    if detail == LOCAL_LLM_UNAVAILABLE_MESSAGE:
+        detail = (
+            "AI assistant could not complete the request using cloud, and local model server is not running. "
+            "For hybrid mode, keep LLM_MODE=auto, verify GROQ API/network, or start Ollama local server."
+        )
+
+    raise HTTPException(status_code=503, detail=detail)
+
+
+def _trim_context_to_budget(context: str, max_chars: int) -> str:
+    text = (context or "").strip()
+    if not text or len(text) <= max_chars:
+        return text
+
+    chunks = [chunk.strip() for chunk in text.split("\n\n---\n\n") if chunk.strip()]
+    if not chunks:
+        return text[:max_chars]
+
+    selected: list[str] = []
+    total = 0
+    for chunk in chunks:
+        next_total = total + len(chunk) + (7 if selected else 0)
+        if next_total > max_chars:
+            break
+        selected.append(chunk)
+        total = next_total
+
+    return "\n\n---\n\n".join(selected) if selected else text[:max_chars]
+
+
 def _studio_prompt(task: str, chapter: str, generation_nonce: str, quiz_count: int | None = None) -> str:
+    """Build a tight, grounded user prompt for studio generation tasks."""
     normalized_task = _normalize_studio_task(task)
 
     if normalized_task == "quiz":
         question_count = quiz_count if quiz_count is not None else 15
         return (
-            f"Generate exactly {question_count} multiple-choice quiz questions from chapter '{chapter}'.\n"
-            f"Generation nonce (must influence variation): {generation_nonce}.\n"
-            "Return ONLY valid JSON with this exact schema:\n"
-            "{\n"
-            "  \"quiz_title\": \"string\",\n"
-            "  \"variant_id\": \"string\",\n"
-            "  \"questions\": [\n"
-            "    {\n"
-            "      \"question\": \"string\",\n"
-            "      \"options\": [\"string\", \"string\", \"string\", \"string\"],\n"
-            "      \"answer_index\": 0,\n"
-            "      \"explanation\": \"string\"\n"
-            "    }\n"
-            "  ]\n"
-            "}\n"
-            "Rules:\n"
-            "1) Output must be JSON only, no markdown/prose outside JSON.\n"
-            "2) Every question must have exactly 4 options.\n"
-            "3) answer_index must be 0..3 and match the correct option.\n"
-            "4) No duplicate questions. Keep wording student-friendly and exam-focused.\n"
-            "5) Ensure this quiz variant is unique for this generation nonce."
+            f"Generate {question_count} multiple-choice questions from chapter '{chapter}'.\n"
+            f"Nonce: {generation_nonce} (use it to vary question selection).\n\n"
+            "RULES:\n"
+            "- Use ONLY the context provided — do not draw on outside knowledge.\n"
+            "- If context supports fewer than 10 questions, generate only what context supports and note the limitation.\n"
+            "- Output plain text (no JSON, no code blocks).\n"
+            "- Cover the FULL chapter breadth — vary topic, type, and difficulty.\n"
+            "- 4 options (A–D) per question; exactly 1 correct; wrong options must be plausible.\n"
+            "- Never reveal the answer in the question wording.\n"
+            "- End with: ✔ Quiz complete — [X] questions from the chapter."
         )
 
     if normalized_task == "summary":
         return (
-            f"Create exam-focused study notes for chapter '{chapter}'.\n"
-            f"Generation nonce (must influence variation): {generation_nonce}.\n"
-            "Return ONLY valid JSON with this exact schema:\n"
-            "{\n"
-            "  \"summary_title\": \"string\",\n"
-            "  \"variant_id\": \"string\",\n"
-            "  \"overview\": \"string\",\n"
-            "  \"detailed_notes\": \"string\",\n"
-            "  \"key_concepts\": [\"string\"],\n"
-            "  \"important_terms\": [{\"term\": \"string\", \"definition\": \"string\"}],\n"
-            "  \"exam_takeaways\": [\"string\"],\n"
-            "  \"revision_questions\": [\"string\"]\n"
-            "}\n"
-            "Rules:\n"
-            "1) Output must be JSON only, no markdown/prose outside JSON.\n"
-            "2) detailed_notes must contain at least 1000 words in professional plain language.\n"
-            "3) Keep wording practical, student-friendly, and exam-focused.\n"
-            "4) Ensure this summary wording is unique for this generation nonce and easy-to-read for students."
+            f"Write structured study notes for chapter '{chapter}'.\n"
+            f"Nonce: {generation_nonce} (vary emphasis across attempts).\n\n"
+            "RULES:\n"
+            "- Use ONLY the provided context — no external knowledge.\n"
+            "- If context is thin, write a shorter accurate summary and state the limitation.\n"
+            "- Output clean plain text (no JSON, no code blocks).\n"
+            "- Follow the system-prompt structure exactly: Overview, Key Points, Conclusion.\n"
+            "- Every sentence must be traceable to the context."
         )
 
     if normalized_task == "exercise":
         return (
-            f"Create chapter exercise solutions for chapter '{chapter}'.\n"
-            f"Generation nonce (must influence variation): {generation_nonce}.\n"
-            "Return ONLY valid JSON with this exact schema:\n"
-            "{\n"
-            "  \"solution_title\": \"string\",\n"
-            "  \"overview\": \"string\",\n"
-            "  \"solutions\": [\n"
-            "    {\n"
-            "      \"question_no\": \"string\",\n"
-            "      \"question\": \"string\",\n"
-            "      \"answer\": \"string\",\n"
-            "      \"steps\": [\"string\"],\n"
-            "      \"key_points\": [\"string\"]\n"
-            "    }\n"
-            "  ]\n"
-            "}\n"
-            "Rules:\n"
-            "1) Output must be JSON only, no markdown/prose outside JSON.\n"
-            "2) Solve the complete exercise from the available chapter context, not a partial sample.\n"
-            "3) Use clear board-exam style language.\n"
-            "4) For numerical problems, include method steps and final answer.\n"
-            "5) Preserve original question numbering/order when possible.\n"
-            "6) If a question exists but details are weak in context, still include it and state what is missing.\n"
-            "7) Ensure this solution set is unique for this generation nonce."
+            f"Write complete exercise solutions for chapter '{chapter}'.\n"
+            f"Nonce: {generation_nonce}.\n\n"
+            "RULES:\n"
+            "- Use ONLY the provided context — do not invent questions, answers, or steps.\n"
+            "- Solve every question visible in the context (MCQs, Short, Long, Numerical).\n"
+            "- For numericals: show every step — never just the answer.\n"
+            "- Output plain text (no JSON, no code blocks).\n"
+            "- Do NOT truncate — complete every section fully.\n"
+            "- End with: ✔ Exercise complete — [X] questions solved."
+        )
+
+    raise HTTPException(status_code=422, detail=f"Unsupported studio task: {task}")
+
+
+def _fallback_studio_generation(
+    request: StudioGenerateRequest,
+    prompt: str,
+    task_name: str,
+) -> tuple[str, str | None]:
+    system_prompt = (
+        QUIZ_SYSTEM_PROMPT if task_name == "quiz"
+        else SUMMARY_SYSTEM_PROMPT if task_name == "summary"
+        else EXERCISE_SYSTEM_PROMPT
+    )
+
+    result = rag_pipeline.query(
+        question=prompt,
+        board=request.board,
+        class_level=request.class_level,
+        subject=request.subject,
+        chapter=request.chapter,
+        language=request.language,
+        system_prompt=system_prompt,
+    )
+    return result.get("answer", ""), result.get("llm_provider")
+
+
+def _studio_prompt_v2(task: str, chapter: str, generation_nonce: str, quiz_count: int | None = None) -> str:
+    normalized_task = _normalize_studio_task(task)
+
+    if normalized_task == "quiz":
+        question_count = quiz_count if quiz_count is not None else 15
+        return (
+            f"Generate {question_count} unique multiple-choice questions from chapter '{chapter}'.\n"
+            f"Nonce: {generation_nonce}.\n\n"
+            "RULES:\n"
+            "- Use only the provided textbook context.\n"
+            "- Make this attempt unique for the nonce by changing topic mix, wording, and option order.\n"
+            "- Do not repeat the same first 5 questions from an earlier attempt.\n"
+            "- Cover early, middle, and late parts of the chapter.\n"
+            "- Output plain text only.\n"
+            "- Use exactly this structure for every question:\n"
+            "  1. [Question text]\n"
+            "  A) [Option]\n"
+            "  B) [Option]\n"
+            "  C) [Option]\n"
+            "  D) [Option]\n"
+            "  Answer: [Letter]) [Correct option text]\n"
+            "- Leave one blank line between questions.\n"
+            "- Do not add a title, chapter heading, emojis, or separators."
+        )
+
+    if normalized_task == "summary":
+        return (
+            f"Write a clean structured summary for chapter '{chapter}'.\n"
+            f"Nonce: {generation_nonce}.\n\n"
+            "RULES:\n"
+            "- Use only the provided textbook context.\n"
+            "- Output plain text only.\n"
+            "- Use exactly these section headings in this order:\n"
+            "  Overview\n"
+            "  Detailed Summary\n"
+            "  Key Points\n"
+            "  Key Concepts\n"
+            "- Overview must be one short paragraph of 2 to 4 sentences.\n"
+            "- Detailed Summary must contain 3 to 5 paragraphs with a blank line between paragraphs.\n"
+            "- Key Points must be bullet points only.\n"
+            "- Each key point should be a short important point or short definition, not a long paragraph.\n"
+            "- Key Concepts must be bullet points of important terms or concepts only.\n"
+            "- Do not use ## headings, emojis, or markdown separators.\n"
+            "- Keep all wording exam-focused and traceable to the context."
+        )
+
+    if normalized_task == "exercise":
+        return (
+            f"Write complete exercise solutions for chapter '{chapter}'.\n"
+            f"Nonce: {generation_nonce}.\n\n"
+            "RULES:\n"
+            "- Use only the provided textbook context.\n"
+            "- Treat the provided context as exercise-only retrieval, not whole-chapter notes.\n"
+            "- Search for and solve only questions found under headings like EXERCISE, Multiple Choice Questions, Short Questions, Long Questions, Numerical Problems, or similar exercise sections.\n"
+            "- Do not invent extra questions. Do not answer random chapter paragraphs that are not part of the exercise.\n"
+            "- List every visible MCQ, short question, long question, and numerical from the retrieved exercise context.\n"
+            "- You may improve clarity, but every answer must stay grounded in book concepts.\n"
+            "- For numericals, show every step.\n"
+            "- Output plain text only.\n"
+            "- Use these exact section headings in this order:\n"
+            "  Multiple Choice Questions\n"
+            "  Short Questions\n"
+            "  Long Questions\n"
+            "  Numerical Problems\n"
+            "- For MCQs include answer and explanation.\n"
+            "- For short questions include answer and key points.\n"
+            "- For long questions include a proper exam-style answer and key concepts.\n"
+            "- Format each item like this:\n"
+            "  1. [Question text]\n"
+            "  Answer: [Answer text]\n"
+            "  Explanation: [Only for MCQs]\n"
+            "  Key Points:\n"
+            "  - [Point]\n"
+            "- Do not add a title, emojis, markdown headings, or separators."
         )
 
     raise HTTPException(status_code=422, detail=f"Unsupported studio task: {task}")
@@ -387,36 +617,40 @@ async def generate_studio_content(
     request: StudioGenerateRequest,
     current_user: User | None = Depends(get_optional_current_user),
 ):
+    """Generate quiz, summary, or exercise solutions for a chapter — single-pass human-readable output."""
     try:
         generation_nonce = f"{datetime.utcnow().isoformat()}-{uuid4().hex[:8]}"
         task_name = _normalize_studio_task(request.task)
         quiz_count = random.SystemRandom().randint(15, 20) if task_name == "quiz" else None
-        retrieval_top_k = 10
-        if task_name == "exercise":
-            retrieval_top_k = 28
 
-        prompt = _studio_prompt(
-            task=request.task,
-            chapter=request.chapter,
-            generation_nonce=generation_nonce,
-            quiz_count=quiz_count,
-        )
-        retrieval = rag_pipeline.retrieve_context_for_scope(
-            board=request.board,
-            class_level=request.class_level,
-            subject=request.subject,
-            chapter=request.chapter,
-            query=prompt,
-            top_k=retrieval_top_k,
-        )
+        # ── retrieval top-k per task ──────────────────────────────────────────
+        retrieval_top_k = 8 if task_name == "quiz" else 10 if task_name == "summary" else 12
+
+        if task_name == "exercise":
+            retrieval = rag_pipeline.retrieve_exercise_context(
+                board=request.board,
+                class_level=request.class_level,
+                subject=request.subject,
+                chapter=request.chapter,
+                top_k=max(16, retrieval_top_k),
+            )
+        else:
+            retrieval = rag_pipeline.retrieve_context_for_scope(
+                board=request.board,
+                class_level=request.class_level,
+                subject=request.subject,
+                chapter=request.chapter,
+                query=f"{task_name} {request.chapter}",
+                top_k=retrieval_top_k,
+            )
 
         chapter_text = retrieval.get("context", "")
         if not chapter_text:
             raise HTTPException(
                 status_code=404,
                 detail=(
-                    "No vector context found for selected chapter. "
-                    "Please run indexing first and then retry quiz generation."
+                    f"No textbook context found for chapter '{request.chapter}'. "
+                    "Please run indexing first (/admin/reindex) and retry."
                 ),
             )
 
@@ -425,159 +659,102 @@ async def generate_studio_content(
             request.board.strip().lower(),
             request.class_level.strip().lower(),
             request.subject.strip().lower(),
+            request.chapter.strip().lower(),
         ])
+
+        # ── choose system prompt and generation settings per task ─────────────
+        if task_name == "quiz":
+            system_prompt = QUIZ_SYSTEM_PROMPT
+            temperature = 0.7
+            top_p = 0.9
+            max_tokens = 2048
+            context_budgets = [12000, 8000]
+        elif task_name == "summary":
+            system_prompt = SUMMARY_SYSTEM_PROMPT
+            temperature = 0.35
+            top_p = 0.9
+            max_tokens = 3072
+            context_budgets = [18000, 12000]
+        elif task_name == "exercise":
+            system_prompt = EXERCISE_SYSTEM_PROMPT
+            temperature = 0.35
+            top_p = 0.9
+            max_tokens = 4096
+            context_budgets = [22000, 14000]
+        else:
+            raise HTTPException(status_code=422, detail=f"Unsupported studio task: {request.task}")
 
         answer = ""
         llm_provider = None
         duplicate_guard_lines: list[str] = []
 
-        if task_name == "exercise":
-            context_for_exercise = _shuffle_context_for_generation(chapter_text[:90000], generation_nonce)
-
-            extraction_prompt = (
-                f"From chapter '{request.chapter}', extract the complete exercise question list.\n"
-                "Return ONLY valid JSON in this schema:\n"
-                "{\n"
-                "  \"questions\": [\n"
-                "    {\"question_no\": \"string\", \"question\": \"string\"}\n"
-                "  ]\n"
-                "}\n"
-                "Rules:\n"
-                "1) Include all exercise questions available in context.\n"
-                "2) Preserve original numbering/order where possible.\n"
-                "3) No extra prose outside JSON."
+        # ── up to 5 attempts with duplicate fingerprint guard ─────────────────
+        for _attempt in range(3):
+            prompt = _studio_prompt_v2(
+                task=request.task,
+                chapter=request.chapter,
+                generation_nonce=generation_nonce,
+                quiz_count=quiz_count,
             )
 
-            extraction_answer, llm_provider = generate_response_with_provider(
-                question=extraction_prompt,
-                context=context_for_exercise,
-                board=request.board,
-                class_level=request.class_level,
-                language=request.language,
-                system_prompt=EXERCISE_SYSTEM_PROMPT,
-                temperature=0.35,
-                top_p=0.9,
-                max_tokens=1800,
-            )
-
-            extracted_questions = _extract_exercise_questions(extraction_answer)
-
-            if extracted_questions:
-                batch_size = 8
-                merged_solutions: list[dict[str, Any]] = []
-
-                for batch_index in range(0, len(extracted_questions), batch_size):
-                    batch_questions = extracted_questions[batch_index:batch_index + batch_size]
-                    questions_json = json.dumps(batch_questions, ensure_ascii=False)
-                    solve_prompt = (
-                        f"Solve this batch of chapter exercise questions for '{request.chapter}'.\n"
-                        f"Question batch JSON:\n{questions_json}\n\n"
-                        "Return ONLY valid JSON with this schema:\n"
-                        "{\n"
-                        "  \"solutions\": [\n"
-                        "    {\n"
-                        "      \"question_no\": \"string\",\n"
-                        "      \"question\": \"string\",\n"
-                        "      \"answer\": \"string\",\n"
-                        "      \"steps\": [\"string\"],\n"
-                        "      \"key_points\": [\"string\"]\n"
-                        "    }\n"
-                        "  ]\n"
-                        "}\n"
-                        "Rules:\n"
-                        "1) Solve every question in this batch.\n"
-                        "2) For numericals, include method steps and final answer.\n"
-                        "3) If context is weak for a question, state what is missing in the answer field."
-                    )
-
-                    batch_answer, llm_provider = generate_response_with_provider(
-                        question=solve_prompt,
-                        context=context_for_exercise,
-                        board=request.board,
-                        class_level=request.class_level,
-                        language=request.language,
-                        system_prompt=EXERCISE_SYSTEM_PROMPT,
-                        temperature=0.6,
-                        top_p=0.92,
-                        max_tokens=3200,
-                    )
-
-                    merged_solutions.extend(_extract_exercise_solutions(batch_answer))
-
-                if merged_solutions:
-                    answer = json.dumps(
-                        {
-                            "solution_title": f"{request.chapter} Exercise Solutions",
-                            "overview": (
-                                f"Solved {len(merged_solutions)} exercise questions from the selected chapter "
-                                "using textbook context."
-                            ),
-                            "solutions": merged_solutions,
-                        },
-                        ensure_ascii=False,
-                    )
-
-                    return StudioGenerateResponse(
-                        answer=answer,
-                        task=request.task,
-                        llm_provider=llm_provider,
-                    )
-
-        for _attempt in range(5):
-            if task_name == "quiz":
-                system_prompt = QUIZ_SYSTEM_PROMPT
-            elif task_name == "exercise":
-                system_prompt = EXERCISE_SYSTEM_PROMPT
-            else:
-                system_prompt = None
-            prompt_with_retry_guidance = prompt
+            # Add anti-repeat guidance on retry for quizzes
             if duplicate_guard_lines and task_name == "quiz":
-                prompt_with_retry_guidance = (
+                prompt = (
                     f"{prompt}\n\n"
-                    "Do not repeat wording patterns from previous attempts. Avoid these question openings:\n"
+                    "Avoid these question-stem patterns from previous attempts:\n"
                     + "\n".join(f"- {line}" for line in duplicate_guard_lines[:8])
                 )
 
-            generation_temperature = 0.85 if task_name == "quiz" else 0.55
-            generation_top_p = 0.95 if task_name == "quiz" else 0.9
-            generation_max_tokens = 2200 if task_name == "quiz" else 1800
-            if task_name == "exercise":
-                generation_temperature = 0.65
-                generation_top_p = 0.92
-                generation_max_tokens = 4200
-            context_budget = 90000 if task_name == "exercise" else 32000
-            context_for_attempt = _shuffle_context_for_generation(chapter_text[:context_budget], generation_nonce)
+            # For summary and exercise: don't shuffle — present context in order
+            for context_budget in context_budgets:
+                trimmed_context = _trim_context_to_budget(chapter_text, context_budget)
+                if task_name == "summary" or task_name == "exercise":
+                    context_for_attempt = trimmed_context
+                else:
+                    context_for_attempt = _shuffle_context_for_generation(trimmed_context, generation_nonce)
 
-            answer, llm_provider = generate_response_with_provider(
-                question=prompt_with_retry_guidance,
-                context=context_for_attempt,
-                board=request.board,
-                class_level=request.class_level,
-                language=request.language,
-                system_prompt=system_prompt,
-                temperature=generation_temperature,
-                top_p=generation_top_p,
-                max_tokens=generation_max_tokens,
-            )
+                answer, llm_provider = generate_response_with_provider(
+                    question=prompt,
+                    context=context_for_attempt,
+                    board=request.board,
+                    class_level=request.class_level,
+                    language=request.language,
+                    system_prompt=system_prompt,
+                    temperature=temperature,
+                    top_p=top_p,
+                    max_tokens=max_tokens,
+                )
 
+                if llm_provider != "error" and (answer or "").strip():
+                    break
+
+            if llm_provider == "error" or not (answer or "").strip():
+                answer, llm_provider = _fallback_studio_generation(request, prompt, task_name)
+                _raise_if_studio_llm_unavailable(answer, llm_provider)
+
+            # Fingerprint to detect repeated output
             normalized = " ".join((answer or "").split()).lower()
             fingerprint = sha1(normalized.encode("utf-8")).hexdigest()
             if fingerprint not in _STUDIO_RECENT_OUTPUTS[scope_key]:
                 _STUDIO_RECENT_OUTPUTS[scope_key].append(fingerprint)
                 break
 
+            # Quiz-specific: also check question count constraint
             if task_name == "quiz":
-                candidate_lines = _extract_quiz_stems(answer)
-                duplicate_guard_lines.extend(candidate_lines[:6])
+                quiz_question_count = _count_quiz_questions(answer)
+                if quiz_question_count < 10 or quiz_question_count > 20:
+                    prompt = (
+                        f"{prompt}\n\n"
+                        f"Retry: last attempt produced {quiz_question_count} questions. "
+                        "Generate between 15 and 20 questions."
+                    )
+                    generation_nonce = f"{datetime.utcnow().isoformat()}-{uuid4().hex[:8]}"
+                    continue
 
-            # Retry with a fresh nonce to force a new variant if the model repeated output.
+                duplicate_guard_lines.extend(_extract_quiz_stems(answer)[:6])
+
+            # Refresh nonce for next attempt
             generation_nonce = f"{datetime.utcnow().isoformat()}-{uuid4().hex[:8]}"
-            prompt = _studio_prompt(
-                task=request.task,
-                chapter=request.chapter,
-                generation_nonce=generation_nonce,
-                quiz_count=quiz_count,
-            )
 
         return StudioGenerateResponse(
             answer=answer,
@@ -670,9 +847,23 @@ async def ask_question(
     db: Session = Depends(get_db),
     current_user: User | None = Depends(get_optional_current_user),
 ):
-    """Ask a question about textbook content and receive an AI-generated answer."""
+    """Ask a question about textbook content with session memory persistence."""
     try:
         auth_user = current_user
+        chat: Chat | None = None
+        chat_history_text = ""
+        session_system_prompt = None
+
+        if auth_user and request.chat_id is not None:
+            chat = _get_owned_chat(request.chat_id, auth_user.id, db)
+            history_stmt = select(Message).where(Message.chat_id == chat.id)
+            if request.chapter:
+                history_stmt = history_stmt.where(Message.chapter == request.chapter)
+            history_stmt = history_stmt.order_by(desc(Message.created_at)).limit(20)
+            recent_messages = list(reversed(db.scalars(history_stmt).all()))
+            chat_history_text = _build_chat_history_text(recent_messages, limit=12)
+            session_system_prompt = _build_session_prompt_system()
+
         result = rag_pipeline.query(
             question=request.question,
             board=request.board,
@@ -680,6 +871,8 @@ async def ask_question(
             subject=request.subject,
             chapter=request.chapter,
             language=request.language,
+            chat_history=chat_history_text,
+            system_prompt=session_system_prompt,
         )
 
         sources = []
@@ -703,10 +896,6 @@ async def ask_question(
 
         chat_id = None
         if auth_user and request.save_to_chat:
-            chat = None
-            if request.chat_id is not None:
-                chat = _get_owned_chat(request.chat_id, auth_user.id, db)
-
             if chat is None:
                 chat = Chat(
                     user_id=auth_user.id,

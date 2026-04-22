@@ -1,6 +1,7 @@
 """RAG pipeline: indexing and querying textbooks via LangChain."""
 
 import logging
+import re
 from typing import Dict
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -24,6 +25,17 @@ from app.services.llm_service import (
 )
 
 logger = logging.getLogger(__name__)
+
+_EXERCISE_SECTION_PATTERNS = (
+    re.compile(r"\bexercise\b", re.IGNORECASE),
+    re.compile(r"\bmultiple\s+choice\s+questions?\b", re.IGNORECASE),
+    re.compile(r"\bmcqs?\b", re.IGNORECASE),
+    re.compile(r"\bshort\s+questions?\b", re.IGNORECASE),
+    re.compile(r"\blong\s+questions?\b", re.IGNORECASE),
+    re.compile(r"\bnumerical(?:s| problems?)?\b", re.IGNORECASE),
+    re.compile(r"\bfill\s*in\s*the\s*blanks?\b", re.IGNORECASE),
+    re.compile(r"\breview\s+questions?\b", re.IGNORECASE),
+)
 
 
 def _normalize_key(value: str | None) -> str:
@@ -129,9 +141,11 @@ class RAGPipeline:
         subject: str,
         chapter: str = None,
         language: str = "en",
+        chat_history: str = "",
+        system_prompt: str = None,
     ) -> Dict:
         """
-        Query the RAG system.
+        Query the RAG system with optional session memory.
 
         Args:
             question: User's question.
@@ -139,6 +153,8 @@ class RAGPipeline:
             class_level: Class filter.
             subject: Subject filter.
             chapter: Optional chapter filter.
+            chat_history: Previous conversation messages for context.
+            system_prompt: Optional system prompt for session memory.
 
         Returns:
             Dict with answer and sources.
@@ -191,9 +207,11 @@ class RAGPipeline:
         answer, llm_provider = generate_response_with_provider(
             question=question,
             context=context,
+            chat_history=chat_history,
             board=board,
             class_level=class_level,
             language=language,
+            system_prompt=system_prompt,
         )
 
         sources = []
@@ -235,6 +253,15 @@ class RAGPipeline:
         if chapter:
             filters["chapter_key"] = _normalize_key(chapter)
 
+        # For studio generation, prefer broad filtered retrieval so outputs cover the full selected chapter.
+        filtered_docs = self.vector_store.get_documents(
+            filters=filters,
+            limit=max(24, top_k * 3),
+        )
+        if filtered_docs:
+            context = "\n\n---\n\n".join(item["text"] for item in filtered_docs)
+            return {"context": context, "chunks": len(filtered_docs)}
+
         results = self.vector_store.search(
             query=query,
             top_k=max(1, top_k),
@@ -246,6 +273,88 @@ class RAGPipeline:
 
         context = "\n\n---\n\n".join(r["text"] for r in results)
         return {"context": context, "chunks": len(results)}
+
+    def retrieve_exercise_context(
+        self,
+        board: str,
+        class_level: str,
+        subject: str,
+        chapter: str | None,
+        top_k: int = 18,
+    ) -> Dict:
+        """Retrieve exercise-focused chapter context, prioritizing exercise sections."""
+        self._ensure_models_loaded()
+
+        filters = {
+            "board_key": _normalize_key(board),
+            "class_level_key": _normalize_key(class_level),
+            "subject_key": _normalize_key(subject),
+        }
+        if chapter:
+            filters["chapter_key"] = _normalize_key(chapter)
+
+        filtered_docs = self.vector_store.get_documents(
+            filters=filters,
+            limit=max(48, top_k * 4),
+        )
+
+        indexed_docs = list(enumerate(filtered_docs))
+        prioritized = []
+        for index, item in indexed_docs:
+            text = str(item.get("text") or "")
+            if not text:
+                continue
+
+            score = sum(1 for pattern in _EXERCISE_SECTION_PATTERNS if pattern.search(text))
+            if score <= 0:
+                continue
+            prioritized.append((index, score, item))
+
+        prioritized.sort(key=lambda entry: (-entry[1], entry[0]))
+
+        combined = []
+        seen_texts = set()
+
+        for _, _, item in prioritized[:top_k]:
+            text = str(item.get("text") or "").strip()
+            if not text or text in seen_texts:
+                continue
+            seen_texts.add(text)
+            combined.append(item)
+
+        semantic_queries = [
+            f"{chapter or subject} exercise",
+            f"{chapter or subject} multiple choice questions",
+            f"{chapter or subject} short questions",
+            f"{chapter or subject} long questions",
+        ]
+
+        for query in semantic_queries:
+            results = self.vector_store.search(
+                query=query,
+                top_k=max(4, top_k // 2),
+                filters=filters,
+            )
+            for item in results:
+                text = str(item.get("text") or "").strip()
+                if not text or text in seen_texts:
+                    continue
+                seen_texts.add(text)
+                combined.append(item)
+                if len(combined) >= top_k:
+                    break
+            if len(combined) >= top_k:
+                break
+
+        if not combined and filtered_docs:
+            combined = filtered_docs[:top_k]
+
+        context = "\n\n---\n\n".join(
+            str(item.get("text") or "").strip()
+            for item in combined
+            if str(item.get("text") or "").strip()
+        )
+        return {"context": context, "chunks": len(combined)}
 
 
 rag_pipeline = RAGPipeline()

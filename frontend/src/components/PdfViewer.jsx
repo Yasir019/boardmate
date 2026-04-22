@@ -14,8 +14,32 @@ function extractJsonPayload(rawText) {
   const fencedMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/i);
   const directCandidate = fencedMatch ? fencedMatch[1] : rawText;
 
+  const tryUnwrapObject = (value) => {
+    let current = value;
+    for (let i = 0; i < 3; i += 1) {
+      if (typeof current === 'string') {
+        try {
+          current = JSON.parse(current);
+          continue;
+        } catch {
+          return null;
+        }
+      }
+
+      if (current && typeof current === 'object' && !Array.isArray(current)) {
+        const envelope = current.data || current.result || current.output || current.response;
+        if (envelope && envelope !== current) {
+          current = envelope;
+          continue;
+        }
+      }
+      return current;
+    }
+    return current;
+  };
+
   try {
-    return JSON.parse(directCandidate);
+    return tryUnwrapObject(JSON.parse(directCandidate));
   } catch {
     const sanitizedCandidate = directCandidate
       .replace(/[\u201C\u201D]/g, '"')
@@ -23,7 +47,7 @@ function extractJsonPayload(rawText) {
       .replace(/,\s*([}\]])/g, '$1');
 
     try {
-      return JSON.parse(sanitizedCandidate);
+      return tryUnwrapObject(JSON.parse(sanitizedCandidate));
     } catch {
       // Continue with substring extraction fallback.
     }
@@ -32,7 +56,7 @@ function extractJsonPayload(rawText) {
     const end = rawText.lastIndexOf('}');
     if (start >= 0 && end > start) {
       try {
-        return JSON.parse(rawText.slice(start, end + 1));
+        return tryUnwrapObject(JSON.parse(rawText.slice(start, end + 1)));
       } catch {
         return null;
       }
@@ -67,6 +91,67 @@ function sanitizeModelText(value) {
     .trim();
 }
 
+function stripSummaryBoilerplate(value) {
+  const text = sanitizeModelText(value);
+  if (!text) {
+    return '';
+  }
+
+  return text
+    .replace(/^chapter\s+summary\s*:?\s*/i, '')
+    .replace(/^overview\s*:?\s*/i, '')
+    .replace(/^detailed\s*summary\s*:?\s*/i, '')
+    .replace(/^📖\s*chapter\s+summary\s*:?\s*/i, '')
+    .replace(/^##\s*overview\s*/i, '')
+    .trim();
+}
+
+function splitSummaryParagraphs(value) {
+  const text = stripSummaryBoilerplate(value);
+  if (!text) {
+    return [];
+  }
+
+  const explicitParagraphs = text
+    .split(/\n{2,}|<br\s*\/?><br\s*\/?>/i)
+    .map((item) => sanitizeModelText(item))
+    .filter(Boolean);
+
+  if (explicitParagraphs.length > 1) {
+    return explicitParagraphs;
+  }
+
+  const sentences = text
+    .split(/(?<=[.!?])\s+/)
+    .map((item) => sanitizeModelText(item))
+    .filter(Boolean);
+
+  if (sentences.length <= 3) {
+    return sentences.length ? [text] : [];
+  }
+
+  const grouped = [];
+  for (let i = 0; i < sentences.length; i += 3) {
+    grouped.push(sentences.slice(i, i + 3).join(' '));
+  }
+  return grouped;
+}
+
+function extractSectionText(rawText, heading) {
+  const text = String(rawText || '').replace(/\r/g, '');
+  if (!text) {
+    return '';
+  }
+
+  const escaped = heading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const pattern = new RegExp(
+    `(?:^|\\n)\\s*(?:\\*\\*)?${escaped}(?:\\*\\*)?\\s*:?\\s*\\n?([\\s\\S]*?)(?=\\n\\s*(?:\\*\\*)?(?:Overview|Detailed Summary|Key Points|Key Concepts)(?:\\*\\*)?\\s*:?\\s*(?:\\n|$)|$)`,
+    'i'
+  );
+  const match = text.match(pattern);
+  return match ? match[1].trim() : '';
+}
+
 function parseLooseSummaryText(rawText) {
   if (!rawText || typeof rawText !== 'string') {
     return null;
@@ -89,6 +174,8 @@ function parseLooseSummaryText(rawText) {
 
   const sections = {
     overview: [],
+    detailedSummary: [],
+    keyPoints: [],
     keyConcepts: [],
     examTakeaways: [],
     revisionQuestions: [],
@@ -107,8 +194,19 @@ function parseLooseSummaryText(rawText) {
       return;
     }
 
-    if (/^overview\s*:?$/i.test(line)) {
+    if (/^overview\s*:?$/i.test(line) || /^##\s*overview\b/i.test(line)) {
       current = 'overview';
+      return;
+    }
+    if (/^detailed\s*summary\s*:?$/i.test(line) || /^##\s*detailed\s*summary\b/i.test(line)) {
+      current = 'detailedSummary';
+      return;
+    }
+    if (/^chapter\s+summary\s*:?\s*/i.test(line) || /^📖\s*chapter\s+summary\s*:?\s*/i.test(line)) {
+      return;
+    }
+    if (/^(key\s*points?)\s*:?$/i.test(line)) {
+      current = 'keyPoints';
       return;
     }
     if (/^(key\s*concepts?|main\s*points?)\s*:?$/i.test(line)) {
@@ -128,7 +226,7 @@ function parseLooseSummaryText(rawText) {
       return;
     }
 
-    const cleanedLine = toPlain(line);
+    const cleanedLine = stripSummaryBoilerplate(toPlain(line));
     if (!cleanedLine) {
       return;
     }
@@ -156,16 +254,22 @@ function parseLooseSummaryText(rawText) {
   if (!sections.keyConcepts.length) {
     sections.keyConcepts = fallbackPoints.slice(0, 5);
   }
+  if (!sections.keyPoints.length && sections.keyConcepts.length) {
+    sections.keyPoints = sections.keyConcepts.slice(0, 8);
+  }
 
   const overviewText = sections.overview.join(' ');
+  const detailedSummaryText = sections.detailedSummary.join(' ');
 
-  if (!overviewText && !sections.keyConcepts.length && !sections.examTakeaways.length) {
+  if (!overviewText && !detailedSummaryText && !sections.keyConcepts.length && !sections.examTakeaways.length) {
     return null;
   }
 
   return {
     title: sections.title || 'Chapter Summary',
     overview: overviewText || fallbackPoints[0] || 'Overview not provided.',
+    detailedNotes: detailedSummaryText,
+    keyPoints: sections.keyPoints,
     keyConcepts: sections.keyConcepts,
     importantTerms: sections.importantTerms,
     examTakeaways: sections.examTakeaways,
@@ -243,8 +347,15 @@ function parseLooseQuizText(rawText) {
   const questions = [];
   let i = 0;
 
-  const isQuestionStart = (line) => /^q\d+\.|^question\s*:/i.test(line);
-  const isMetaStart = (line) => /^(answer\s*:|answer_index\s*:|explanation\s*:)/i.test(line);
+  const stripMarkdownMarkers = (value) => String(value || '').replace(/\*\*/g, '').trim();
+  const isQuestionStart = (line) => {
+    const normalized = stripMarkdownMarkers(line);
+    return /^q\d+\.|^question\s*:|^question\s+\d+\s*:?$|^\d+[\.\-]\s+/i.test(normalized);
+  };
+  const isMetaStart = (line) => {
+    const normalized = stripMarkdownMarkers(line);
+    return /^(answer\s*:|correct\s+answer\s*:|answer_index\s*:|explanation\s*:)/i.test(normalized);
+  };
 
   while (i < lines.length) {
     const current = lines[i];
@@ -253,10 +364,20 @@ function parseLooseQuizText(rawText) {
       continue;
     }
 
-    const questionText = current
+    const normalizedCurrent = stripMarkdownMarkers(current);
+    let questionText = normalizedCurrent
       .replace(/^q\d+\.\s*/i, '')
       .replace(/^question\s*:\s*/i, '')
+      .replace(/^question\s+\d+\s*:?\s*/i, '')
       .trim();
+
+    if (!questionText && i + 1 < lines.length) {
+      const nextLine = stripMarkdownMarkers(lines[i + 1]);
+      if (nextLine && !isQuestionStart(nextLine) && !isMetaStart(nextLine) && !/^[A-D][\)\.]\s+/i.test(nextLine)) {
+        questionText = nextLine;
+        i += 1;
+      }
+    }
 
     const options = [];
     let answerIndex = 0;
@@ -267,14 +388,14 @@ function parseLooseQuizText(rawText) {
       const line = lines[i];
 
       if (/^options?\s*:/i.test(line)) {
-        const firstOption = line.replace(/^options?\s*:\s*/i, '').trim();
+        const firstOption = stripMarkdownMarkers(line).replace(/^options?\s*:\s*/i, '').trim();
         if (firstOption) {
-          options.push(firstOption.replace(/^[A-D]\.?\s*/i, '').trim());
+          options.push(firstOption.replace(/^[A-D][\)\.]?\s*/i, '').trim());
         }
 
         i += 1;
         while (i < lines.length && !isQuestionStart(lines[i]) && !isMetaStart(lines[i])) {
-          const optionLine = lines[i].replace(/^[A-D]\.?\s*/i, '').trim();
+          const optionLine = stripMarkdownMarkers(lines[i]).replace(/^[A-D][\)\.]?\s*/i, '').trim();
           if (optionLine) {
             options.push(optionLine);
           }
@@ -283,14 +404,14 @@ function parseLooseQuizText(rawText) {
         continue;
       }
 
-      if (/^[A-D]\.?\s+/i.test(line)) {
-        options.push(line.replace(/^[A-D]\.?\s*/i, '').trim());
+      if (/^[A-D][\)\.]?\s+/i.test(stripMarkdownMarkers(line))) {
+        options.push(stripMarkdownMarkers(line).replace(/^[A-D][\)\.]?\s*/i, '').trim());
         i += 1;
         continue;
       }
 
-      if (/^answer_index\s*:/i.test(line)) {
-        const numeric = Number(line.replace(/^answer_index\s*:\s*/i, '').trim());
+      if (/^answer_index\s*:/i.test(stripMarkdownMarkers(line))) {
+        const numeric = Number(stripMarkdownMarkers(line).replace(/^answer_index\s*:\s*/i, '').trim());
         if (Number.isFinite(numeric)) {
           // Accept both 0-based and 1-based values from model output.
           answerIndex = numeric >= 1 && numeric <= 4 ? numeric - 1 : numeric;
@@ -299,9 +420,12 @@ function parseLooseQuizText(rawText) {
         continue;
       }
 
-      if (/^answer\s*:/i.test(line)) {
-        const rawAnswer = line.replace(/^answer\s*:\s*/i, '').trim();
-        if (/^[A-D]$/i.test(rawAnswer)) {
+      if (/^(answer|correct\s+answer)\s*:/i.test(stripMarkdownMarkers(line))) {
+        const rawAnswer = stripMarkdownMarkers(line).replace(/^(answer|correct\s+answer)\s*:\s*/i, '').trim();
+        const answerLetterMatch = rawAnswer.match(/^([A-D])[\)\.]?/i);
+        if (answerLetterMatch) {
+          answerIndex = answerLetterMatch[1].toUpperCase().charCodeAt(0) - 65;
+        } else if (/^[A-D]$/i.test(rawAnswer)) {
           answerIndex = rawAnswer.toUpperCase().charCodeAt(0) - 65;
         } else {
           const numeric = Number(rawAnswer);
@@ -313,8 +437,8 @@ function parseLooseQuizText(rawText) {
         continue;
       }
 
-      if (/^explanation\s*:/i.test(line)) {
-        explanation = line.replace(/^explanation\s*:\s*/i, '').trim();
+      if (/^explanation\s*:/i.test(stripMarkdownMarkers(line))) {
+        explanation = stripMarkdownMarkers(line).replace(/^explanation\s*:\s*/i, '').trim();
         i += 1;
         continue;
       }
@@ -412,14 +536,57 @@ function normalizeQuizData(answer) {
 function normalizeSummaryData(answer) {
   const parsed = extractJsonPayload(answer);
   if (!parsed || typeof parsed !== 'object') {
-    return parseLooseSummaryText(answer);
+    const loose = parseLooseSummaryText(answer);
+    if (!loose) {
+      return null;
+    }
+
+    const overviewSection = extractSectionText(answer, 'Overview');
+    const detailSection = extractSectionText(answer, 'Detailed Summary');
+    const keyPointsSection = extractSectionText(answer, 'Key Points');
+    const keyConceptsSection = extractSectionText(answer, 'Key Concepts');
+
+    const overview = stripSummaryBoilerplate(overviewSection || loose.overview || '');
+    const detailedNotes = stripSummaryBoilerplate(detailSection || loose.detailedNotes || '');
+    const keyPoints = keyPointsSection ? toSentenceList(keyPointsSection) : (loose.keyPoints || []);
+    const keyConcepts = keyConceptsSection ? toSentenceList(keyConceptsSection) : (loose.keyConcepts || []);
+
+    return {
+      ...loose,
+      overview,
+      overviewParagraphs: splitSummaryParagraphs(overview),
+      detailedNotes,
+      detailedParagraphs: splitSummaryParagraphs(detailedNotes),
+      keyPoints,
+      keyConcepts,
+    };
   }
 
-  const keyConcepts = toSentenceList(parsed.key_concepts || parsed.concepts || parsed.main_points);
-  const examTakeaways = toSentenceList(parsed.exam_takeaways || parsed.takeaways || parsed.exam_points);
-  const revisionQuestions = toSentenceList(parsed.revision_questions || parsed.practice_questions);
+  const nestedCandidate = (
+    typeof parsed.overview === 'string' && parsed.overview.trim().startsWith('{')
+      ? extractJsonPayload(parsed.overview)
+      : null
+  );
 
-  const terms = parsed.important_terms || parsed.terms || [];
+  const summarySource = (
+    nestedCandidate
+    && typeof nestedCandidate === 'object'
+    && (
+      nestedCandidate.summary_title
+      || nestedCandidate.detailed_notes
+      || nestedCandidate.key_concepts
+      || nestedCandidate.exam_takeaways
+    )
+  )
+    ? nestedCandidate
+    : parsed;
+
+  const keyPoints = toSentenceList(summarySource.key_points || summarySource.key_concepts || summarySource.concepts || summarySource.main_points);
+  const keyConcepts = toSentenceList(summarySource.key_concepts || summarySource.concepts || summarySource.main_points);
+  const examTakeaways = toSentenceList(summarySource.exam_takeaways || summarySource.takeaways || summarySource.exam_points);
+  const revisionQuestions = toSentenceList(summarySource.revision_questions || summarySource.practice_questions);
+
+  const terms = summarySource.important_terms || summarySource.terms || [];
   const importantTerms = Array.isArray(terms)
     ? terms
       .map((item) => {
@@ -446,14 +613,22 @@ function normalizeSummaryData(answer) {
       .filter(Boolean)
     : [];
 
-  if (!keyConcepts.length && !examTakeaways.length && !revisionQuestions.length) {
+  const detailedNotes = stripSummaryBoilerplate(String(summarySource.detailed_notes || summarySource.full_summary || ''));
+  const overview = stripSummaryBoilerplate(String(summarySource.overview || ''));
+  const overviewParagraphs = splitSummaryParagraphs(overview);
+  const detailedParagraphs = splitSummaryParagraphs(detailedNotes);
+
+  if (!keyPoints.length && !keyConcepts.length && !examTakeaways.length && !revisionQuestions.length && !detailedNotes && !overview) {
     return parseLooseSummaryText(answer);
   }
 
   return {
-    title: sanitizeModelText(parsed.summary_title || 'Chapter Summary'),
-    overview: sanitizeModelText(String(parsed.overview || '')),
-    detailedNotes: sanitizeModelText(String(parsed.detailed_notes || parsed.full_summary || '')),
+    title: sanitizeModelText(summarySource.summary_title || 'Chapter Summary'),
+    overview,
+    overviewParagraphs,
+    detailedNotes,
+    detailedParagraphs,
+    keyPoints,
     keyConcepts,
     importantTerms,
     examTakeaways,
@@ -461,54 +636,285 @@ function normalizeSummaryData(answer) {
   };
 }
 
-function normalizeExerciseData(answer) {
-  const parsed = extractJsonPayload(answer);
-  if (!parsed || typeof parsed !== 'object') {
-    return null;
+function normalizeExerciseSectionItems(items, sectionKey) {
+  if (!Array.isArray(items)) {
+    return [];
   }
 
-  const solutions = Array.isArray(parsed.solutions)
-    ? parsed.solutions
-      .map((item, index) => {
-        if (!item || typeof item !== 'object') {
-          return null;
-        }
+  return items
+    .map((item, index) => {
+      if (!item || typeof item !== 'object') {
+        return null;
+      }
 
-        const question = sanitizeModelText(String(item.question || ''));
-        const answerText = sanitizeModelText(String(item.answer || ''));
-        if (!question && !answerText) {
-          return null;
-        }
+      const question = sanitizeModelText(String(item.question || item.text || ''));
+      const answer = sanitizeModelText(String(item.answer || item.solution || ''));
+      const explanation = sanitizeModelText(String(item.explanation || ''));
+      const steps = Array.isArray(item.steps)
+        ? item.steps.map((step) => sanitizeModelText(String(step))).filter(Boolean)
+        : [];
+      const keyPoints = Array.isArray(item.key_points || item.keyPoints)
+        ? (item.key_points || item.keyPoints).map((point) => sanitizeModelText(String(point))).filter(Boolean)
+        : [];
 
-        const steps = Array.isArray(item.steps)
-          ? item.steps.map((step) => sanitizeModelText(String(step))).filter(Boolean)
-          : [];
+      if (!question && !answer && !explanation && !steps.length && !keyPoints.length) {
+        return null;
+      }
 
-        const keyPoints = Array.isArray(item.key_points)
-          ? item.key_points.map((point) => sanitizeModelText(String(point))).filter(Boolean)
-          : [];
+      return {
+        id: `${sectionKey}-${index + 1}`,
+        questionNo: sanitizeModelText(String(item.question_no || item.number || index + 1)),
+        question,
+        answer,
+        explanation,
+        steps,
+        keyPoints,
+      };
+    })
+    .filter(Boolean);
+}
 
-        return {
-          id: index + 1,
-          questionNo: sanitizeModelText(String(item.question_no || index + 1)),
-          question,
-          answer: answerText,
-          steps,
-          keyPoints,
-        };
-      })
-      .filter(Boolean)
-    : [];
-
-  if (!solutions.length) {
+function buildExercisePayload({
+  title = 'Exercise Solutions',
+  overview = '',
+  mcqs = [],
+  shortQuestions = [],
+  longQuestions = [],
+  numericals = [],
+}) {
+  const total = mcqs.length + shortQuestions.length + longQuestions.length + numericals.length;
+  if (!total) {
     return null;
   }
 
   return {
+    title,
+    overview: overview || `Generated ${total} exercise solution${total === 1 ? '' : 's'}.`,
+    mcqs,
+    shortQuestions,
+    longQuestions,
+    numericals,
+  };
+}
+
+function parseLooseExerciseData(answer) {
+  if (!answer || typeof answer !== 'string') {
+    return null;
+  }
+
+  const cleaned = answer.replace(/```json|```/gi, '').replace(/\r/g, '').trim();
+  if (!cleaned) {
+    return null;
+  }
+
+  const stripMarkdownMarkers = (value) => String(value || '').replace(/\*\*/g, '').trim();
+  const toSectionKey = (line) => {
+    const normalized = stripMarkdownMarkers(line)
+      .replace(/^section\s+[a-z]\s*:\s*/i, '')
+      .toLowerCase();
+
+    if (/^multiple choice questions/.test(normalized) || /^mcqs?/.test(normalized)) {
+      return 'mcqs';
+    }
+    if (/^short questions/.test(normalized)) {
+      return 'shortQuestions';
+    }
+    if (/^long questions/.test(normalized)) {
+      return 'longQuestions';
+    }
+    if (/^numerical problems/.test(normalized) || /^numericals?/.test(normalized)) {
+      return 'numericals';
+    }
+    return '';
+  };
+
+  const lines = cleaned
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  const sections = {
+    mcqs: [],
+    shortQuestions: [],
+    longQuestions: [],
+    numericals: [],
+  };
+
+  let currentSection = '';
+  let current = null;
+  let activeListKey = '';
+
+  const flushCurrent = () => {
+    if (!current || !currentSection) {
+      current = null;
+      activeListKey = '';
+      return;
+    }
+
+    if (current.question || current.answer || current.explanation || current.steps.length || current.keyPoints.length) {
+      sections[currentSection].push({
+        id: `${currentSection}-${sections[currentSection].length + 1}`,
+        questionNo: current.questionNo || String(sections[currentSection].length + 1),
+        question: current.question,
+        answer: current.answer,
+        explanation: current.explanation,
+        steps: current.steps,
+        keyPoints: current.keyPoints,
+      });
+    }
+
+    current = null;
+    activeListKey = '';
+  };
+
+  lines.forEach((line) => {
+    const normalizedLine = stripMarkdownMarkers(line);
+    const sectionKey = toSectionKey(normalizedLine);
+    if (sectionKey) {
+      flushCurrent();
+      currentSection = sectionKey;
+      return;
+    }
+
+    const questionMatch = normalizedLine.match(/^(?:q(?:uestion)?\s*)?(\d+[a-zA-Z]?)\s*[\)\.:\-]\s*(.+)$/i);
+    if (questionMatch && currentSection) {
+      flushCurrent();
+      current = {
+        questionNo: sanitizeModelText(questionMatch[1]),
+        question: sanitizeModelText(questionMatch[2]),
+        answer: '',
+        explanation: '',
+        steps: [],
+        keyPoints: [],
+      };
+      return;
+    }
+
+    if (!current || !currentSection) {
+      return;
+    }
+
+    if (/^answer\s*:/i.test(normalizedLine)) {
+      current.answer = sanitizeModelText(normalizedLine.replace(/^answer\s*:/i, ''));
+      activeListKey = '';
+      return;
+    }
+    if (/^explanation\s*:/i.test(normalizedLine)) {
+      current.explanation = sanitizeModelText(normalizedLine.replace(/^explanation\s*:/i, ''));
+      activeListKey = '';
+      return;
+    }
+    if (/^solution\s*:/i.test(normalizedLine)) {
+      const solutionText = sanitizeModelText(normalizedLine.replace(/^solution\s*:/i, ''));
+      if (currentSection === 'mcqs') {
+        current.explanation = solutionText;
+      } else if (!current.answer) {
+        current.answer = solutionText;
+      } else {
+        current.steps.push(solutionText);
+      }
+      activeListKey = '';
+      return;
+    }
+    if (/^steps?\s*:/i.test(normalizedLine)) {
+      const firstStep = sanitizeModelText(normalizedLine.replace(/^steps?\s*:/i, ''));
+      if (firstStep) {
+        current.steps.push(firstStep);
+      }
+      activeListKey = 'steps';
+      return;
+    }
+    if (/^(key[_\s-]*points?|key[_\s-]*concepts?)\s*:/i.test(normalizedLine)) {
+      const firstPoint = sanitizeModelText(normalizedLine.replace(/^(key[_\s-]*points?|key[_\s-]*concepts?)\s*:/i, ''));
+      if (firstPoint) {
+        current.keyPoints.push(firstPoint);
+      }
+      activeListKey = 'keyPoints';
+      return;
+    }
+    if (/^(given|required)\s*:/i.test(normalizedLine)) {
+      current.steps.push(sanitizeModelText(normalizedLine));
+      activeListKey = 'steps';
+      return;
+    }
+
+    if (/^[-*\u2022]\s*/.test(normalizedLine)) {
+      const bullet = sanitizeModelText(normalizedLine.replace(/^[-*\u2022]\s*/, ''));
+      if (bullet && activeListKey && Array.isArray(current[activeListKey])) {
+        current[activeListKey].push(bullet);
+      } else if (bullet) {
+        current.keyPoints.push(bullet);
+      }
+      return;
+    }
+
+    if (activeListKey && Array.isArray(current[activeListKey])) {
+      current[activeListKey].push(sanitizeModelText(normalizedLine));
+      return;
+    }
+
+    if (!current.answer) {
+      current.answer = sanitizeModelText(normalizedLine);
+      return;
+    }
+
+    if (currentSection === 'mcqs') {
+      current.explanation = [current.explanation, sanitizeModelText(normalizedLine)].filter(Boolean).join(' ').trim();
+      return;
+    }
+
+    current.steps.push(sanitizeModelText(normalizedLine));
+  });
+
+  flushCurrent();
+
+  return buildExercisePayload(sections);
+}
+
+function normalizeExerciseData(answer) {
+  const parsed = extractJsonPayload(answer);
+  if (!parsed || typeof parsed !== 'object') {
+    return parseLooseExerciseData(answer);
+  }
+
+  const mcqs = normalizeExerciseSectionItems(
+    parsed.mcqs || parsed.multiple_choice_questions || parsed.multipleChoiceQuestions || [],
+    'mcqs'
+  );
+  const shortQuestions = normalizeExerciseSectionItems(
+    parsed.short_questions || parsed.shortQuestions || [],
+    'shortQuestions'
+  );
+  const longQuestions = normalizeExerciseSectionItems(
+    parsed.long_questions || parsed.longQuestions || [],
+    'longQuestions'
+  );
+  const numericals = normalizeExerciseSectionItems(
+    parsed.numerical_problems || parsed.numericals || parsed.numericalQuestions || [],
+    'numericals'
+  );
+
+  if (!mcqs.length && !shortQuestions.length && !longQuestions.length && !numericals.length) {
+    const legacySolutions = normalizeExerciseSectionItems(parsed.solutions || [], 'shortQuestions');
+    if (!legacySolutions.length) {
+      return parseLooseExerciseData(answer);
+    }
+
+    return buildExercisePayload({
+      title: sanitizeModelText(String(parsed.solution_title || 'Exercise Solutions')),
+      overview: sanitizeModelText(String(parsed.overview || '')),
+      shortQuestions: legacySolutions,
+    });
+  }
+
+  return buildExercisePayload({
     title: sanitizeModelText(String(parsed.solution_title || 'Exercise Solutions')),
     overview: sanitizeModelText(String(parsed.overview || '')),
-    solutions,
-  };
+    mcqs,
+    shortQuestions,
+    longQuestions,
+    numericals,
+  });
 }
 
 function PdfViewer({
@@ -1411,38 +1817,39 @@ function PdfViewer({
                 <div className="quiz-sheet">
                   {activeStudioItem.payload?.quiz ? (
                     <>
-                      <p className="quiz-title-line">{activeStudioItem.payload.quiz.title || 'Chapter Quiz'}</p>
-
                       {activeStudioItem.payload.quiz.questions.map((question, index) => {
                         const options = Array.isArray(question.options) ? question.options : [];
                         const answerIndex = Number.isInteger(question.answerIndex)
                           ? Math.max(0, Math.min(3, question.answerIndex))
                           : 0;
+                        const answerLetter = `${String.fromCharCode(65 + answerIndex)})`;
+                        const answerText = options[answerIndex] || 'Correct option not available';
 
                         return (
                           <article key={`${question.id || index}-${question.question}`} className="quiz-text-question-block">
                             <p className="quiz-text-question">
-                              {`Q${index + 1}. `}
+                              {`${index + 1}. `}
                               {question.question || 'Question not available'}
                             </p>
 
-                            <div className="quiz-text-options">
+                            <div className="quiz-text-options" role="list" aria-label={`Options for question ${index + 1}`}>
                               {options.slice(0, 4).map((option, optionIndex) => (
-                                <p key={`${question.id || index}-${optionIndex}`}>
-                                  {`${String.fromCharCode(65 + optionIndex)}. ${option}`}
+                                <p key={`${question.id || index}-${optionIndex}`} role="listitem">
+                                  {`${String.fromCharCode(65 + optionIndex)}) ${option}`}
                                 </p>
                               ))}
                             </div>
 
                             <p className="quiz-text-answer">
-                              {`Answer: ${String.fromCharCode(65 + answerIndex)}`}
-                            </p>
-                            <p className="quiz-text-explanation">
-                              {`Explanation: ${question.explanation || 'No explanation provided.'}`}
+                              <strong>Answer:</strong>
+                              {' '}
+                              <strong>{answerLetter}</strong>
+                              {' '}
+                              {answerText}
                             </p>
 
                             {index < activeStudioItem.payload.quiz.questions.length - 1 && (
-                              <p className="quiz-text-separator">--------------------------------------------------</p>
+                              <div className="quiz-text-separator" aria-hidden="true"></div>
                             )}
                           </article>
                         );
@@ -1457,20 +1864,65 @@ function PdfViewer({
               {activeStudioItem.type === 'summary' && (
                 <div className="summary-sheet">
                   {activeStudioItem.payload?.summary ? (
-                    <div className="summary-plain">
-                      <p className="summary-plain-heading"><strong>{activeStudioItem.payload.summary.title}</strong></p>
+                    <div className="summary-structured">
+                      <h4>{activeStudioItem.payload.summary.title}</h4>
 
-                      <p className="summary-plain-heading"><strong>Overview</strong></p>
-                      <p className="summary-plain-paragraph">{activeStudioItem.payload.summary.overview || 'Overview not provided.'}</p>
+                      <section className="summary-section">
+                        <p className="summary-section-heading"><strong>Overview</strong></p>
+                        {(activeStudioItem.payload.summary.overviewParagraphs?.length
+                          ? activeStudioItem.payload.summary.overviewParagraphs
+                          : [activeStudioItem.payload.summary.overview || 'Overview not provided.']
+                        ).map((paragraph, index) => (
+                          <p key={`overview-${index}`} className="summary-section-paragraph">{paragraph}</p>
+                        ))}
+                      </section>
 
-                      {activeStudioItem.payload.summary.detailedNotes && (
-                        <>
-                          <p className="summary-plain-heading"><strong>Detailed Notes</strong></p>
-                          <p className="summary-plain-paragraph">{activeStudioItem.payload.summary.detailedNotes}</p>
-                        </>
+                      {(activeStudioItem.payload.summary.detailedNotes || activeStudioItem.payload.summary.overviewParagraphs?.length) && (
+                        <section className="summary-section">
+                          <p className="summary-section-heading"><strong>Detailed Summary</strong></p>
+                          {(activeStudioItem.payload.summary.detailedParagraphs?.length
+                            ? activeStudioItem.payload.summary.detailedParagraphs
+                            : activeStudioItem.payload.summary.overviewParagraphs || []
+                          ).map((paragraph, index) => (
+                            <p key={`detail-${index}`} className="summary-section-paragraph">{paragraph}</p>
+                          ))}
+                        </section>
                       )}
 
-                      {activeStudioItem.payload.summary.keyConcepts.length > 0 && (
+                      {activeStudioItem.payload.summary.keyPoints.length > 0 && (
+                        <section className="summary-section">
+                          <p className="summary-section-heading"><strong>Key Points</strong></p>
+                          <ul className="summary-section-list">
+                            {activeStudioItem.payload.summary.keyPoints.map((item) => (
+                              <li key={item}>{item}</li>
+                            ))}
+                          </ul>
+                        </section>
+                      )}
+
+                      {(activeStudioItem.payload.summary.importantTerms.length > 0
+                        || activeStudioItem.payload.summary.examTakeaways.length > 0
+                        || activeStudioItem.payload.summary.revisionQuestions.length > 0) && (
+                        <section className="summary-section">
+                          <p className="summary-section-heading"><strong>Key Concepts</strong></p>
+                          <ul className="summary-section-list">
+                            {activeStudioItem.payload.summary.importantTerms.map((item) => (
+                              <li key={`${item.term}-${item.definition}`}>
+                                <strong>{item.term}</strong>
+                                {item.definition ? ` - ${item.definition}` : ''}
+                              </li>
+                            ))}
+                            {activeStudioItem.payload.summary.examTakeaways.map((item) => (
+                              <li key={item}>{item}</li>
+                            ))}
+                            {activeStudioItem.payload.summary.revisionQuestions.map((item) => (
+                              <li key={item}>{item}</li>
+                            ))}
+                          </ul>
+                        </section>
+                      )}
+
+                      {false && activeStudioItem.payload.summary.keyConcepts.length > 0 && (
                         <>
                           <p className="summary-plain-heading"><strong>Key Concepts</strong></p>
                           {activeStudioItem.payload.summary.keyConcepts.map((item) => (
@@ -1479,7 +1931,7 @@ function PdfViewer({
                         </>
                       )}
 
-                      {activeStudioItem.payload.summary.importantTerms.length > 0 && (
+                      {false && activeStudioItem.payload.summary.importantTerms.length > 0 && (
                         <>
                           <p className="summary-plain-heading"><strong>Important Terms</strong></p>
                           {activeStudioItem.payload.summary.importantTerms.map((item) => (
@@ -1490,7 +1942,7 @@ function PdfViewer({
                         </>
                       )}
 
-                      {activeStudioItem.payload.summary.examTakeaways.length > 0 && (
+                      {false && activeStudioItem.payload.summary.examTakeaways.length > 0 && (
                         <>
                           <p className="summary-plain-heading"><strong>Exam Takeaways</strong></p>
                           {activeStudioItem.payload.summary.examTakeaways.map((item) => (
@@ -1499,7 +1951,7 @@ function PdfViewer({
                         </>
                       )}
 
-                      {activeStudioItem.payload.summary.revisionQuestions.length > 0 && (
+                      {false && activeStudioItem.payload.summary.revisionQuestions.length > 0 && (
                         <>
                           <p className="summary-plain-heading"><strong>Revision Questions</strong></p>
                           {activeStudioItem.payload.summary.revisionQuestions.map((item, index) => (
@@ -1517,41 +1969,74 @@ function PdfViewer({
               {activeStudioItem.type === 'exercise' && (
                 <div className="exercise-sheet">
                   {activeStudioItem.payload?.exercise ? (
-                    <div className="summary-plain">
-                      <p className="summary-plain-heading"><strong>{activeStudioItem.payload.exercise.title}</strong></p>
+                    <div className="summary-structured exercise-structured">
+                      <h4>{activeStudioItem.payload.exercise.title}</h4>
 
                       {activeStudioItem.payload.exercise.overview && (
-                        <>
-                          <p className="summary-plain-heading"><strong>Overview</strong></p>
-                          <p className="summary-plain-paragraph">{activeStudioItem.payload.exercise.overview}</p>
-                        </>
+                        <section className="summary-section">
+                          <p className="summary-section-heading"><strong>Overview</strong></p>
+                          <p className="summary-section-paragraph">{activeStudioItem.payload.exercise.overview}</p>
+                        </section>
                       )}
 
-                      <p className="summary-plain-heading"><strong>Solved Exercise</strong></p>
-                      {activeStudioItem.payload.exercise.solutions.map((solution) => (
-                        <div key={`${solution.questionNo}-${solution.question}`} className="exercise-item">
-                          <p className="summary-plain-line"><strong>{`Q${solution.questionNo}:`}</strong> {solution.question}</p>
-                          <p className="summary-plain-line"><strong>Answer:</strong> {solution.answer}</p>
+                      {[
+                        { key: 'mcqs', heading: 'Multiple Choice Questions', items: activeStudioItem.payload.exercise.mcqs },
+                        { key: 'shortQuestions', heading: 'Short Questions', items: activeStudioItem.payload.exercise.shortQuestions },
+                        { key: 'longQuestions', heading: 'Long Questions', items: activeStudioItem.payload.exercise.longQuestions },
+                        { key: 'numericals', heading: 'Numerical Problems', items: activeStudioItem.payload.exercise.numericals },
+                      ]
+                        .filter((section) => Array.isArray(section.items) && section.items.length > 0)
+                        .map((section) => (
+                          <section key={section.key} className="summary-section">
+                            <p className="summary-section-heading"><strong>{section.heading}</strong></p>
 
-                          {solution.steps.length > 0 && (
-                            <>
-                              <p className="summary-plain-line"><strong>Steps:</strong></p>
-                              {solution.steps.map((step, index) => (
-                                <p key={`${solution.questionNo}-step-${index}`} className="summary-plain-line">{`${index + 1}. ${step}`}</p>
-                              ))}
-                            </>
-                          )}
+                            <div className="exercise-section-list">
+                              {section.items.map((item) => (
+                                <article key={`${section.key}-${item.questionNo}-${item.question}`} className="exercise-item">
+                                  <p className="exercise-question-line">
+                                    <strong>{`${item.questionNo}.`}</strong>
+                                    {' '}
+                                    <strong>{item.question}</strong>
+                                  </p>
 
-                          {solution.keyPoints.length > 0 && (
-                            <>
-                              <p className="summary-plain-line"><strong>Key Points:</strong></p>
-                              {solution.keyPoints.map((point, index) => (
-                                <p key={`${solution.questionNo}-point-${index}`} className="summary-plain-line">• {point}</p>
+                                  {item.answer && (
+                                    <p className="exercise-answer-line">
+                                      <strong>Answer:</strong>
+                                      {' '}
+                                      {item.answer}
+                                    </p>
+                                  )}
+
+                                  {item.explanation && (
+                                    <p className="exercise-detail-line">
+                                      <strong>Explanation:</strong>
+                                      {' '}
+                                      {item.explanation}
+                                    </p>
+                                  )}
+
+                                  {item.steps.length > 0 && (
+                                    <div className="exercise-detail-group">
+                                      <p className="exercise-detail-label"><strong>Steps:</strong></p>
+                                      {item.steps.map((step, index) => (
+                                        <p key={`${section.key}-${item.questionNo}-step-${index}`} className="exercise-detail-line">{`${index + 1}. ${step}`}</p>
+                                      ))}
+                                    </div>
+                                  )}
+
+                                  {item.keyPoints.length > 0 && (
+                                    <div className="exercise-detail-group">
+                                      <p className="exercise-detail-label"><strong>Key Points:</strong></p>
+                                      {item.keyPoints.map((point, index) => (
+                                        <p key={`${section.key}-${item.questionNo}-point-${index}`} className="exercise-detail-line">• {point}</p>
+                                      ))}
+                                    </div>
+                                  )}
+                                </article>
                               ))}
-                            </>
-                          )}
-                        </div>
-                      ))}
+                            </div>
+                          </section>
+                        ))}
                     </div>
                   ) : (
                     <pre className="studio-raw-output">{beautifyRawResponse(activeStudioItem.payload?.rawAnswer || 'No exercise solutions found.')}</pre>

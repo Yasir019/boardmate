@@ -938,7 +938,7 @@ function ChatLayout() {
           selectedChapter={selectedChapter}
           messages={messages}
           onSendMessage={handleSendMessage}
-          isLoading={isLoading || isLoadingSessions}
+          isLoading={isLoading}
           chatEnabled={true}
           language={language}
           onLanguageChange={setLanguage}

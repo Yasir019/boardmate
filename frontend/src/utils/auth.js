@@ -1,5 +1,6 @@
 const TOKEN_KEY = 'boardmate_access_token';
 const USER_KEY = 'boardmate_user';
+const ADMIN_ACCESS_KEY = 'boardmate_admin_access';
 
 export function getToken() {
   return localStorage.getItem(TOKEN_KEY);
@@ -35,4 +36,17 @@ export function setSession(authResponse) {
 export function clearSession() {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
+  sessionStorage.removeItem(ADMIN_ACCESS_KEY);
+}
+
+export function setAdminAccess() {
+  sessionStorage.setItem(ADMIN_ACCESS_KEY, 'granted');
+}
+
+export function hasAdminAccess() {
+  return sessionStorage.getItem(ADMIN_ACCESS_KEY) === 'granted';
+}
+
+export function clearAdminAccess() {
+  sessionStorage.removeItem(ADMIN_ACCESS_KEY);
 }

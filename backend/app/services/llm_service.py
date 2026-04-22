@@ -30,102 +30,289 @@ CLOUD_LLM_UNAVAILABLE_MESSAGE = (
     "AI assistant is temporarily unavailable right now. Please try again in a moment."
 )
 
+# How long (seconds) to wait when probing internet connectivity.
+_INTERNET_PROBE_TIMEOUT = 3
+
+
+def _is_internet_available() -> bool:
+    """Return True if we can reach the Groq API endpoint, False otherwise."""
+    try:
+        req = urlrequest.Request(
+            "https://api.groq.com",
+            headers={"User-Agent": "BoardMate/1.0"},
+            method="HEAD",
+        )
+        with urlrequest.urlopen(req, timeout=_INTERNET_PROBE_TIMEOUT):
+            return True
+    except Exception:
+        return False
+
+SESSION_MEMORY_SYSTEM_PROMPT = """
+You are BoardMate, an AI educational assistant for Pakistani board students.
+
+MEMORY INSTRUCTIONS:
+You have a conversation history with the student. Use this context to maintain continuity throughout the conversation.
+
+When answering follow-up questions:
+- Reference earlier discussion if relevant (e.g., "As we discussed earlier...")
+- Maintain consistency with previous answers
+- Don't ask for information the student already provided
+- Build on previous explanations when appropriate
+
+IMPORTANT: Remember the chapter, topic, and context being discussed. A student's follow-up question like "Explain more" or "What about X?" refers to the current chapter/subject being studied.
+"""
+
+def build_session_memory_context(
+    messages: list[dict],
+    max_messages: int = 10,
+    include_summary: bool = True,
+) -> str:
+    """Build conversation context for session continuity using sliding window buffer.
+    
+    Args:
+        messages: List of message dicts with 'role' and 'content' keys
+        max_messages: Maximum number of recent messages to include
+        include_summary: Whether to include a session summary
+    
+    Returns:
+        Formatted conversation history string with session summary
+    """
+    if not messages:
+        return "No previous messages in this session."
+    
+    recent = messages[-max_messages:] if len(messages) > max_messages else messages
+    
+    history_parts = []
+    for msg in recent:
+        role = msg.get("role", "user")
+        content = msg.get("content", "")
+        if content and len(content.strip()) > 0:
+            prefix = "Student" if role == "user" else "Assistant"
+            truncated = content[:500] + "..." if len(content) > 500 else content
+            history_parts.append(f"{prefix}: {truncated}")
+    
+    if not history_parts:
+        return "No previous messages in this session."
+    
+    history_text = "\n\n".join(history_parts)
+    
+    if include_summary and len(messages) > max_messages:
+        summary_placeholder = f"\n\n[This session has {len(messages)} messages. Earlier context available.]"
+        history_text = summary_placeholder + "\n\n" + history_text
+    
+    return history_text
+
+
+def generate_session_summary(messages: list[dict], current_topic: str = "") -> str:
+    """Generate a summary of the conversation session for memory persistence.
+    
+    Args:
+        messages: List of conversation messages
+        current_topic: Current chapter/topic being discussed
+    
+    Returns:
+        Session summary string
+    """
+    if len(messages) < 3:
+        return ""
+    
+    user_messages = [m.get("content", "") for m in messages if m.get("role") == "user"]
+    if not user_messages:
+        return ""
+    
+    topics_discussed = current_topic or "various topics"
+    question_count = len(user_messages)
+    last_question = user_messages[-1][:100] if user_messages else ""
+    
+    return (
+        f"Session Summary: Student asked {question_count} question(s) about {topics_discussed}. "
+        f"Last question: {last_question}..."
+    )
+
+
 SYSTEM_PROMPT = (
     "You are BoardMate, an AI educational assistant for Pakistani board students "
     "(Sindh, Punjab, Federal, KPK, Balochistan boards).\n\n"
+    "CRITICAL GROUNDING RULE:\n"
+    "- Use ONLY the textbook context provided as your source for all academic answers.\n"
+    "- If the context does not contain enough information to answer the question, "
+    "say: 'I couldn't find this in the selected chapter. Please check the chapter selection or rephrase your question.'\n"
+    "- DO NOT fill gaps using your training knowledge for subject-matter questions.\n\n"
     "Your role:\n"
-    "- Use the provided textbook context as your primary source for academic answers\n"
-    "- Explain concepts clearly and simply\n"
-    "- Help with exercises and numerical problems\n"
-    "- Reply naturally to simple greetings or app-help requests without forcing textbook citations\n"
-    "- If the textbook context is weak or missing for a study question, say that clearly and offer the next best helpful step\n\n"
+    "- Explain concepts clearly using ONLY the provided context\n"
+    "- Help with exercises and problems found in the context\n"
+    "- Reply naturally to greetings and app-help without forcing citations\n\n"
     "Guidelines:\n"
     "- Be accurate and educational\n"
     "- Use simple language suitable for 9th-12th grade students\n"
-    "- Include formulas when relevant\n"
+    "- Include formulas when they appear in context\n"
     "- Give step-by-step explanations for problems\n"
-    "- Cite which chapter/topic the information comes from when possible\n"
+    "- Cite chapter/topic from context when possible\n"
     "- Respond in the student's requested language when specified\n"
-    "- Never write Roman Urdu. If Urdu is requested, use Urdu script only\n"
-    "- Adapt structure to the question:\n"
-    "  - Use bullet points for lists, key facts, and summaries\n"
-    "  - Use numbered steps for procedures and problem-solving\n"
-    "  - Use short explanatory paragraphs for concept-building\n"
+    "- Never write Roman Urdu — Urdu script only if Urdu requested\n"
+    "- Adapt structure to question type: bullets for lists, numbered steps for procedures, "
+    "short paragraphs for concepts\n"
     "- Use markdown formatting for readability\n"
-    "- Add at most 1-2 meaningful emojis when they improve clarity (not in every line)\n"
-    "- End with a short helpful next-step prompt when appropriate\n"
-    "- Avoid generic filler. Be specific, practical, and exam-focused\n"
-    "- For direct definition-type questions, keep the answer concise first, then add key points"
+    "- Add at most 1-2 meaningful emojis when they aid clarity\n"
+    "- Avoid generic filler — be specific, practical, and exam-focused\n"
 )
 
 QUIZ_SYSTEM_PROMPT = """
 You are BoardMate Quiz Generator for Pakistani board students.
 
-Your task is to generate high-quality MCQs from textbook context.
+STRICT GROUNDING RULE — THIS IS MANDATORY:
+You MUST generate ALL questions EXCLUSIVELY from the textbook context provided below.
+If the context is insufficient to generate even 10 questions, generate only as many as the context supports and say:
+"⚠ Only X questions could be generated — the chapter context retrieved was limited."
+DO NOT use your training knowledge. DO NOT hallucinate content not present in the context.
 
-Rules:
-- Generate unique MCQs based on concepts from the chapter, not only by copying end-of-chapter exercises.
-- Use your understanding of the chapter to create fresh questions.
-- Questions must remain faithful to the textbook context.
-- Avoid repeating the same wording across quiz attempts.
-- Prioritize conceptual understanding, definitions, applications, comparisons, and reasoning.
-- Each MCQ must have exactly 4 options.
-- Only one option must be clearly correct.
-- Wrong options should be plausible but incorrect.
-- Keep questions suitable for board students.
-- Use simple, clear language.
-- Do not generate trick questions.
-- Avoid duplicate questions within the same quiz.
-- Avoid questions whose answer is directly revealed in the wording.
-- If the context is too weak, return fewer but better questions instead of guessing.
+UNIQUENESS RULE:
+Every quiz attempt must feel fresh. Vary which facts, definitions, and concepts you pick.
+Do not reuse the same question phrasing across attempts.
 
-Output format:
-Return ONLY valid JSON in this exact schema:
+FORMAT (plain text, never JSON):
 
-{
-    "quiz_title": "string",
-    "variant_id": "string",
-    "questions": [
-        {
-            "question": "string",
-            "options": ["string", "string", "string", "string"],
-            "answer_index": 0,
-            "explanation": "string"
-        }
-    ]
-}
+📝 QUIZ: [Chapter name exactly as in context]
 
-Rules for formatting:
-- Output must be JSON only, no markdown/prose outside JSON.
-- Generate between 15 and 20 questions as requested by the prompt unless context is too weak.
-- Keep each question clear, readable, and exam-focused.
-- answer_index must be 0..3 and match the correct option.
-- Do not split sentences awkwardly.
+---
+
+## Question 1
+[Question text — derived directly from context]
+A) [Option]
+B) [Option]
+C) [Option]
+D) [Option]
+✅ Correct Answer: [Letter]
+📚 Explanation: [1-sentence explanation citing the context]
+
+---
+
+[Repeat for 15–20 questions]
+
+CONTENT RULES:
+- Questions count: minimum 15, maximum 20, only if context supports it
+- 4 options each, exactly 1 correct, wrong options must be plausible
+- Cover the FULL breadth of the provided context (not just the first section)
+- Vary types: definitions, fill-in-blank, application, reasoning
+- Never reveal the answer in the question wording
+- If context mentions a formula, number, or process — use it
+- End with: "✔ Quiz complete — [X] questions from [chapter name]"
 """
 
 EXERCISE_SYSTEM_PROMPT = """
 You are BoardMate Exercise Solution Generator for Pakistani board students.
 
-Your task is to provide accurate, chapter-specific exercise solutions.
+STRICT GROUNDING RULE — THIS IS MANDATORY:
+Solve questions ONLY using the textbook context provided.
+Do not invent answers, formulas, or steps not present in the context.
+If a question cannot be solved from the context, write:
+"⚠ Insufficient context for this question — please ensure the chapter is fully indexed."
 
-Rules:
-- Use only the provided chapter context.
-- Provide complete answers, not hints.
-- Keep language simple, clear, and exam-oriented.
-- For numerical questions, include method steps and final answer.
-- For theory questions, provide concise but complete board-style responses.
-- Avoid unnecessary filler text.
-- Avoid Roman Urdu.
+FORMAT (plain text, never JSON):
 
-Output format:
-Return ONLY valid JSON using the schema requested in the user prompt.
-Do not include markdown, headings, or prose outside JSON.
+📋 EXERCISE SOLUTIONS: [Chapter name from context]
+
+---
+
+### Section A: Multiple Choice Questions
+
+**Q1.** [Question from context]
+**Answer:** [Correct option — letter and full text]
+**Solution:** [1–2 sentence explanation from context]
+
+---
+
+### Section B: Short Questions
+
+**Q1.** [Question from context]
+**Answer:** [2–4 sentence exam-style answer, grounded in context]
+**Key Points:**
+- [Key fact from context]
+- [Key fact from context]
+
+---
+
+### Section C: Long Questions
+
+**Q1.** [Question from context]
+**Answer:**
+[Step-by-step explanation using context. Use numbered steps for clarity.]
+
+**Key Concepts from context:**
+- [Concept 1]
+- [Concept 2]
+
+---
+
+### Section D: Numerical Problems (if present in context)
+
+**Q1.** [Problem from context]
+**Given:** [Data from context]
+**Required:** [What to find]
+**Solution:**
+Step 1: [Formula from context]
+Step 2: [Substitute values]
+Step 3: [Calculate result]
+**Answer:** [Final value with units]
+
+---
+
+RULES:
+1. Solve every question present in the context — skip nothing
+2. Include all sections visible in context: MCQs, Short, Long, Numerical, Fill-in-the-blank
+3. For numericals, show ALL steps — never just a final answer
+4. Language: simple, exam-focused English (or Urdu script if requested)
+5. Do NOT truncate — complete every question fully
+6. End with: "✔ Exercise complete — [X] questions solved from [chapter name]"
+"""
+
+SUMMARY_SYSTEM_PROMPT = """
+You are BoardMate Study Notes Generator for Pakistani board students.
+
+STRICT GROUNDING RULE — THIS IS MANDATORY:
+Generate notes ONLY from the textbook context provided. Do not add external knowledge.
+If context is thin, produce a shorter but accurate summary and note the limitation.
+
+OUTPUT STRUCTURE — follow this EXACTLY, no deviations:
+
+📖 CHAPTER SUMMARY: [Chapter name from context]
+
+---
+
+## Overview (20 lines)
+[Write exactly ~20 lines summarising the chapter's main themes, purpose, and scope.
+Each line = one meaningful sentence. Cover the chapter in sequence as it appears in context.]
+
+---
+
+## Key Points
+[Bullet list of the most important facts, definitions, formulas, and concepts from the context.
+Minimum 8 points. Each bullet = one clear, exam-focused fact.]
+- [Point 1]
+- [Point 2]
+...
+
+---
+
+## Conclusion (10 lines)
+[Write exactly ~10 lines wrapping up the chapter.
+Summarise what the student should take away. Connect key ideas.
+Mention exam relevance where visible in context.]
+
+---
+
+RULES:
+- Every sentence must be traceable to the provided context
+- Do NOT add examples, facts, or figures not present in the context
+- Use simple language for 9th–12th grade students
+- No JSON, no code blocks — clean readable text only
 """
 
 PROMPT_TEMPLATE = ChatPromptTemplate.from_messages([
     ("system", SYSTEM_PROMPT),
     ("user", (
         "Context from textbook:\n---\n{context}\n---\n\n"
+        "Recent conversation history (may be empty):\n{chat_history}\n\n"
         "Student Question: {question}\n\n"
         "Use the context above when it is relevant. "
         "If this is just a greeting or simple conversational message, respond naturally. "
@@ -161,6 +348,9 @@ HELP_PATTERNS = (
 IDENTITY_PATTERNS = (
     r"who are you",
     r"what are you",
+    r"what is your name",
+    r"what's your name",
+    r"your name",
     r"tell me about yourself",
 )
 STATUS_PATTERNS = (
@@ -304,6 +494,7 @@ def _build_prompt_template(system_prompt: str) -> ChatPromptTemplate:
         ("system", system_prompt),
         ("user", (
             "Context from textbook:\n---\n{context}\n---\n\n"
+            "Recent conversation history (may be empty):\n{chat_history}\n\n"
             "Student Question: {question}\n\n"
             "Use the context above when it is relevant. "
             "If this is just a greeting or simple conversational message, respond naturally. "
@@ -315,6 +506,7 @@ def _build_prompt_template(system_prompt: str) -> ChatPromptTemplate:
 def _generate_cloud_response(
     question: str,
     context: str,
+    chat_history: str = "",
     system_prompt: str | None = None,
     temperature: float | None = None,
     max_tokens: int | None = None,
@@ -334,6 +526,7 @@ def _generate_cloud_response(
     try:
         response = chain.invoke({
             "context": context,
+            "chat_history": chat_history,
             "question": question,
         })
         return response.content
@@ -346,16 +539,23 @@ def _generate_cloud_response(
         retry_chain = prompt_template | get_llm()
         response = retry_chain.invoke({
             "context": context,
+            "chat_history": chat_history,
             "question": question,
         })
         return response.content
 
 
-def _build_local_prompt(context: str, question: str, system_prompt: str | None = None) -> str:
+def _build_local_prompt(
+    context: str,
+    question: str,
+    system_prompt: str | None = None,
+    chat_history: str = "",
+) -> str:
     prompt_system = system_prompt or SYSTEM_PROMPT
     return (
         f"{prompt_system}\n\n"
         f"Context from textbook:\n---\n{context}\n---\n\n"
+        f"Recent conversation history (may be empty):\n{chat_history}\n\n"
         f"Student Question: {question}\n\n"
         "Use the context above when it is relevant. "
         "If this is just a greeting or simple conversational message, respond naturally. "
@@ -366,6 +566,7 @@ def _build_local_prompt(context: str, question: str, system_prompt: str | None =
 def _generate_local_response(
     question: str,
     context: str,
+    chat_history: str = "",
     system_prompt: str | None = None,
     temperature: float | None = None,
     top_p: float | None = None,
@@ -374,7 +575,12 @@ def _generate_local_response(
     endpoint = f"{LOCAL_LLM_BASE_URL.rstrip('/')}/api/generate"
     payload = {
         "model": LOCAL_LLM_MODEL,
-        "prompt": _build_local_prompt(context=context, question=question, system_prompt=system_prompt),
+        "prompt": _build_local_prompt(
+            context=context,
+            question=question,
+            system_prompt=system_prompt,
+            chat_history=chat_history,
+        ),
         "stream": False,
         "options": {
             "temperature": temperature if temperature is not None else 0.3,
@@ -418,6 +624,7 @@ def _is_local_connection_refused(error: Exception) -> bool:
 def generate_response_with_provider(
     question: str,
     context: str,
+    chat_history: str = "",
     board: str = None,
     class_level: str = None,
     language: str = "en",
@@ -440,6 +647,7 @@ def generate_response_with_provider(
             return _generate_cloud_response(
                 enhanced_question,
                 context,
+                chat_history=chat_history,
                 system_prompt=system_prompt,
                 temperature=temperature,
                 max_tokens=max_tokens,
@@ -450,6 +658,7 @@ def generate_response_with_provider(
                 return _generate_local_response(
                     enhanced_question,
                     context,
+                    chat_history=chat_history,
                     system_prompt=system_prompt,
                     temperature=temperature,
                     top_p=top_p,
@@ -457,8 +666,6 @@ def generate_response_with_provider(
                 ), "local"
             except Exception as local_error:
                 logger.error("Local fallback failed after cloud-mode error: %s", local_error)
-                if _is_local_connection_refused(local_error):
-                    return LOCAL_LLM_UNAVAILABLE_MESSAGE, "error"
                 return CLOUD_LLM_UNAVAILABLE_MESSAGE, "error"
 
     if mode == "local":
@@ -466,6 +673,7 @@ def generate_response_with_provider(
             return _generate_local_response(
                 enhanced_question,
                 context,
+                chat_history=chat_history,
                 system_prompt=system_prompt,
                 temperature=temperature,
                 top_p=top_p,
@@ -478,6 +686,7 @@ def generate_response_with_provider(
                     return _generate_cloud_response(
                         enhanced_question,
                         context,
+                        chat_history=chat_history,
                         system_prompt=system_prompt,
                         temperature=temperature,
                         max_tokens=max_tokens,
@@ -489,23 +698,33 @@ def generate_response_with_provider(
                 return LOCAL_LLM_UNAVAILABLE_MESSAGE, "error"
             return CLOUD_LLM_UNAVAILABLE_MESSAGE, "error"
 
-    # auto mode: prefer cloud if configured, otherwise local.
-    if GROQ_API_KEY:
+    # ── auto mode: internet-aware hybrid routing ──────────────────────────────
+    # Probe connectivity first so we skip the Groq timeout when offline.
+    internet_up = _is_internet_available() if GROQ_API_KEY else False
+    logger.debug("Auto-mode connectivity probe: internet_up=%s", internet_up)
+
+    if internet_up and GROQ_API_KEY:
         try:
             return _generate_cloud_response(
                 enhanced_question,
                 context,
+                chat_history=chat_history,
                 system_prompt=system_prompt,
                 temperature=temperature,
                 max_tokens=max_tokens,
             ), "cloud"
         except Exception as cloud_error:
-            logger.warning("Cloud LLM failed in auto mode, falling back to local: %s", cloud_error)
+            logger.warning(
+                "Cloud LLM failed despite connectivity probe passing — falling back to local: %s",
+                cloud_error,
+            )
 
+    # Fallback: local LLM (Ollama)
     try:
         return _generate_local_response(
             enhanced_question,
             context,
+            chat_history=chat_history,
             system_prompt=system_prompt,
             temperature=temperature,
             top_p=top_p,
@@ -513,20 +732,23 @@ def generate_response_with_provider(
         ), "local"
     except Exception as local_error:
         logger.error("Local LLM failed in auto mode: %s", local_error)
-        if _is_local_connection_refused(local_error):
-            if GROQ_API_KEY:
-                try:
-                    return _generate_cloud_response(
-                        enhanced_question,
-                        context,
-                        system_prompt=system_prompt,
-                        temperature=temperature,
-                        max_tokens=max_tokens,
-                    ), "cloud"
-                except Exception as cloud_error:
-                    logger.error("Cloud retry after local failure also failed: %s", cloud_error)
-            return LOCAL_LLM_UNAVAILABLE_MESSAGE, "error"
 
+        # Last-chance cloud retry if probe was wrong and local is also down.
+        if GROQ_API_KEY and not internet_up:
+            try:
+                return _generate_cloud_response(
+                    enhanced_question,
+                    context,
+                    chat_history=chat_history,
+                    system_prompt=system_prompt,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                ), "cloud"
+            except Exception as cloud_error:
+                logger.error("Last-chance cloud retry also failed: %s", cloud_error)
+
+        if _is_local_connection_refused(local_error):
+            return LOCAL_LLM_UNAVAILABLE_MESSAGE, "error"
         return CLOUD_LLM_UNAVAILABLE_MESSAGE, "error"
 
 
@@ -547,9 +769,11 @@ def get_llm() -> ChatGroq:
 def generate_response(
     question: str,
     context: str,
+    chat_history: str = "",
     board: str = None,
     class_level: str = None,
     language: str = "en",
+    system_prompt: str = None,
 ) -> str:
     """
     Generate a response using LangChain with the Groq LLM.
@@ -557,8 +781,11 @@ def generate_response(
     Args:
         question: Student's question.
         context: Retrieved context from the vector store.
+        chat_history: Previous conversation for context.
         board: Optional board name.
         class_level: Optional class level.
+        language: Response language.
+        system_prompt: Optional system prompt override.
 
     Returns:
         The generated answer string.
@@ -566,9 +793,11 @@ def generate_response(
     answer, _provider = generate_response_with_provider(
         question=question,
         context=context,
+        chat_history=chat_history,
         board=board,
         class_level=class_level,
         language=language,
+        system_prompt=system_prompt,
     )
     return answer
 
