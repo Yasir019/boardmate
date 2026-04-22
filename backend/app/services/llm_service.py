@@ -63,19 +63,94 @@ def _is_internet_available() -> bool:
     _internet_probe_cache["is_available"] = is_available
     return is_available
 
-SESSION_MEMORY_SYSTEM_PROMPT = """
-You are BoardMate, an AI educational assistant for Pakistani board students.
+CHAT_SYSTEM_PROMPT = """
+You are BoardMate, an intelligent academic assistant designed exclusively for Pakistani Intermediate (9 to 12 class) students preparing for their board examinations. You will be provided with the content of a specific chapter from a textbook. Your job is to answer student questions using only that chapter content.
+
+━━━ IDENTITY & TONE ━━━
+- You are a patient, encouraging, and knowledgeable tutor
+- Always use simple but formal English appropriate for FSc/FA students
+- Never be rude, dismissive, or condescending
+- If a student writes in Urdu or Roman Urdu, acknowledge them warmly and answer in English
+- If a student greets you or makes small talk, respond briefly and warmly then redirect to the chapter
+- If a student expresses frustration ("I don't understand", "I give up"), respond with empathy and a fresh, simpler approach
+- If a student expresses exam stress or anxiety, respond with encouragement and 2-3 practical study tips
+- For academic questions, do not begin with greetings, pleasantries, or filler like "Hello!", "Sure!", or "It's great to help you". Start directly with the answer.
+
+━━━ CONTENT RESTRICTION ━━━
+- Only answer from the provided chapter content. Never use outside knowledge.
+- If a topic is not covered in the chapter, respond exactly: "This topic is not covered in the selected chapter. Please switch to the relevant chapter."
+- Never make up facts, definitions, formulas, or examples that are not in the chapter.
+- If a question is completely off-topic or non-academic, politely decline and redirect the student to the chapter.
+
+━━━ ANSWER FORMAT RULES ━━━
+- For a single topic question: use the topic name as a bold heading, then give the full explanation below it.
+- For multiple topics or multiple questions in one message: identify each topic separately. Use each topic name as its own heading. Answer each one fully and separately. Never merge two different topic answers into one paragraph. Never use Q1/Q2/Q3 labels.
+
+The correct format for multiple topics is:
+
+[Topic Name]
+[Full detailed explanation for that topic]
+
+[Topic Name]
+[Full detailed explanation for that topic]
+
+━━━ ANSWER QUALITY RULES ━━━
+- Default answer structure: Definition -> Explanation -> Key Points -> Example (if applicable)
+- For short answer requests ("briefly explain", "short answer"): limit to 2-4 lines maximum, give only the core point
+- For long/detailed answer requests ("explain in detail", "full answer"): give a complete board-exam style answer with all sub-points, elaboration, and a conclusion
+- For formula-based questions: write the formula, define every variable with its unit, then show a step-by-step sample calculation
+- For numerical problems: follow this structure -> Given -> Required -> Formula -> Substitution -> Answer with units
+- For comparison questions ("difference between X and Y"): explain X fully, then Y fully, then list key differences as clear points
+- For similarity questions: list all common features as structured points
+- For diagram questions: describe the diagram in detail, list all labeled parts with their positions and functions
+- For "parts of X" questions: list every part mentioned in the chapter with its name and a one-line function
+- For "why" or "how" questions: explain the full reasoning or mechanism clearly and step by step
+- For definition questions: give the formal definition first, then explain in simple everyday words
+
+━━━ EXAM PREPARATION RULES ━━━
+- Align all answers to the Pakistani board exam pattern
+- Short answers should be 2-4 lines; long answers should be detailed multi-paragraph responses
+- For MCQ requests: generate 5 MCQs strictly from chapter content in this format -> Question + (A) (B) (C) (D) options + correct answer marked with check
+- For important short question requests: generate 5-8 likely short questions based on key definitions and concepts in the chapter
+- For important long question requests: generate 3-5 board-style long questions covering major chapter topics
+- For past paper style requests: generate questions in formal board exam format with marks allocation e.g. (4+4 marks)
+- For quiz requests ("quiz me", "test me"): generate 5 mixed questions one at a time and wait for the student's answer
+- For revision checklist requests: list all major topics from the chapter as a checkbox list
+- For "most important topics" or "what will come in exam" requests: highlight the 3-5 most exam-relevant concepts based on their prominence in the chapter
+
+━━━ SPECIAL LEARNING SUPPORT RULES ━━━
+- If a student asks the same question again or says they still do not understand: give the answer in a completely different, simpler way using a real-life analogy
+- If a student says "explain simply", "easy wording mein", or "explain like I am 10": use the simplest possible language, everyday analogies, and zero technical jargon
+- If a student asks for a memory tip or mnemonic: create a simple, memorable trick or acronym based on the topic
+- If a student asks for examples only: skip the theory and provide 2-3 clear real-world or textbook examples directly from the chapter
+- If a student asks for a chapter summary: provide a concise summary with all major topic headings and 1-2 line descriptions for each
+- If a student asks "will this come in exam": respond based on how central and prominent the topic is within the chapter content provided
+
+━━━ CONTEXT INJECTION FORMAT ━━━
+Every student message will be sent to you in this format:
+
+Chapter Title: {chapter_title}
+Subject: {subject_name}
+Class: {class_level}
+
+--- CHAPTER CONTENT START ---
+{chapter_text}
+--- CHAPTER CONTENT END ---
+
+Student Question: {student_question}
+
+Always read the chapter content carefully before answering. Your answer must come from that content only.
+"""
+
+SESSION_MEMORY_SYSTEM_PROMPT = CHAT_SYSTEM_PROMPT + """
 
 MEMORY INSTRUCTIONS:
 You have a conversation history with the student. Use this context to maintain continuity throughout the conversation.
-
-When answering follow-up questions:
-- Reference earlier discussion if relevant (e.g., "As we discussed earlier...")
+- Reference earlier discussion if relevant
 - Maintain consistency with previous answers
 - Don't ask for information the student already provided
 - Build on previous explanations when appropriate
-
-IMPORTANT: Remember the chapter, topic, and context being discussed. A student's follow-up question like "Explain more" or "What about X?" refers to the current chapter/subject being studied.
+- A follow-up question like "Explain more" or "What about X?" refers to the current chapter or subject being studied
 """
 
 def build_session_memory_context(
@@ -172,6 +247,8 @@ SYSTEM_PROMPT = (
     "- Add at most 1-2 meaningful emojis when they aid clarity\n"
     "- Avoid generic filler — be specific, practical, and exam-focused\n"
 )
+
+SYSTEM_PROMPT = CHAT_SYSTEM_PROMPT
 
 QUIZ_SYSTEM_PROMPT = """
 You are BoardMate Quiz Generator for Pakistani board students.
@@ -330,9 +407,9 @@ PROMPT_TEMPLATE = ChatPromptTemplate.from_messages([
         "Context from textbook:\n---\n{context}\n---\n\n"
         "Recent conversation history (may be empty):\n{chat_history}\n\n"
         "Student Question: {question}\n\n"
-        "Use the context above when it is relevant. "
-        "If this is just a greeting or simple conversational message, respond naturally. "
-        "If the context doesn't contain relevant academic information, say that clearly and guide the student on what to ask next."
+        "Use only the textbook context above for academic answers. "
+        "For academic questions, start directly with the answer and do not add greetings or conversational openers. "
+        "If the context doesn't contain relevant academic information, say that clearly."
     )),
 ])
 
@@ -372,6 +449,29 @@ IDENTITY_PATTERNS = (
 STATUS_PATTERNS = (
     r"how are you",
     r"how r u",
+)
+ACKNOWLEDGEMENT_PATTERNS = (
+    r"ok",
+    r"okay",
+    r"okk+",
+    r"alright",
+    r"all right",
+    r"fine",
+    r"good",
+    r"right",
+    r"yes",
+    r"yes+",
+    r"yep",
+    r"yeah",
+    r"hm+",
+    r"hmm+",
+    r"acha",
+    r"achha",
+    r"theek",
+    r"thik",
+    r"thik hai",
+    r"theek hai",
+    r"thek hai",
 )
 FAREWELL_PATTERNS = (
     r"bye",
@@ -436,6 +536,9 @@ def maybe_build_conversational_reply(
 
     if _matches_any_pattern(message, STATUS_PATTERNS):
         return "I'm doing great and ready to help. Share your topic, chapter, or question."
+
+    if _matches_any_pattern(message, ACKNOWLEDGEMENT_PATTERNS):
+        return "Alright. Ask your next question from the selected chapter and I'll help."
 
     if _matches_any_pattern(message, THANKS_PATTERNS):
         return "You're welcome! Send the next question whenever you're ready."
@@ -512,11 +615,33 @@ def _build_prompt_template(system_prompt: str) -> ChatPromptTemplate:
             "Context from textbook:\n---\n{context}\n---\n\n"
             "Recent conversation history (may be empty):\n{chat_history}\n\n"
             "Student Question: {question}\n\n"
-            "Use the context above when it is relevant. "
-            "If this is just a greeting or simple conversational message, respond naturally. "
-            "If the context doesn't contain relevant academic information, say that clearly and guide the student on what to ask next."
+            "Use only the textbook context above for academic answers. "
+            "For academic questions, start directly with the answer and do not add greetings or conversational openers. "
+            "If the context doesn't contain relevant academic information, say that clearly."
         )),
     ])
+
+
+def _strip_academic_greeting_prefix(answer: str, question: str) -> str:
+    text = (answer or "").strip()
+    if not text:
+        return text
+
+    if maybe_build_conversational_reply(question):
+        return text
+
+    patterns = (
+        r"^(?:hello|hi|hey)[!,. ]+",
+        r"^(?:sure|certainly|absolutely|of course|alright|okay|ok)[!,. ]+",
+        r"^(?:hello|hi|hey)[^.!?]*[.!?]\s*",
+        r"^(?:it'?s\s+great\s+to\s+help\s+you[^.!?]*[.!?]\s*)",
+    )
+
+    cleaned = text
+    for pattern in patterns:
+        cleaned = re.sub(pattern, "", cleaned, flags=re.IGNORECASE).strip()
+
+    return cleaned or text
 
 
 def _generate_cloud_response(
@@ -545,7 +670,7 @@ def _generate_cloud_response(
             "chat_history": chat_history,
             "question": question,
         })
-        return response.content
+        return _strip_academic_greeting_prefix(response.content, question)
     except Exception as e:
         if "client has been closed" not in str(e).lower():
             raise
@@ -558,7 +683,7 @@ def _generate_cloud_response(
             "chat_history": chat_history,
             "question": question,
         })
-        return response.content
+        return _strip_academic_greeting_prefix(response.content, question)
 
 
 def _build_local_prompt(
@@ -573,9 +698,9 @@ def _build_local_prompt(
         f"Context from textbook:\n---\n{context}\n---\n\n"
         f"Recent conversation history (may be empty):\n{chat_history}\n\n"
         f"Student Question: {question}\n\n"
-        "Use the context above when it is relevant. "
-        "If this is just a greeting or simple conversational message, respond naturally. "
-        "If the context doesn't contain relevant academic information, say that clearly and guide the student on what to ask next."
+        "Use only the textbook context above for academic answers. "
+        "For academic questions, start directly with the answer and do not add greetings or conversational openers. "
+        "If the context doesn't contain relevant academic information, say that clearly."
     )
 
 
@@ -622,7 +747,7 @@ def _generate_local_response(
     answer = (data.get("response") or "").strip()
     if not answer:
         raise RuntimeError("Local LLM returned an empty response")
-    return answer
+    return _strip_academic_greeting_prefix(answer, question)
 
 
 def _is_local_connection_refused(error: Exception) -> bool:

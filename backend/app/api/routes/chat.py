@@ -875,9 +875,9 @@ async def ask_question(
             history_stmt = select(Message).where(Message.chat_id == chat.id)
             if request.chapter:
                 history_stmt = history_stmt.where(Message.chapter == request.chapter)
-            history_stmt = history_stmt.order_by(desc(Message.created_at)).limit(12)
+            history_stmt = history_stmt.order_by(desc(Message.created_at)).limit(8)
             recent_messages = list(reversed(db.scalars(history_stmt).all()))
-            chat_history_text = _build_chat_history_text(recent_messages, limit=8)
+            chat_history_text = _build_chat_history_text(recent_messages, limit=4)
             session_system_prompt = _build_session_prompt_system()
 
         result = rag_pipeline.query(

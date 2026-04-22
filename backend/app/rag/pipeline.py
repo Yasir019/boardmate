@@ -44,6 +44,25 @@ def _normalize_key(value: str | None) -> str:
     return " ".join(str(value).strip().lower().split())
 
 
+def _chat_top_k_for_question(question: str) -> int:
+    normalized = _normalize_key(question)
+    word_count = len(normalized.split())
+    if not normalized:
+        return 2
+    if word_count <= 6:
+        return 2
+    if any(token in normalized for token in ("difference", "compare", "why", "how", "steps", "explain", "derive")):
+        return max(4, TOP_K_RESULTS)
+    return min(TOP_K_RESULTS, 3)
+
+
+def _chat_max_tokens_for_question(question: str) -> int:
+    normalized = _normalize_key(question)
+    if any(token in normalized for token in ("difference", "compare", "why", "how", "steps", "detail", "detailed", "long")):
+        return 640
+    return 384
+
+
 class RAGPipeline:
     """Complete RAG pipeline for indexing and querying textbook content."""
 
@@ -185,11 +204,25 @@ class RAGPipeline:
 
         results = self.vector_store.search(
             query=question,
-            top_k=TOP_K_RESULTS,
+            top_k=_chat_top_k_for_question(question),
             filters=filters,
         )
 
         if not results:
+            return {
+                "answer": build_missing_context_response(
+                    board=board,
+                    class_level=class_level,
+                    subject=subject,
+                    chapter=chapter,
+                    language=language,
+                ),
+                "sources": [],
+                "llm_provider": "rule-based",
+            }
+
+        top_distance = results[0].get("distance")
+        if isinstance(top_distance, (int, float)) and top_distance > 1.15:
             return {
                 "answer": build_missing_context_response(
                     board=board,
@@ -212,6 +245,7 @@ class RAGPipeline:
             class_level=class_level,
             language=language,
             system_prompt=system_prompt,
+            max_tokens=_chat_max_tokens_for_question(question),
         )
 
         sources = []
