@@ -22,6 +22,7 @@ from app.services.llm_service import (
     build_missing_context_response,
     generate_response_with_provider,
     maybe_build_conversational_reply,
+    normalize_llm_mode,
 )
 
 logger = logging.getLogger(__name__)
@@ -44,7 +45,7 @@ def _normalize_key(value: str | None) -> str:
     return " ".join(str(value).strip().lower().split())
 
 
-def _chat_top_k_for_question(question: str) -> int:
+def _chat_top_k_for_question(question: str, is_local_mode: bool = False) -> int:
     normalized = _normalize_key(question)
     word_count = len(normalized.split())
     if not normalized:
@@ -52,15 +53,28 @@ def _chat_top_k_for_question(question: str) -> int:
     if word_count <= 6:
         return 2
     if any(token in normalized for token in ("difference", "compare", "why", "how", "steps", "explain", "derive")):
-        return max(4, TOP_K_RESULTS)
-    return min(TOP_K_RESULTS, 3)
+        return min(max(4, TOP_K_RESULTS), 3 if is_local_mode else TOP_K_RESULTS)
+    return 2 if is_local_mode else min(TOP_K_RESULTS, 3)
 
 
-def _chat_max_tokens_for_question(question: str) -> int:
+def _chat_max_tokens_for_question(question: str, is_local_mode: bool = False) -> int:
     normalized = _normalize_key(question)
+    if is_local_mode:
+        if any(token in normalized for token in ("difference", "compare", "why", "how", "steps", "detail", "detailed", "long")):
+            return 384
+        return 256
     if any(token in normalized for token in ("difference", "compare", "why", "how", "steps", "detail", "detailed", "long")):
         return 640
     return 384
+
+
+def _trim_chat_context_for_mode(context: str, is_local_mode: bool = False) -> str:
+    if not context:
+        return ""
+    max_chars = 4500 if is_local_mode else 9000
+    if len(context) <= max_chars:
+        return context
+    return context[:max_chars].rstrip() + "\n\n[Context trimmed for faster response]"
 
 
 class RAGPipeline:
@@ -200,12 +214,13 @@ class RAGPipeline:
             "class_level_key": _normalize_key(class_level),
             "subject_key": _normalize_key(subject),
         }
+        is_local_mode = normalize_llm_mode(llm_mode_override) == "local"
         if chapter:
             filters["chapter_key"] = _normalize_key(chapter)
 
         results = self.vector_store.search(
             query=question,
-            top_k=_chat_top_k_for_question(question),
+            top_k=_chat_top_k_for_question(question, is_local_mode=is_local_mode),
             filters=filters,
         )
 
@@ -237,6 +252,7 @@ class RAGPipeline:
             }
 
         context = "\n\n---\n\n".join(r["text"] for r in results)
+        context = _trim_chat_context_for_mode(context, is_local_mode=is_local_mode)
 
         answer, llm_provider = generate_response_with_provider(
             question=question,
@@ -246,7 +262,7 @@ class RAGPipeline:
             class_level=class_level,
             language=language,
             system_prompt=system_prompt,
-            max_tokens=_chat_max_tokens_for_question(question),
+            max_tokens=_chat_max_tokens_for_question(question, is_local_mode=is_local_mode),
             mode_override=llm_mode_override,
         )
 

@@ -76,6 +76,18 @@ a {
   -webkit-tap-highlight-color: transparent;
 }
 
+button,
+[role="button"],
+[role="menuitem"] {
+  cursor: pointer;
+}
+
+button:disabled,
+[role="button"][aria-disabled="true"],
+[role="menuitem"][aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
 .material-symbols-outlined {
   font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
 }

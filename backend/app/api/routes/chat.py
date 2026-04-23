@@ -31,11 +31,35 @@ from app.services.llm_service import (
     generate_response_with_provider,
     get_llm_runtime_status,
     maybe_build_conversational_reply,
+    normalize_llm_mode,
 )
 
 router = APIRouter()
 
 _STUDIO_RECENT_OUTPUTS: dict[str, deque[str]] = defaultdict(lambda: deque(maxlen=8))
+
+
+def _is_local_mode_requested(mode_override: str | None) -> bool:
+    return normalize_llm_mode(mode_override) == "local"
+
+
+def _studio_generation_settings(task_name: str, is_local_mode: bool) -> tuple[str, float, float, int, list[int]]:
+    if task_name == "quiz":
+        if is_local_mode:
+            return QUIZ_SYSTEM_PROMPT, 0.6, 0.85, 768, [6000]
+        return QUIZ_SYSTEM_PROMPT, 0.7, 0.9, 2048, [12000, 8000]
+
+    if task_name == "summary":
+        if is_local_mode:
+            return SUMMARY_SYSTEM_PROMPT, 0.25, 0.85, 1024, [8000]
+        return SUMMARY_SYSTEM_PROMPT, 0.35, 0.9, 3072, [18000, 12000]
+
+    if task_name == "exercise":
+        if is_local_mode:
+            return EXERCISE_SYSTEM_PROMPT, 0.25, 0.85, 1536, [12000, 9000]
+        return EXERCISE_SYSTEM_PROMPT, 0.35, 0.9, 8192, [48000, 32000]
+
+    raise HTTPException(status_code=422, detail=f"Unsupported studio task: {task_name}")
 
 
 def _normalize_studio_task(task: str) -> str:
@@ -995,26 +1019,10 @@ async def generate_studio_content(
         ])
 
         # ── choose system prompt and generation settings per task ─────────────
-        if task_name == "quiz":
-            system_prompt = QUIZ_SYSTEM_PROMPT
-            temperature = 0.7
-            top_p = 0.9
-            max_tokens = 2048
-            context_budgets = [12000, 8000]
-        elif task_name == "summary":
-            system_prompt = SUMMARY_SYSTEM_PROMPT
-            temperature = 0.35
-            top_p = 0.9
-            max_tokens = 3072
-            context_budgets = [18000, 12000]
-        elif task_name == "exercise":
-            system_prompt = EXERCISE_SYSTEM_PROMPT
-            temperature = 0.35
-            top_p = 0.9
-            max_tokens = 8192
-            context_budgets = [48000, 32000]
-        else:
-            raise HTTPException(status_code=422, detail=f"Unsupported studio task: {request.task}")
+        system_prompt, temperature, top_p, max_tokens, context_budgets = _studio_generation_settings(
+            task_name=task_name,
+            is_local_mode=_is_local_mode_requested(request.llm_mode_override),
+        )
 
         answer = ""
         llm_provider = None

@@ -151,9 +151,12 @@ You are BoardMate, an intelligent academic assistant designed exclusively for Pa
 
 ━━━ IDENTITY & TONE ━━━
 - You are a patient, encouraging, and knowledgeable tutor
-- Always use simple but formal English appropriate for FSc/FA students
+- Use simple, exam-focused language appropriate for FSc/FA students
 - Never be rude, dismissive, or condescending
-- If a student writes in Urdu or Roman Urdu, acknowledge them warmly and answer in English
+- If the requested response language is Urdu, always answer in proper Urdu script only
+- Never answer in Roman Urdu
+- If a student writes in Roman Urdu and the response language is Urdu, convert the reply into proper Urdu script
+- If a student writes in Urdu or Roman Urdu but the response language is English, answer in English
 - If a student greets you or makes small talk, respond briefly and warmly then redirect to the chapter
 - If a student expresses frustration ("I don't understand", "I give up"), respond with empathy and a fresh, simpler approach
 - If a student expresses exam stress or anxiety, respond with encouragement and 2-3 practical study tips
@@ -789,21 +792,24 @@ def _build_local_prompt(
     system_prompt: str | None = None,
     chat_history: str = "",
 ) -> str:
-    prompt_system = system_prompt or (
-        "You are BoardMate, a textbook-grounded tutor for Pakistani board students. "
-        "Use only the provided textbook context. "
-        "Answer directly and concisely. "
-        "Do not include hidden reasoning, thinking tags, or analysis in the output. "
-        "If the context is insufficient, say so clearly."
-    )
+    trimmed_context = (context or "").strip()
+    if len(trimmed_context) > 3200:
+        trimmed_context = trimmed_context[:3200].rstrip()
+
+    trimmed_history = (chat_history or "").strip()
+    if len(trimmed_history) > 500:
+        trimmed_history = trimmed_history[-500:].lstrip()
+
     return (
         "Context from textbook:\n"
-        f"---\n{context}\n---\n\n"
-        f"Recent conversation history:\n{chat_history or 'No previous messages.'}\n\n"
+        f"---\n{trimmed_context}\n---\n\n"
+        f"Recent conversation history:\n{trimmed_history or 'No previous messages.'}\n\n"
         f"Student Question:\n{question}\n\n"
         "Answer rules:\n"
-        f"- {prompt_system}\n"
+        "- Use only the textbook context.\n"
         "- For academic answers, start directly with the answer.\n"
+        "- Keep the answer concise and relevant.\n"
+        "- If context is insufficient, say so clearly.\n"
         "- Never output <think> tags or chain-of-thought.\n"
     )
 
@@ -872,6 +878,7 @@ def _generate_local_response(
             "top_p": top_p if top_p is not None else 0.9,
             "repeat_penalty": 1.1,
             "num_predict": max_tokens if max_tokens is not None else 1024,
+            "num_ctx": 2048,
         },
     }
 
