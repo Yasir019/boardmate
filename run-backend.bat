@@ -1,26 +1,37 @@
 @echo off
-set ROOT=%~dp0
-set PYTHON_EXE=%ROOT%.venv\Scripts\python.exe
+setlocal
 
-if not exist "%PYTHON_EXE%" (
-	echo Virtual environment not found at %PYTHON_EXE%
-	echo Create it once with: py -m venv .venv
-	pause
-	exit /b 1
+set "ROOT=%~dp0"
+set "BACKEND_DIR=%ROOT%backend"
+set "BACKEND_PYTHON=%BACKEND_DIR%\.venv\Scripts\python.exe"
+set "ROOT_PYTHON=%ROOT%.venv\Scripts\python.exe"
+
+cd /d "%BACKEND_DIR%"
+
+if exist "%BACKEND_PYTHON%" (
+  "%BACKEND_PYTHON%" -c "import uvicorn" >nul 2>&1
+  if errorlevel 1 (
+    echo Backend dependencies are not installed in:
+    echo   %BACKEND_PYTHON%
+    echo.
+    echo Run these commands once:
+    echo   cd /d "%BACKEND_DIR%"
+    echo   .\.venv\Scripts\python.exe -m ensurepip --upgrade
+    echo   .\.venv\Scripts\python.exe -m pip install -r requirements.txt
+    exit /b 1
+  )
+
+  "%BACKEND_PYTHON%" -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+  exit /b %ERRORLEVEL%
 )
 
-cd /d "%ROOT%backend"
-
-"%PYTHON_EXE%" -c "import fastapi,uvicorn" >nul 2>&1
-if errorlevel 1 (
-	echo Installing backend dependencies one time...
-	"%PYTHON_EXE%" -m pip install -r requirements.txt
-	if errorlevel 1 (
-		echo Dependency install failed.
-		pause
-		exit /b 1
-	)
+if exist "%ROOT_PYTHON%" (
+  "%ROOT_PYTHON%" -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+  exit /b %ERRORLEVEL%
 )
 
-"%PYTHON_EXE%" -m uvicorn app.main:app --reload --port 8000
-pause
+echo Backend Python environment not found.
+echo Expected one of:
+echo   %BACKEND_PYTHON%
+echo   %ROOT_PYTHON%
+exit /b 1

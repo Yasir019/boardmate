@@ -1,13 +1,13 @@
 const LANGUAGE_CONFIG = {
   en: {
     label: 'English',
-    recognition: 'en-US',
-    synthesis: 'en-US',
+    recognition: ['en-US', 'en-GB', 'en'],
+    synthesis: ['en-US', 'en-GB', 'en'],
   },
   ur: {
     label: 'Urdu',
-    recognition: 'ur-PK',
-    synthesis: 'ur-PK',
+    recognition: ['ur-PK', 'ur-IN', 'ur'],
+    synthesis: ['ur-PK', 'ur-IN', 'ur'],
   },
 };
 
@@ -30,11 +30,19 @@ export function createSpeechRecognition(language = 'en') {
   }
 
   const recognition = new SpeechRecognition();
-  recognition.lang = getLanguageConfig(language).recognition;
+  recognition.lang = getLanguageConfig(language).recognition[0];
   recognition.continuous = false;
   recognition.interimResults = false;
   recognition.maxAlternatives = 1;
   return recognition;
+}
+
+function pickMatchingVoice(voices, language) {
+  const candidates = getLanguageConfig(language).synthesis.map((value) => value.toLowerCase());
+
+  return voices.find((voice) => candidates.includes(voice.lang?.toLowerCase()))
+    || voices.find((voice) => candidates.some((candidate) => voice.lang?.toLowerCase().startsWith(candidate)))
+    || null;
 }
 
 export function stopSpeaking() {
@@ -51,18 +59,9 @@ export function speakText(text, language = 'en', options = {}) {
   stopSpeaking();
 
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = getLanguageConfig(language).synthesis;
+  utterance.lang = getLanguageConfig(language).synthesis[0];
   utterance.rate = language === 'ur' ? 0.9 : 1;
   utterance.pitch = 1;
-
-  const voices = window.speechSynthesis.getVoices();
-  const prefix = utterance.lang.toLowerCase().split('-')[0];
-  const matchingVoice = voices.find((voice) =>
-    voice.lang?.toLowerCase().startsWith(prefix)
-  );
-  if (matchingVoice) {
-    utterance.voice = matchingVoice;
-  }
 
   if (typeof options.onEnd === 'function') {
     utterance.onend = options.onEnd;
@@ -71,6 +70,35 @@ export function speakText(text, language = 'en', options = {}) {
     utterance.onerror = options.onError;
   }
 
-  window.speechSynthesis.speak(utterance);
+  let didSpeak = false;
+  const speakOnce = () => {
+    if (didSpeak) {
+      return;
+    }
+    didSpeak = true;
+
+    const voices = window.speechSynthesis.getVoices();
+    const matchingVoice = pickMatchingVoice(voices, language);
+    if (matchingVoice) {
+      utterance.voice = matchingVoice;
+      utterance.lang = matchingVoice.lang;
+    }
+
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const voices = window.speechSynthesis.getVoices();
+  if (voices.length) {
+    speakOnce();
+    return true;
+  }
+
+  const handleVoicesChanged = () => {
+    window.speechSynthesis.removeEventListener('voiceschanged', handleVoicesChanged);
+    speakOnce();
+  };
+
+  window.speechSynthesis.addEventListener('voiceschanged', handleVoicesChanged);
+  window.setTimeout(speakOnce, 250);
   return true;
 }

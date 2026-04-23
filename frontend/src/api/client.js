@@ -62,21 +62,6 @@ function isNetworkFetchError(error) {
   return error instanceof TypeError;
 }
 
-async function shouldFallbackToAsk(response) {
-  if (response.status === 404) {
-    return true;
-  }
-
-  if (response.status === 422) {
-    const detail = (await getErrorDetail(response)).toLowerCase();
-    if (detail.includes('unsupported studio task')) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
 function assertAuthOrThrow(response) {
   if (response.status === 401) {
     handleAuthExpired();
@@ -198,6 +183,7 @@ export const api = {
     language = 'en',
     chatId = null,
     saveToChat = true,
+    llmModeOverride = null,
   ) {
     let response;
     try {
@@ -216,6 +202,7 @@ export const api = {
           chat_id: chatId,
           language,
           save_to_chat: saveToChat,
+          llm_mode_override: llmModeOverride,
         }),
       });
     } catch (error) {
@@ -237,30 +224,23 @@ export const api = {
     return response.json();
   },
 
-  async generateChapterQuiz(board, classLevel, subject, chapter, chapterTitle, language = 'en') {
-    const nonce = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    const prompt = [
-      `Generate exactly 15 multiple-choice quiz questions from chapter "${chapterTitle || chapter}".`,
-      `Generation nonce: ${nonce}`,
-      'Return ONLY valid JSON in this schema:',
-      '{',
-      '  "quiz_title": "string",',
-      '  "variant_id": "string",',
-      '  "difficulty_mix": {"easy": 0, "medium": 0, "hard": 0},',
-      '  "questions": [',
-      '    {',
-      '      "question": "string",',
-      '      "options": ["string", "string", "string", "string"],',
-      '      "answer_index": 0,',
-      '      "difficulty": "easy|medium|hard",',
-      '      "concept": "string",',
-      '      "explanation": "string"',
-      '    }',
-      '  ]',
-      '}',
-      'Rules: answer_index must be 0..3, questions must be chapter-specific, exam-focused, and unique for this nonce.',
-    ].join('\n');
+  async getChatRuntime() {
+    const response = await fetch(buildApiUrl('/chat/runtime'), {
+      headers: {
+        ...getAuthHeaders(),
+      },
+    });
 
+    assertAuthOrThrow(response);
+
+    if (!response.ok) {
+      throw new Error(await getErrorMessage(response, 'Failed to fetch chat runtime status'));
+    }
+
+    return response.json();
+  },
+
+  async generateChapterQuiz(board, classLevel, subject, chapter, chapterTitle, language = 'en', llmModeOverride = null) {
     try {
       const response = await fetch(buildApiUrl('/chat/studio/generate'), {
         method: 'POST',
@@ -275,23 +255,11 @@ export const api = {
           chapter,
           task: 'quiz',
           language,
+          llm_mode_override: llmModeOverride,
         }),
       });
 
       assertAuthOrThrow(response);
-
-      if (await shouldFallbackToAsk(response)) {
-        return this.askQuestion(
-          board,
-          classLevel,
-          subject,
-          prompt,
-          chapter,
-          language,
-          null,
-          false,
-        );
-      }
 
       if (!response.ok) {
         throw new Error(await getErrorMessage(response, `Failed to generate quiz for ${chapterTitle || chapter}`));
@@ -300,43 +268,13 @@ export const api = {
       return response.json();
     } catch (error) {
       if (isNetworkFetchError(error)) {
-        try {
-          return this.askQuestion(
-            board,
-            classLevel,
-            subject,
-            prompt,
-            chapter,
-            language,
-            null,
-            false,
-          );
-        } catch (fallbackError) {
-          throw toNetworkError(fallbackError, 'generate quiz');
-        }
+        throw toNetworkError(error, 'generate quiz');
       }
       throw error;
     }
   },
 
-  async generateChapterSummary(board, classLevel, subject, chapter, chapterTitle, language = 'en') {
-    const nonce = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    const prompt = [
-      `Create structured exam-focused summary and study notes for chapter "${chapterTitle || chapter}".`,
-      `Generation nonce: ${nonce}`,
-      'Return ONLY valid JSON in this schema:',
-      '{',
-      '  "summary_title": "string",',
-      '  "variant_id": "string",',
-      '  "overview": "string",',
-      '  "key_concepts": ["string"],',
-      '  "important_terms": [{"term": "string", "definition": "string"}],',
-      '  "exam_takeaways": ["string"],',
-      '  "revision_questions": ["string"]',
-      '}',
-      'Rules: concise and practical; unique wording for this nonce.',
-    ].join('\n');
-
+  async generateChapterSummary(board, classLevel, subject, chapter, chapterTitle, language = 'en', llmModeOverride = null) {
     try {
       const response = await fetch(buildApiUrl('/chat/studio/generate'), {
         method: 'POST',
@@ -351,23 +289,11 @@ export const api = {
           chapter,
           task: 'summary',
           language,
+          llm_mode_override: llmModeOverride,
         }),
       });
 
       assertAuthOrThrow(response);
-
-      if (await shouldFallbackToAsk(response)) {
-        return this.askQuestion(
-          board,
-          classLevel,
-          subject,
-          prompt,
-          chapter,
-          language,
-          null,
-          false,
-        );
-      }
 
       if (!response.ok) {
         throw new Error(await getErrorMessage(response, `Failed to generate summary for ${chapterTitle || chapter}`));
@@ -376,47 +302,13 @@ export const api = {
       return response.json();
     } catch (error) {
       if (isNetworkFetchError(error)) {
-        try {
-          return this.askQuestion(
-            board,
-            classLevel,
-            subject,
-            prompt,
-            chapter,
-            language,
-            null,
-            false,
-          );
-        } catch (fallbackError) {
-          throw toNetworkError(fallbackError, 'generate summary');
-        }
+        throw toNetworkError(error, 'generate summary');
       }
       throw error;
     }
   },
 
-  async generateChapterExerciseSolution(board, classLevel, subject, chapter, chapterTitle, language = 'en') {
-    const nonce = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    const prompt = [
-      `Create chapter exercise solutions with answers for chapter "${chapterTitle || chapter}".`,
-      `Generation nonce: ${nonce}`,
-      'Return ONLY valid JSON in this schema:',
-      '{',
-      '  "solution_title": "string",',
-      '  "overview": "string",',
-      '  "solutions": [',
-      '    {',
-      '      "question_no": "string",',
-      '      "question": "string",',
-      '      "answer": "string",',
-      '      "steps": ["string"],',
-      '      "key_points": ["string"]',
-      '    }',
-      '  ]',
-      '}',
-      'Rules: include direct answers, show steps for numerical items, and keep wording exam-focused.',
-    ].join('\n');
-
+  async generateChapterExerciseSolution(board, classLevel, subject, chapter, chapterTitle, language = 'en', llmModeOverride = null) {
     try {
       const response = await fetch(buildApiUrl('/chat/studio/generate'), {
         method: 'POST',
@@ -431,23 +323,11 @@ export const api = {
           chapter,
           task: 'exercise',
           language,
+          llm_mode_override: llmModeOverride,
         }),
       });
 
       assertAuthOrThrow(response);
-
-      if (await shouldFallbackToAsk(response)) {
-        return this.askQuestion(
-          board,
-          classLevel,
-          subject,
-          prompt,
-          chapter,
-          language,
-          null,
-          false,
-        );
-      }
 
       if (!response.ok) {
         throw new Error(await getErrorMessage(response, `Failed to generate exercise solutions for ${chapterTitle || chapter}`));
@@ -456,20 +336,7 @@ export const api = {
       return response.json();
     } catch (error) {
       if (isNetworkFetchError(error)) {
-        try {
-          return this.askQuestion(
-            board,
-            classLevel,
-            subject,
-            prompt,
-            chapter,
-            language,
-            null,
-            false,
-          );
-        } catch (fallbackError) {
-          throw toNetworkError(fallbackError, 'generate exercise solutions');
-        }
+        throw toNetworkError(error, 'generate exercise solutions');
       }
       throw error;
     }

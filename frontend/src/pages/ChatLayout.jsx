@@ -26,7 +26,7 @@ const UI_TEXT = {
     micStartFailed: 'Could not start voice input. Try Chrome or Edge and refresh the page.',
     micGenericError: 'Voice input failed. Try again after allowing microphone access.',
     micNoSpeech: 'No speech was detected. Please speak a little closer to the microphone.',
-    micNetwork: 'Voice recognition service is unavailable right now.',
+    micNetwork: 'Voice recognition service is unavailable right now. Urdu voice depends on your browser speech service.',
     inputPlaceholder: 'Ask a short question or tap the microphone...',
     chapterChanged: (chapter) => `Focused on ${chapter}. Ask about this chapter.`,
     welcome: 'Ask anything from this chapter.',
@@ -42,7 +42,7 @@ const UI_TEXT = {
     micStartFailed: 'Could not start voice input. Try Chrome or Edge and refresh the page.',
     micGenericError: 'Voice input failed. Try again after allowing microphone access.',
     micNoSpeech: 'No speech was detected. Please speak a little closer to the microphone.',
-    micNetwork: 'Voice recognition service is unavailable right now.',
+    micNetwork: 'Voice recognition service is unavailable right now. Urdu voice depends on your browser speech service.',
     inputPlaceholder: 'Ask a short question or tap the microphone...',
     chapterChanged: (chapter) => `Focused on ${chapter}. Ask about this chapter.`,
     welcome: 'Ask anything from this chapter.',
@@ -66,6 +66,8 @@ function ChatLayout() {
   const [isListening, setIsListening] = useState(false);
   const [voiceError, setVoiceError] = useState('');
   const [activeSpeechMessageId, setActiveSpeechMessageId] = useState(null);
+  const [llmMode, setLlmMode] = useState('cloud');
+  const [chatRuntime, setChatRuntime] = useState(null);
   const [showChapterPanel, setShowChapterPanel] = useState(true);
   const [showPdfPanel, setShowPdfPanel] = useState(true);
   const [chatSessionsByChapter, setChatSessionsByChapter] = useState({});
@@ -307,6 +309,23 @@ function ChatLayout() {
       isDeleting: false,
     });
   }, [board, classLevel, subject]);
+
+  useEffect(() => {
+    api.getChatRuntime()
+      .then((runtime) => {
+        setChatRuntime(runtime);
+        if (runtime?.default_mode === 'local') {
+          setLlmMode('local');
+          return;
+        }
+        if (runtime?.default_mode === 'cloud' || runtime?.default_mode === 'auto') {
+          setLlmMode('cloud');
+        }
+      })
+      .catch((error) => {
+        console.error('Error fetching chat runtime:', error);
+      });
+  }, []);
 
   useEffect(() => {
     if (isAuthenticated()) {
@@ -640,7 +659,9 @@ function ChatLayout() {
         normalizedText,
         requestChapterId,
         language,
-        targetChatId
+        targetChatId,
+        true,
+        llmMode
       );
 
       const botMessage = {
@@ -813,6 +834,27 @@ function ChatLayout() {
     ? api.resolveUrl(selectedChapter.pdfPath)
     : null;
 
+  const llmStatusText = (() => {
+    if (!chatRuntime) {
+      return llmMode === 'local'
+        ? 'Offline mode selected. BoardMate will use your local LLM if available.'
+        : 'Online mode selected. BoardMate will use the Groq model.';
+    }
+
+    if (llmMode === 'local') {
+      if (chatRuntime.local_available) {
+        return `Offline mode uses local model: ${chatRuntime.resolved_local_model}.`;
+      }
+      return 'Offline mode selected, but no local LLM was detected. Start Ollama, then try again.';
+    }
+
+    if (!chatRuntime.cloud_available) {
+      return 'Online mode selected, but no cloud API key is configured. Switch to Offline or set the backend API key.';
+    }
+
+    return 'Online mode uses the Groq model.';
+  })();
+
   const layoutClasses = [
     'chat-layout',
     'three-panel',
@@ -951,6 +993,9 @@ function ChatLayout() {
           activeSpeechMessageId={activeSpeechMessageId}
           voiceError={voiceError}
           inputPlaceholder={text.inputPlaceholder}
+          llmMode={llmMode}
+          onLlmModeChange={setLlmMode}
+          llmStatusText={llmStatusText}
         />
 
         {!showPdfPanel && (
@@ -982,6 +1027,7 @@ function ChatLayout() {
             subject={subject}
             chapterId={selectedChapter?.chapter}
             language={language}
+            llmMode={llmMode}
             onCollapsePanel={handleTogglePdfPanel}
           />
         )}

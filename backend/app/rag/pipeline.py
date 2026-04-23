@@ -162,6 +162,7 @@ class RAGPipeline:
         language: str = "en",
         chat_history: str = "",
         system_prompt: str = None,
+        llm_mode_override: str | None = None,
     ) -> Dict:
         """
         Query the RAG system with optional session memory.
@@ -246,6 +247,7 @@ class RAGPipeline:
             language=language,
             system_prompt=system_prompt,
             max_tokens=_chat_max_tokens_for_question(question),
+            mode_override=llm_mode_override,
         )
 
         sources = []

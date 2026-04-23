@@ -642,6 +642,27 @@
   color: var(--text-primary);
 }
 
+.pdf-studio-provider-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin-top: 0.3rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(180, 83, 9, 0.12);
+  color: #92400e;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.pdf-studio-provider-note {
+  margin: 0.3rem 0 0;
+  color: #92400e;
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
 .pdf-studio-overlay-content {
   flex: 1;
   min-height: 0;
@@ -650,8 +671,8 @@
 }
 
 .quiz-sheet h4 {
-  margin: 0 0 0.7rem;
-  font-size: 0.92rem;
+  margin: 0 0 1.15rem;
+  font-size: 1rem;
   font-weight: 800;
   color: var(--text-primary);
 }
@@ -661,7 +682,7 @@
 }
 
 .quiz-text-question-block {
-  margin-bottom: 1.9rem;
+  margin-bottom: 2.35rem;
   background: transparent;
   border: none;
   border-radius: 0;
@@ -669,40 +690,40 @@
 }
 
 .quiz-text-question {
-  margin: 0 0 0.85rem;
+  margin: 0 0 1rem;
   color: #111827;
-  font-size: 1rem;
-  line-height: 1.55;
-  font-weight: 700;
+  font-size: 1.03rem;
+  line-height: 1.6;
+  font-weight: 800;
 }
 
 .quiz-text-options {
   display: grid;
-  gap: 0.55rem;
+  gap: 0.62rem;
   padding-left: 0;
 }
 
 .quiz-text-options p {
   margin: 0;
   color: #111827;
-  font-size: 0.98rem;
-  line-height: 1.5;
+  font-size: 1rem;
+  line-height: 1.58;
 }
 
 .quiz-text-answer,
 .quiz-text-explanation {
-  margin: 1.1rem 0 0;
+  margin: 1.2rem 0 0;
   color: #111827;
   font-size: 1rem;
   line-height: 1.55;
 }
 
 .quiz-text-answer {
-  font-weight: 400;
+  font-weight: 800;
 }
 
 .quiz-text-separator {
-  margin: 1.5rem 0 0;
+  margin: 1.8rem 0 0;
   height: 1px;
   background: rgba(209, 213, 219, 0.95);
 }

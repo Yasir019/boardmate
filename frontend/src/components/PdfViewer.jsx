@@ -91,6 +91,19 @@ function sanitizeModelText(value) {
     .trim();
 }
 
+function isStudioMissingContextMessage(value) {
+  const text = sanitizeModelText(value).toLowerCase();
+  if (!text) {
+    return false;
+  }
+
+  return (
+    text.includes("i couldn't find a clear match for that") ||
+    text.includes('no textbook context found for chapter') ||
+    text.includes('please run indexing first')
+  );
+}
+
 function stripSummaryBoilerplate(value) {
   const text = sanitizeModelText(value);
   if (!text) {
@@ -470,6 +483,10 @@ function parseLooseQuizText(rawText) {
 }
 
 function normalizeQuizData(answer) {
+  if (isStudioMissingContextMessage(answer)) {
+    return null;
+  }
+
   const parsed = extractJsonPayload(answer);
   if (!parsed || typeof parsed !== 'object') {
     return parseLooseQuizText(answer);
@@ -534,6 +551,10 @@ function normalizeQuizData(answer) {
 }
 
 function normalizeSummaryData(answer) {
+  if (isStudioMissingContextMessage(answer)) {
+    return null;
+  }
+
   const parsed = extractJsonPayload(answer);
   if (!parsed || typeof parsed !== 'object') {
     const loose = parseLooseSummaryText(answer);
@@ -872,6 +893,10 @@ function parseLooseExerciseData(answer) {
 }
 
 function normalizeExerciseData(answer) {
+  if (isStudioMissingContextMessage(answer)) {
+    return null;
+  }
+
   const parsed = extractJsonPayload(answer);
   if (!parsed || typeof parsed !== 'object') {
     return parseLooseExerciseData(answer);
@@ -925,6 +950,7 @@ function PdfViewer({
   subject,
   chapterId,
   language = 'en',
+  llmMode = 'cloud',
   onCollapsePanel,
 }) {
   const [error, setError] = useState(false);
@@ -1031,6 +1057,7 @@ function PdfViewer({
       createdAt: new Date().toISOString(),
       payload: null,
       error: '',
+      llmProvider: '',
     };
     setStudioItems((prev) => [nextItem, ...prev]);
     return id;
@@ -1224,10 +1251,12 @@ function PdfViewer({
         chapterId,
         chapterTitle || chapterId,
         language,
+        llmMode,
       );
 
       updateStudioItem(itemId, {
         status: 'ready',
+        llmProvider: result.llm_provider || '',
         payload: {
           quiz: normalizeQuizData(result.answer),
           rawAnswer: result.answer,
@@ -1258,10 +1287,12 @@ function PdfViewer({
         chapterId,
         chapterTitle || chapterId,
         language,
+        llmMode,
       );
 
       updateStudioItem(itemId, {
         status: 'ready',
+        llmProvider: result.llm_provider || '',
         payload: {
           summary: normalizeSummaryData(result.answer),
           rawAnswer: result.answer,
@@ -1292,10 +1323,12 @@ function PdfViewer({
         chapterId,
         chapterTitle || chapterId,
         language,
+        llmMode,
       );
 
       updateStudioItem(itemId, {
         status: 'ready',
+        llmProvider: result.llm_provider || '',
         payload: {
           exercise: normalizeExerciseData(result.answer),
           rawAnswer: result.answer,
@@ -1712,6 +1745,11 @@ function PdfViewer({
                           <span className="pdf-studio-history-item-title">
                             {isProcessing ? `Generating ${itemTypeLabel.toLowerCase()}...` : item.title}
                           </span>
+                          {isReady && item.llmProvider && (
+                            <span className="pdf-studio-provider-badge">
+                              {item.llmProvider === 'local' ? 'Offline Model' : 'Online Model'}
+                            </span>
+                          )}
                           <span className="pdf-studio-history-item-meta">
                             {isProcessing && 'based on 1 source'}
                             {isReady && `1 source · ${formatRelativeTime(item.createdAt)}`}
@@ -1799,6 +1837,13 @@ function PdfViewer({
               <div className="pdf-studio-overlay-headings">
                 <p className="pdf-studio-breadcrumb">Studio &rsaquo; App</p>
                 <h3>{activeStudioItem.title}</h3>
+                {activeStudioItem.llmProvider && (
+                  <p className="pdf-studio-provider-note">
+                    {activeStudioItem.llmProvider === 'local'
+                      ? 'Generated with the local offline model.'
+                      : 'Generated with the online Groq model.'}
+                  </p>
+                )}
               </div>
               <div className="pdf-studio-overlay-actions">
                 <button
@@ -1817,6 +1862,7 @@ function PdfViewer({
                 <div className="quiz-sheet">
                   {activeStudioItem.payload?.quiz ? (
                     <>
+                      <h4>{activeStudioItem.payload.quiz.title || activeStudioItem.title}</h4>
                       {activeStudioItem.payload.quiz.questions.map((question, index) => {
                         const options = Array.isArray(question.options) ? question.options : [];
                         const answerIndex = Number.isInteger(question.answerIndex)
@@ -1845,7 +1891,7 @@ function PdfViewer({
                               {' '}
                               <strong>{answerLetter}</strong>
                               {' '}
-                              {answerText}
+                              <strong>{answerText}</strong>
                             </p>
 
                             {index < activeStudioItem.payload.quiz.questions.length - 1 && (

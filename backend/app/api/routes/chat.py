@@ -2,17 +2,20 @@ from datetime import datetime
 from collections import defaultdict, deque
 from hashlib import sha1
 import json
+from pathlib import Path
 import random
 import re
 from uuid import uuid4
 from typing import Any, List, Optional
 
+from bs4 import BeautifulSoup
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
 from app.api.routes.auth import get_current_user, get_optional_current_user
+from app.core.config import DATA_DIR
 from app.db.models import Chat, Message, User
 from app.db.session import get_db
 from app.rag.pipeline import rag_pipeline
@@ -26,6 +29,7 @@ from app.services.llm_service import (
     build_session_memory_context,
     generate_session_summary,
     generate_response_with_provider,
+    get_llm_runtime_status,
     maybe_build_conversational_reply,
 )
 
@@ -61,6 +65,7 @@ class ChatRequest(BaseModel):
     chat_id: Optional[int] = None
     language: str = "en"
     save_to_chat: bool = True
+    llm_mode_override: Optional[str] = None
 
 
 class Source(BaseModel):
@@ -123,6 +128,7 @@ class StudioGenerateRequest(BaseModel):
     chapter: str
     task: str
     language: str = "en"
+    llm_mode_override: Optional[str] = None
 
 
 class StudioGenerateResponse(BaseModel):
@@ -131,11 +137,311 @@ class StudioGenerateResponse(BaseModel):
     llm_provider: Optional[str] = None
 
 
+class ChatRuntimeResponse(BaseModel):
+    default_mode: str
+    effective_mode: str
+    cloud_available: bool
+    local_available: bool
+    configured_local_model: str
+    resolved_local_model: str
+    local_models: List[str]
+
+
 def _build_chat_title(question: str, subject: str) -> str:
     trimmed = " ".join(question.split())
     if trimmed:
         return trimmed[:77] + "..." if len(trimmed) > 80 else trimmed
     return f"{subject} study chat"
+
+
+def _resolve_chapter_html_path(board: str, class_level: str, subject: str, chapter: str) -> Path | None:
+    subject_path = (DATA_DIR / board / class_level / subject).resolve()
+    html_path = (subject_path / "All_Chapters_Extracted" / f"{chapter}.html").resolve()
+    if DATA_DIR.resolve() not in html_path.parents or not html_path.exists():
+        return None
+    return html_path
+
+
+def _load_chapter_soup(board: str, class_level: str, subject: str, chapter: str) -> BeautifulSoup | None:
+    html_path = _resolve_chapter_html_path(board, class_level, subject, chapter)
+    if not html_path:
+        return None
+    try:
+        return BeautifulSoup(html_path.read_text(encoding="utf-8"), "html.parser")
+    except Exception:
+        return None
+
+
+def _clean_text(value: str) -> str:
+    return " ".join((value or "").replace("\xa0", " ").split()).strip()
+
+
+def _extract_chapter_title_from_soup(soup: BeautifulSoup | None, fallback: str) -> str:
+    if not soup:
+        return fallback
+    title = _clean_text(soup.title.get_text(" ", strip=True) if soup.title else fallback)
+    if "|" in title:
+        title = title.split("|", 1)[0].strip()
+    title = re.sub(r"^Unit\s+\d+\s*[:\-]?\s*", "", title, flags=re.IGNORECASE)
+    return title or fallback
+
+
+def _non_exercise_blocks(soup: BeautifulSoup | None) -> tuple[list[str], list[tuple[str, str]], list[str]]:
+    if not soup:
+        return [], [], []
+
+    main = soup.find("main") or soup.body or soup
+    paragraphs: list[str] = []
+    headings: list[tuple[str, str]] = []
+    bullets: list[str] = []
+    in_exercise = False
+
+    for node in main.find_all(["h1", "h2", "h3", "h4", "p", "li"]):
+        text = _clean_text(node.get_text(" ", strip=True))
+        if not text:
+            continue
+        if node.name in {"h1", "h2", "h3", "h4"} and "exercise" in text.lower():
+            in_exercise = True
+            continue
+        if in_exercise:
+            continue
+        if node.name in {"h1", "h2", "h3", "h4"}:
+            headings.append((node.name.lower(), text))
+        elif node.name == "p":
+            paragraphs.append(text)
+        elif node.name == "li":
+            bullets.append(text)
+
+    return paragraphs, headings, bullets
+
+
+def _tokenize_keywords(text: str) -> set[str]:
+    stopwords = {
+        "the", "and", "for", "with", "that", "this", "from", "into", "than", "then", "when",
+        "what", "which", "where", "why", "how", "your", "their", "about", "have", "has",
+        "had", "been", "being", "into", "also", "only", "such", "each", "used", "use",
+        "using", "within", "between", "while", "will", "would", "could", "should", "does",
+        "did", "are", "was", "were", "can", "may", "might", "not", "all", "any", "its",
+        "our", "out", "under", "over", "through", "chapter", "question", "software",
+    }
+    return {
+        token for token in re.findall(r"[a-zA-Z][a-zA-Z0-9\-]{2,}", (text or "").lower())
+        if token not in stopwords
+    }
+
+
+def _match_reference_paragraphs(question: str, paragraphs: list[str], limit: int = 2) -> list[str]:
+    query_tokens = _tokenize_keywords(question)
+    if not query_tokens:
+        return paragraphs[:limit]
+
+    scored: list[tuple[int, int, str]] = []
+    for index, paragraph in enumerate(paragraphs):
+        paragraph_tokens = _tokenize_keywords(paragraph)
+        overlap = len(query_tokens & paragraph_tokens)
+        if overlap <= 0:
+            continue
+        scored.append((overlap, -index, paragraph))
+
+    scored.sort(reverse=True)
+    matched = [paragraph for _, _, paragraph in scored[:limit]]
+    return matched or paragraphs[:limit]
+
+
+def _choose_best_option(question: str, options: list[str], references: list[str]) -> str:
+    if not options:
+        return ""
+
+    reference_text = " ".join(references)
+    reference_tokens = _tokenize_keywords(reference_text)
+    question_tokens = _tokenize_keywords(question)
+    normalized_question = (question or "").lower()
+
+    best_option = options[0]
+    best_score = float("-inf")
+
+    for index, option in enumerate(options):
+        option_tokens = _tokenize_keywords(option)
+        overlap_score = len(option_tokens & reference_tokens) * 4
+        distinctiveness = len(option_tokens - question_tokens)
+        option_text = option.lower()
+
+        exact_phrase_bonus = 6 if option_text and option_text in reference_text.lower() else 0
+        negation_bonus = 0
+        if " not " in f" {normalized_question} ":
+            negation_bonus = -overlap_score
+
+        score = overlap_score + distinctiveness + exact_phrase_bonus + negation_bonus - (index * 0.01)
+        if score > best_score:
+            best_score = score
+            best_option = option
+
+    return best_option
+
+
+def _extract_definition_candidates(paragraphs: list[str], headings: list[tuple[str, str]]) -> list[dict[str, str]]:
+    candidates: list[dict[str, str]] = []
+    seen = set()
+
+    for paragraph in paragraphs:
+        normalized = _clean_text(paragraph)
+        patterns = [
+            re.match(r"^(?:The\s+)?([A-Z][A-Za-z0-9()\/\-\s]{2,60}?)\s+is\s+(.+)$", normalized),
+            re.match(r"^(?:The\s+)?([A-Z][A-Za-z0-9()\/\-\s]{2,60}?)\s+refers\s+to\s+(.+)$", normalized),
+            re.match(r"^(?:The\s+)?([A-Z][A-Za-z0-9()\/\-\s]{2,60}?)\s+consists\s+of\s+(.+)$", normalized),
+        ]
+        for match in patterns:
+            if not match:
+                continue
+            term = _clean_text(match.group(1))
+            definition = _clean_text(match.group(2))
+            if len(term) < 3 or len(definition) < 20:
+                continue
+            signature = term.lower()
+            if signature in seen:
+                continue
+            seen.add(signature)
+            candidates.append({"term": term, "definition": definition.rstrip(".") + "."})
+            break
+
+    if len(candidates) >= 10:
+        return candidates
+
+    for _, heading in headings:
+        if heading.lower().startswith("page ") or "exercise" in heading.lower():
+            continue
+        related = next((paragraph for paragraph in paragraphs if heading.lower() in paragraph.lower()), None)
+        if not related:
+            continue
+        signature = heading.lower()
+        if signature in seen:
+            continue
+        seen.add(signature)
+        candidates.append({"term": heading, "definition": related.rstrip(".") + "."})
+        if len(candidates) >= 12:
+            break
+
+    return candidates
+
+
+def _build_offline_quiz_answer(
+    request: StudioGenerateRequest,
+    soup: BeautifulSoup | None,
+    generation_nonce: str,
+    desired_count: int | None = None,
+) -> str:
+    paragraphs, headings, _bullets = _non_exercise_blocks(soup)
+    candidates = _extract_definition_candidates(paragraphs, headings)
+    if len(candidates) < 4:
+        return ""
+
+    rng = random.Random(generation_nonce)
+    rng.shuffle(candidates)
+    count = min(max(desired_count or 10, 10), 15, len(candidates))
+    selected = candidates[:count]
+
+    questions = []
+    all_definitions = [item["definition"] for item in candidates]
+    for index, item in enumerate(selected, start=1):
+        distractors = [definition for definition in all_definitions if definition != item["definition"]]
+        rng.shuffle(distractors)
+        options = [item["definition"], *distractors[:3]]
+        rng.shuffle(options)
+        answer_index = options.index(item["definition"])
+        questions.append({
+            "question": f"What best describes {item['term']} in {request.chapter}?",
+            "options": options,
+            "answer_index": answer_index,
+            "difficulty": "medium",
+            "concept": item["term"],
+            "explanation": item["definition"],
+        })
+
+    payload = {
+        "quiz_title": f"{request.chapter} Quiz",
+        "variant_id": generation_nonce,
+        "difficulty_mix": {"easy": max(1, count // 3), "medium": count - max(1, count // 3) - max(1, count // 5), "hard": max(1, count // 5)},
+        "questions": questions,
+    }
+    return json.dumps(payload)
+
+
+def _extract_exercise_from_soup(soup: BeautifulSoup | None) -> dict[str, list[dict[str, Any]]]:
+    if not soup:
+        return {"mcqs": [], "short_questions": [], "long_questions": []}
+
+    exercise = {"mcqs": [], "short_questions": [], "long_questions": []}
+    for item in soup.select(".mcq-item"):
+        question = _clean_text(item.select_one(".question").get_text(" ", strip=True) if item.select_one(".question") else "")
+        options = [_clean_text(li.get_text(" ", strip=True)) for li in item.select("ol.options > li")]
+        if question:
+            question_with_options = question
+            if options:
+                question_with_options += " Options: " + " | ".join(
+                    f"{chr(65 + idx)}) {option}" for idx, option in enumerate(options[:4])
+                )
+            exercise["mcqs"].append({"question_no": str(len(exercise["mcqs"]) + 1), "question": question_with_options, "options": options[:4]})
+
+    for selector, key in [("ol.sq-item > li.sq-item", "short_questions"), ("ol.lq-item > li.lq-item", "long_questions")]:
+        for index, item in enumerate(soup.select(selector), start=1):
+            question = _clean_text(item.get_text(" ", strip=True))
+            if question:
+                exercise[key].append({"question_no": str(index), "question": question})
+
+    return exercise
+
+
+def _build_offline_summary_answer(request: StudioGenerateRequest, soup: BeautifulSoup | None) -> str:
+    paragraphs, headings, bullets = _non_exercise_blocks(soup)
+    title = _extract_chapter_title_from_soup(soup, request.chapter)
+    overview = " ".join(paragraphs[:3])[:1200]
+    key_concepts = [heading for _, heading in headings[:8] if heading]
+    important_terms = _extract_definition_candidates(paragraphs, headings)[:6]
+    exam_takeaways = bullets[:6] or key_concepts[:6]
+
+    payload = {
+        "summary_title": title,
+        "variant_id": f"{request.chapter.lower()}-offline-summary",
+        "overview": overview or f"Summary generated directly from chapter content for {request.chapter}.",
+        "key_concepts": key_concepts,
+        "important_terms": important_terms,
+        "exam_takeaways": exam_takeaways,
+        "revision_questions": [item["question"] for item in _extract_exercise_from_soup(soup).get("short_questions", [])[:5]],
+    }
+    return json.dumps(payload)
+
+
+def _build_offline_exercise_answer(request: StudioGenerateRequest, soup: BeautifulSoup | None) -> str:
+    paragraphs, _headings, _bullets = _non_exercise_blocks(soup)
+    exercise = _extract_exercise_from_soup(soup)
+
+    def build_items(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        built: list[dict[str, Any]] = []
+        for item in items:
+            question = item.get("question", "")
+            references = _match_reference_paragraphs(question, paragraphs, limit=2)
+            answer = " ".join(references[:1]).strip()
+            if item.get("options"):
+                answer = _choose_best_option(question, item["options"], references) or answer
+
+            built.append({
+                "question_no": item.get("question_no", str(len(built) + 1)),
+                "question": question,
+                "answer": answer or "Relevant answer could not be derived confidently from the chapter text alone.",
+                "steps": references[1:],
+                "key_points": references[:2],
+            })
+        return built
+
+    payload = {
+        "solution_title": f"{request.chapter} Exercise Solutions",
+        "overview": "Exercise response generated directly from chapter and exercise text because the AI model was unavailable.",
+        "mcqs": build_items(exercise["mcqs"]),
+        "short_questions": build_items(exercise["short_questions"]),
+        "long_questions": build_items(exercise["long_questions"]),
+        "numerical_problems": [],
+    }
+    return json.dumps(payload)
 
 
 def _serialize_source(source: dict) -> Source:
@@ -515,13 +821,38 @@ def _fallback_studio_generation(
     request: StudioGenerateRequest,
     prompt: str,
     task_name: str,
+    chapter_text: str,
+    generation_nonce: str,
 ) -> tuple[str, str | None]:
+    soup = _load_chapter_soup(
+        board=request.board,
+        class_level=request.class_level,
+        subject=request.subject,
+        chapter=request.chapter,
+    )
+
+    if task_name == "quiz":
+        answer = _build_offline_quiz_answer(
+            request=request,
+            soup=soup,
+            generation_nonce=generation_nonce,
+        )
+        if answer:
+            return answer, "offline"
+    elif task_name == "summary":
+        answer = _build_offline_summary_answer(request=request, soup=soup)
+        if answer:
+            return answer, "offline"
+    elif task_name == "exercise":
+        answer = _build_offline_exercise_answer(request=request, soup=soup)
+        if answer:
+            return answer, "offline"
+
     system_prompt = (
         QUIZ_SYSTEM_PROMPT if task_name == "quiz"
         else SUMMARY_SYSTEM_PROMPT if task_name == "summary"
         else EXERCISE_SYSTEM_PROMPT
     )
-
     result = rag_pipeline.query(
         question=prompt,
         board=request.board,
@@ -724,13 +1055,22 @@ async def generate_studio_content(
                     temperature=temperature,
                     top_p=top_p,
                     max_tokens=max_tokens,
+                    mode_override=request.llm_mode_override,
                 )
 
                 if llm_provider != "error" and (answer or "").strip():
                     break
 
             if llm_provider == "error" or not (answer or "").strip():
-                answer, llm_provider = _fallback_studio_generation(request, prompt, task_name)
+                if request.llm_mode_override in {"cloud", "local"}:
+                    _raise_if_studio_llm_unavailable(answer, llm_provider)
+                answer, llm_provider = _fallback_studio_generation(
+                    request,
+                    prompt,
+                    task_name,
+                    chapter_text,
+                    generation_nonce,
+                )
                 _raise_if_studio_llm_unavailable(answer, llm_provider)
 
             # Fingerprint to detect repeated output
@@ -766,6 +1106,11 @@ async def generate_studio_content(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Studio generation error: {str(e)}")
+
+
+@router.get("/runtime", response_model=ChatRuntimeResponse)
+def get_chat_runtime():
+    return ChatRuntimeResponse(**get_llm_runtime_status())
 
 
 @router.get("/sessions", response_model=List[ChatSummaryResponse])
@@ -850,6 +1195,9 @@ async def ask_question(
 ):
     """Ask a question about textbook content with session memory persistence."""
     try:
+        auth_user = current_user
+        chat: Chat | None = None
+
         conversational_reply = maybe_build_conversational_reply(
             question=request.question,
             board=request.board,
@@ -858,15 +1206,48 @@ async def ask_question(
             language=request.language,
         )
         if conversational_reply:
+            chat_id = request.chat_id
+            if auth_user and request.save_to_chat:
+                if request.chat_id is not None:
+                    chat = _get_owned_chat(request.chat_id, auth_user.id, db)
+                else:
+                    chat = Chat(
+                        user_id=auth_user.id,
+                        title=_build_chat_title(request.question, request.subject),
+                        board=request.board.strip(),
+                        class_level=request.class_level.strip(),
+                        subject=request.subject.strip(),
+                        chapter=(request.chapter or "").strip() or None,
+                    )
+                    db.add(chat)
+                    db.flush()
+
+                chat.updated_at = datetime.utcnow()
+                db.add_all([
+                    Message(
+                        chat_id=chat.id,
+                        role="user",
+                        content=request.question.strip(),
+                        chapter=request.chapter,
+                    ),
+                    Message(
+                        chat_id=chat.id,
+                        role="assistant",
+                        content=conversational_reply,
+                        chapter=request.chapter,
+                        sources=[],
+                    ),
+                ])
+                db.commit()
+                chat_id = chat.id
+
             return ChatResponse(
                 answer=conversational_reply,
                 sources=[],
-                chat_id=request.chat_id,
+                chat_id=chat_id,
                 llm_provider="rule-based",
             )
 
-        auth_user = current_user
-        chat: Chat | None = None
         chat_history_text = ""
         session_system_prompt = None
 
@@ -889,6 +1270,7 @@ async def ask_question(
             language=request.language,
             chat_history=chat_history_text,
             system_prompt=session_system_prompt,
+            llm_mode_override=request.llm_mode_override,
         )
 
         sources = []

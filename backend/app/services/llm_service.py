@@ -22,9 +22,16 @@ from app.core.config import (
 
 logger = logging.getLogger(__name__)
 
+VALID_LLM_MODES = {"auto", "cloud", "local"}
+
 LOCAL_LLM_UNAVAILABLE_MESSAGE = (
     "AI assistant is temporarily unavailable because the local model server is not running. "
     "Please start your local LLM server (for example Ollama) or switch to cloud mode."
+)
+
+LOCAL_LLM_TIMEOUT_MESSAGE = (
+    "AI assistant is temporarily unavailable because the local model took too long to respond. "
+    "Try a smaller Ollama model or increase LOCAL_LLM_TIMEOUT_SECONDS."
 )
 
 CLOUD_LLM_UNAVAILABLE_MESSAGE = (
@@ -37,6 +44,10 @@ _INTERNET_PROBE_CACHE_TTL = 30
 _internet_probe_cache: dict[str, float | bool] = {
     "checked_at": 0.0,
     "is_available": False,
+}
+_local_model_cache: dict[str, float | list[str]] = {
+    "checked_at": 0.0,
+    "models": [],
 }
 
 
@@ -62,6 +73,78 @@ def _is_internet_available() -> bool:
     _internet_probe_cache["checked_at"] = now
     _internet_probe_cache["is_available"] = is_available
     return is_available
+
+
+def normalize_llm_mode(mode: str | None, default: str | None = None) -> str:
+    normalized = (mode or default or LLM_MODE or "auto").strip().lower()
+    return normalized if normalized in VALID_LLM_MODES else (default or LLM_MODE or "auto").strip().lower()
+
+
+def _get_available_local_models() -> list[str]:
+    now = time.time()
+    checked_at = float(_local_model_cache.get("checked_at") or 0.0)
+    if now - checked_at < 15:
+        return list(_local_model_cache.get("models") or [])
+
+    endpoint = f"{LOCAL_LLM_BASE_URL.rstrip('/')}/api/tags"
+    models: list[str] = []
+    try:
+        req = urlrequest.Request(
+            endpoint,
+            headers={"User-Agent": "BoardMate/1.0"},
+            method="GET",
+        )
+        with urlrequest.urlopen(req, timeout=min(LOCAL_LLM_TIMEOUT_SECONDS, 5)) as response:
+            data = json.loads(response.read().decode("utf-8"))
+            models = [
+                str(item.get("name", "")).strip()
+                for item in (data.get("models") or [])
+                if str(item.get("name", "")).strip()
+            ]
+    except Exception:
+        models = []
+
+    _local_model_cache["checked_at"] = now
+    _local_model_cache["models"] = models
+    return models
+
+
+def resolve_local_llm_model() -> str:
+    available_models = _get_available_local_models()
+    configured_model = (LOCAL_LLM_MODEL or "").strip()
+
+    if configured_model and configured_model in available_models:
+        return configured_model
+
+    if available_models:
+        fallback_model = available_models[0]
+        if configured_model and configured_model != fallback_model:
+            logger.warning(
+                "Configured local model '%s' is unavailable. Falling back to detected Ollama model '%s'.",
+                configured_model,
+                fallback_model,
+            )
+        return fallback_model
+
+    return configured_model
+
+
+def get_llm_runtime_status(mode_override: str | None = None) -> dict[str, object]:
+    default_mode = normalize_llm_mode(LLM_MODE, "auto")
+    effective_mode = normalize_llm_mode(mode_override, default_mode)
+    local_models = _get_available_local_models()
+    resolved_local_model = resolve_local_llm_model()
+    cloud_configured = bool(GROQ_API_KEY)
+
+    return {
+        "default_mode": default_mode,
+        "effective_mode": effective_mode,
+        "cloud_available": cloud_configured,
+        "local_available": bool(local_models),
+        "configured_local_model": LOCAL_LLM_MODEL,
+        "resolved_local_model": resolved_local_model,
+        "local_models": local_models,
+    }
 
 CHAT_SYSTEM_PROMPT = """
 You are BoardMate, an intelligent academic assistant designed exclusively for Pakistani Intermediate (9 to 12 class) students preparing for their board examinations. You will be provided with the content of a specific chapter from a textbook. Your job is to answer student questions using only that chapter content.
@@ -415,10 +498,14 @@ PROMPT_TEMPLATE = ChatPromptTemplate.from_messages([
 
 GREETING_PATTERNS = (
     r"hi",
+    r"hii+",
     r"hello",
+    r"helo+",
     r"hey",
     r"hy",
     r"salam",
+    r"slam",
+    r"aslam(?: o alaikum|ualaikum| walekum)?",
     r"assalam(?:u alaikum| o alaikum|ualaikum)?",
     r"aoa",
     r"good morning",
@@ -669,6 +756,11 @@ def _generate_cloud_response(
             "context": context,
             "chat_history": chat_history,
             "question": question,
+            "chapter_text": context,
+            "chapter_title": "",
+            "subject_name": "",
+            "class_level": "",
+            "student_question": question,
         })
         return _strip_academic_greeting_prefix(response.content, question)
     except Exception as e:
@@ -682,6 +774,11 @@ def _generate_cloud_response(
             "context": context,
             "chat_history": chat_history,
             "question": question,
+            "chapter_text": context,
+            "chapter_title": "",
+            "subject_name": "",
+            "class_level": "",
+            "student_question": question,
         })
         return _strip_academic_greeting_prefix(response.content, question)
 
@@ -692,16 +789,49 @@ def _build_local_prompt(
     system_prompt: str | None = None,
     chat_history: str = "",
 ) -> str:
-    prompt_system = system_prompt or SYSTEM_PROMPT
-    return (
-        f"{prompt_system}\n\n"
-        f"Context from textbook:\n---\n{context}\n---\n\n"
-        f"Recent conversation history (may be empty):\n{chat_history}\n\n"
-        f"Student Question: {question}\n\n"
-        "Use only the textbook context above for academic answers. "
-        "For academic questions, start directly with the answer and do not add greetings or conversational openers. "
-        "If the context doesn't contain relevant academic information, say that clearly."
+    prompt_system = system_prompt or (
+        "You are BoardMate, a textbook-grounded tutor for Pakistani board students. "
+        "Use only the provided textbook context. "
+        "Answer directly and concisely. "
+        "Do not include hidden reasoning, thinking tags, or analysis in the output. "
+        "If the context is insufficient, say so clearly."
     )
+    return (
+        "Context from textbook:\n"
+        f"---\n{context}\n---\n\n"
+        f"Recent conversation history:\n{chat_history or 'No previous messages.'}\n\n"
+        f"Student Question:\n{question}\n\n"
+        "Answer rules:\n"
+        f"- {prompt_system}\n"
+        "- For academic answers, start directly with the answer.\n"
+        "- Never output <think> tags or chain-of-thought.\n"
+    )
+
+
+def _strip_thinking_markup(text: str) -> str:
+    cleaned = (text or "").strip()
+    if not cleaned:
+        return ""
+
+    if "</think>" in cleaned:
+        cleaned = cleaned.split("</think>")[-1].strip()
+
+    cleaned = re.sub(r"<think>.*?</think>", "", cleaned, flags=re.IGNORECASE | re.DOTALL).strip()
+    cleaned = re.sub(r"^thinking:\s*", "", cleaned, flags=re.IGNORECASE).strip()
+    return cleaned
+
+
+def _extract_local_answer(data: dict) -> str:
+    direct_response = _strip_thinking_markup(str(data.get("response") or ""))
+    if direct_response:
+        return direct_response
+
+    message = data.get("message") or {}
+    message_content = _strip_thinking_markup(str(message.get("content") or ""))
+    if message_content:
+        return message_content
+
+    return ""
 
 
 def _generate_local_response(
@@ -713,15 +843,29 @@ def _generate_local_response(
     top_p: float | None = None,
     max_tokens: int | None = None,
 ) -> str:
-    endpoint = f"{LOCAL_LLM_BASE_URL.rstrip('/')}/api/generate"
+    endpoint = f"{LOCAL_LLM_BASE_URL.rstrip('/')}/api/chat"
+    local_model = resolve_local_llm_model()
+    prompt_system = system_prompt or (
+        "You are BoardMate, a textbook-grounded tutor for Pakistani board students. "
+        "Use only the provided textbook context. "
+        "Answer directly and concisely. "
+        "Do not include hidden reasoning, thinking tags, or analysis in the output. "
+        "If the context is insufficient, say so clearly."
+    )
     payload = {
-        "model": LOCAL_LLM_MODEL,
-        "prompt": _build_local_prompt(
-            context=context,
-            question=question,
-            system_prompt=system_prompt,
-            chat_history=chat_history,
-        ),
+        "model": local_model,
+        "messages": [
+            {"role": "system", "content": prompt_system},
+            {
+                "role": "user",
+                "content": _build_local_prompt(
+                    context=context,
+                    question=question,
+                    system_prompt=prompt_system,
+                    chat_history=chat_history,
+                ),
+            },
+        ],
         "stream": False,
         "options": {
             "temperature": temperature if temperature is not None else 0.3,
@@ -744,8 +888,14 @@ def _generate_local_response(
     except urlerror.URLError as e:
         raise RuntimeError(f"Local LLM request failed: {e}") from e
 
-    answer = (data.get("response") or "").strip()
+    answer = _extract_local_answer(data)
     if not answer:
+        thinking_text = str(data.get("thinking") or "")
+        done_reason = str(data.get("done_reason") or "")
+        if thinking_text.strip():
+            raise RuntimeError(
+                f"Local LLM returned reasoning without a final answer (done_reason={done_reason or 'unknown'})"
+            )
         raise RuntimeError("Local LLM returned an empty response")
     return _strip_academic_greeting_prefix(answer, question)
 
@@ -762,6 +912,11 @@ def _is_local_connection_refused(error: Exception) -> bool:
     )
 
 
+def _is_local_timeout(error: Exception) -> bool:
+    msg = str(error).lower()
+    return "timed out" in msg or "timeout" in msg
+
+
 def generate_response_with_provider(
     question: str,
     context: str,
@@ -773,6 +928,7 @@ def generate_response_with_provider(
     temperature: float | None = None,
     top_p: float | None = None,
     max_tokens: int | None = None,
+    mode_override: str | None = None,
 ) -> tuple[str, str]:
     """Generate response and include the provider used (cloud or local)."""
     enhanced_question = _build_enhanced_question(
@@ -781,7 +937,7 @@ def generate_response_with_provider(
         class_level=class_level,
         language=language,
     )
-    mode = (LLM_MODE or "auto").strip().lower()
+    mode = normalize_llm_mode(mode_override, LLM_MODE)
 
     if mode == "cloud":
         try:
@@ -795,19 +951,7 @@ def generate_response_with_provider(
             ), "cloud"
         except Exception as cloud_error:
             logger.error("Cloud LLM error in cloud mode: %s", cloud_error)
-            try:
-                return _generate_local_response(
-                    enhanced_question,
-                    context,
-                    chat_history=chat_history,
-                    system_prompt=system_prompt,
-                    temperature=temperature,
-                    top_p=top_p,
-                    max_tokens=max_tokens,
-                ), "local"
-            except Exception as local_error:
-                logger.error("Local fallback failed after cloud-mode error: %s", local_error)
-                return CLOUD_LLM_UNAVAILABLE_MESSAGE, "error"
+            return CLOUD_LLM_UNAVAILABLE_MESSAGE, "error"
 
     if mode == "local":
         try:
@@ -822,21 +966,10 @@ def generate_response_with_provider(
             ), "local"
         except Exception as local_error:
             logger.error("Local LLM error in local mode: %s", local_error)
-            if GROQ_API_KEY:
-                try:
-                    return _generate_cloud_response(
-                        enhanced_question,
-                        context,
-                        chat_history=chat_history,
-                        system_prompt=system_prompt,
-                        temperature=temperature,
-                        max_tokens=max_tokens,
-                    ), "cloud"
-                except Exception as cloud_error:
-                    logger.error("Cloud fallback failed after local-mode error: %s", cloud_error)
-
             if _is_local_connection_refused(local_error):
                 return LOCAL_LLM_UNAVAILABLE_MESSAGE, "error"
+            if _is_local_timeout(local_error):
+                return LOCAL_LLM_TIMEOUT_MESSAGE, "error"
             return CLOUD_LLM_UNAVAILABLE_MESSAGE, "error"
 
     # ── auto mode: internet-aware hybrid routing ──────────────────────────────
@@ -890,6 +1023,8 @@ def generate_response_with_provider(
 
         if _is_local_connection_refused(local_error):
             return LOCAL_LLM_UNAVAILABLE_MESSAGE, "error"
+        if _is_local_timeout(local_error):
+            return LOCAL_LLM_TIMEOUT_MESSAGE, "error"
         return CLOUD_LLM_UNAVAILABLE_MESSAGE, "error"
 
 
@@ -915,6 +1050,7 @@ def generate_response(
     class_level: str = None,
     language: str = "en",
     system_prompt: str = None,
+    mode_override: str | None = None,
 ) -> str:
     """
     Generate a response using LangChain with the Groq LLM.
@@ -939,6 +1075,7 @@ def generate_response(
         class_level=class_level,
         language=language,
         system_prompt=system_prompt,
+        mode_override=mode_override,
     )
     return answer
 
