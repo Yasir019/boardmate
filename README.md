@@ -11,7 +11,7 @@ It uses a React frontend, FastAPI backend, and RAG pipeline over textbook data.
 
 - Frontend: React 18, Vite, React Router
 - Backend: FastAPI, SQLAlchem
-- AI: Groq, LangChain, ChromaDB, sentence-transformers
+- AI: Groq , Ollama, LangChain, ChromaDB, sentence-transformers
 
 ## Project Structure
 
