@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import ChatLayout from './pages/ChatLayout';
 import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
+import AdminLogin from './pages/AdminLogin';
 import NotFound from './pages/NotFound';
 import { isAuthenticated } from './utils/auth';
 import './styles/landing.css';
@@ -31,9 +32,10 @@ function PublicOnly({ children }) {
 function App() {
   const location = useLocation();
   const isChatRoute = location.pathname.startsWith('/chat/');
+  const isAdminRoute = location.pathname.startsWith('/admin');
   const isAuthRoute = location.pathname === '/signin' || location.pathname === '/signup';
   const isLandingRoute = location.pathname === '/';
-  const hideTopNav = isChatRoute || isAuthRoute;
+  const hideTopNav = isChatRoute || isAuthRoute || isAdminRoute;
 
   return (
     <div className={`app ${isChatRoute ? 'chat-route' : ''} ${isAuthRoute ? 'auth-route' : ''} ${isLandingRoute ? 'landing-route' : ''}`}>
@@ -64,6 +66,14 @@ function App() {
                 <Dashboard />
               </RequireAuth>
             )}
+          />
+          <Route
+            path="/admin"
+            element={<AdminLogin />}
+          />
+          <Route
+            path="/admin-login"
+            element={<AdminLogin />}
           />
           <Route
             path="/chat/:board/:classLevel/:subject"

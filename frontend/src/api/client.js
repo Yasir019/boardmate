@@ -14,6 +14,11 @@ function buildApiUrl(path) {
   return API_BASE_URL ? `${API_BASE_URL}${path}` : path;
 }
 
+function buildAdminApiUrl(path) {
+  const adminBasePath = API_BASE_URL ? '/admin' : '/admin-api';
+  return buildApiUrl(`${adminBasePath}${path}`);
+}
+
 function getAuthHeaders() {
   const token = getStoredToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -138,6 +143,30 @@ export const api = {
 
     if (!response.ok) {
       throw new Error(await getErrorMessage(response, 'Sign in failed'));
+    }
+
+    return response.json();
+  },
+
+  async adminSignIn(username, password) {
+    let response;
+    try {
+      response = await fetch(buildAdminApiUrl('/login'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username,
+          password,
+        }),
+      });
+    } catch (error) {
+      throw toNetworkError(error, 'sign in as admin');
+    }
+
+    if (!response.ok) {
+      throw new Error(await getErrorMessage(response, 'Admin sign in failed'));
     }
 
     return response.json();
@@ -526,7 +555,7 @@ export const api = {
     formData.append('chapter', chapter);
     formData.append('file', file);
 
-    const response = await fetch(buildApiUrl('/admin/upload'), {
+    const response = await fetch(buildAdminApiUrl('/upload'), {
       method: 'POST',
       headers: {
         'X-ADMIN-TOKEN': ADMIN_TOKEN,
@@ -550,7 +579,7 @@ export const api = {
       throw new Error('VITE_ADMIN_TOKEN is not configured');
     }
 
-    const response = await fetch(buildApiUrl('/admin/reindex'), {
+    const response = await fetch(buildAdminApiUrl('/reindex'), {
       method: 'POST',
       headers: {
         'X-ADMIN-TOKEN': ADMIN_TOKEN,

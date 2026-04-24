@@ -25,9 +25,10 @@ export default defineConfig({
         target: backendTarget,
         changeOrigin: true,
       },
-      '/admin': {
+      '/admin-api': {
         target: backendTarget,
         changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/admin-api/, '/admin'),
       },
     },
   },

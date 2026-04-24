@@ -3,9 +3,12 @@
 from pathlib import Path
 
 from sqlalchemy import inspect, text
+from sqlalchemy.orm import Session
 
 from app.core.config import DATABASE_URL
+from app.core.security import hash_password
 from app.db.base import Base
+from app.db.models import AdminUser
 from app.db.session import engine
 
 # Ensure model metadata is registered before create_all.
@@ -24,6 +27,8 @@ def initialize_database() -> None:
         _ensure_users_password_hash_column()
         _ensure_chats_table_columns()
         _ensure_messages_table_columns()
+
+    _seed_default_admin()
 
 
 def _ensure_users_password_hash_column() -> None:
@@ -90,3 +95,19 @@ def _ensure_messages_table_columns() -> None:
     with engine.begin() as connection:
         for statement in statements:
             connection.execute(text(statement))
+
+
+def _seed_default_admin() -> None:
+    """Create the default admin account when it does not exist."""
+    with Session(engine) as session:
+        admin = session.query(AdminUser).filter(AdminUser.username == "admin").first()
+        if admin:
+            return
+
+        session.add(
+            AdminUser(
+                username="admin",
+                password_hash=hash_password("admin123"),
+            )
+        )
+        session.commit()

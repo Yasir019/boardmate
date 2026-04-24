@@ -1,9 +1,14 @@
 import hmac
 
-from fastapi import APIRouter, File, Form, Header, HTTPException, UploadFile
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, File, Form, Header, HTTPException, UploadFile
+from pydantic import BaseModel, Field
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from app.core.config import ADMIN_TOKEN, ADMIN_UPLOAD_MAX_MB
+from app.core.security import verify_password
+from app.db.models import AdminUser
+from app.db.session import get_db
 from app.services.indexing_service import indexing_service
 
 router = APIRouter()
@@ -29,6 +34,28 @@ class ReindexResponse(BaseModel):
     files_indexed: int = 0
     chunks_indexed: int = 0
     error: str | None = None
+
+
+class AdminLoginRequest(BaseModel):
+    username: str = Field(min_length=1, max_length=80)
+    password: str = Field(min_length=1, max_length=128)
+
+
+class AdminLoginResponse(BaseModel):
+    ok: bool
+    username: str
+
+
+@router.post("/login", response_model=AdminLoginResponse)
+def admin_login(payload: AdminLoginRequest, db: Session = Depends(get_db)):
+    """Validate the dedicated admin login credentials."""
+    admin_user = db.scalar(
+        select(AdminUser).where(AdminUser.username == payload.username.strip().lower())
+    )
+    if not admin_user or not verify_password(payload.password, admin_user.password_hash):
+        raise HTTPException(status_code=401, detail="Invalid admin username or password")
+
+    return AdminLoginResponse(ok=True, username=admin_user.username)
 
 
 @router.post("/upload", response_model=UploadResponse)
