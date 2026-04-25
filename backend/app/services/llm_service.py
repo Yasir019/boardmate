@@ -361,8 +361,7 @@ A) [Option]
 B) [Option]
 C) [Option]
 D) [Option]
-✅ Correct Answer: [Letter]
-📚 Explanation: [1-sentence explanation citing the context]
+Correct Answer: [Letter]
 
 ---
 
@@ -389,7 +388,7 @@ If a question cannot be solved from the context, write:
 
 FORMAT (plain text, never JSON):
 
-📋 EXERCISE SOLUTIONS: [Chapter name from context]
+EXERCISE SOLUTIONS: [Chapter name from context]
 
 ---
 

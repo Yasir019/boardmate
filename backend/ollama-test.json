@@ -1,9 +1,0 @@
-{
-  "model": "qwen3:4b",
-  "messages": [
-    {"role": "system", "content": "Answer directly in one sentence."},
-    {"role": "user", "content": "What is photosynthesis?"}
-  ],
-  "stream": false,
-  "options": {"temperature": 0.1, "num_predict": 80}
-}
