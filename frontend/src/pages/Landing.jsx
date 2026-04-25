@@ -201,7 +201,12 @@ function Landing() {
                 <Link className="button button-hero" to={ctaTarget}>
                   Start Learning Free
                 </Link>
-                <a className="button button-hero-secondary" href="#features">
+                <a
+                  className="button button-hero-secondary"
+                  href="https://youtu.be/1l9NRnt3Qpw"
+                  target="_blank"
+                  rel="noreferrer"
+                >
                   <Icon name="play_circle" />
                   Watch Demo
                 </a>
