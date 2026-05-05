@@ -15,7 +15,9 @@ function SubjectGrid({ board, classLevel }) {
   return (
     <div className="dashboard-section">
       <div className="section-header">
+        <span className="section-kicker-badge">{classLevel.name}</span>
         <h1>Select Your Subject</h1>
+        <p>Open a subject workspace with chapters, chat history, and studio tools ready for study.</p>
       </div>
       <div className="subject-card-grid">
         {classLevel.subjects.map((subject) => (
@@ -27,6 +29,7 @@ function SubjectGrid({ board, classLevel }) {
             disabled={!subject.available}
             aria-disabled={!subject.available}
           >
+            <div className="selection-card-glow" aria-hidden="true"></div>
             <div className="subject-card-media-shell">
               <div className="subject-card-media">
                 {subject.image ? (

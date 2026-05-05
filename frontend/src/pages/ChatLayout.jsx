@@ -70,6 +70,10 @@ function ChatLayout() {
   const [chatRuntime, setChatRuntime] = useState(null);
   const [showChapterPanel, setShowChapterPanel] = useState(true);
   const [showPdfPanel, setShowPdfPanel] = useState(true);
+  const [isMobileLayout, setIsMobileLayout] = useState(() => (
+    typeof window !== 'undefined' ? window.innerWidth <= 768 : false
+  ));
+  const [activeMobileSection, setActiveMobileSection] = useState('chat');
   const [chatSessionsByChapter, setChatSessionsByChapter] = useState({});
   const [activeChatByChapter, setActiveChatByChapter] = useState({});
   const [renameDialog, setRenameDialog] = useState({
@@ -290,6 +294,17 @@ function ChatLayout() {
   }, [isWorkspaceMenuOpen]);
 
   useEffect(() => {
+    const handleResize = () => {
+      setIsMobileLayout(window.innerWidth <= 768);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
     latestSessionLoadIdRef.current += 1;
     setMessagesBySession({});
     setChatSessionsByChapter({});
@@ -431,6 +446,9 @@ function ChatLayout() {
 
   const handleSelectChapter = (chapter) => {
     setSelectedChapter(chapter);
+    if (isMobileLayout) {
+      setActiveMobileSection('chat');
+    }
     clearVoiceStartTimeout();
     if (recognitionRef.current) {
       recognitionRef.current.stop();
@@ -858,6 +876,7 @@ function ChatLayout() {
   const layoutClasses = [
     'chat-layout',
     'three-panel',
+    `mobile-section-${activeMobileSection}`,
     showChapterPanel ? '' : 'hide-left-panel',
     showPdfPanel ? '' : 'hide-right-panel',
   ].filter(Boolean).join(' ');
@@ -884,6 +903,8 @@ function ChatLayout() {
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase() || '')
     .join('') || 'BM';
+  const shouldRenderChapterPanel = isMobileLayout || showChapterPanel;
+  const shouldRenderPdfPanel = isMobileLayout || showPdfPanel;
 
   return (
     <div className={layoutClasses}>
@@ -937,7 +958,39 @@ function ChatLayout() {
         </div>
       </header>
 
-      {showChapterPanel && (
+      {isMobileLayout && (
+        <div className="workspace-mobile-tabs" role="tablist" aria-label="Workspace sections">
+          <button
+            type="button"
+            className={`workspace-mobile-tab${activeMobileSection === 'sources' ? ' active' : ''}`}
+            onClick={() => setActiveMobileSection('sources')}
+            role="tab"
+            aria-selected={activeMobileSection === 'sources'}
+          >
+            Sources
+          </button>
+          <button
+            type="button"
+            className={`workspace-mobile-tab${activeMobileSection === 'chat' ? ' active' : ''}`}
+            onClick={() => setActiveMobileSection('chat')}
+            role="tab"
+            aria-selected={activeMobileSection === 'chat'}
+          >
+            Chat
+          </button>
+          <button
+            type="button"
+            className={`workspace-mobile-tab${activeMobileSection === 'studio' ? ' active' : ''}`}
+            onClick={() => setActiveMobileSection('studio')}
+            role="tab"
+            aria-selected={activeMobileSection === 'studio'}
+          >
+            Studio
+          </button>
+        </div>
+      )}
+
+      {shouldRenderChapterPanel && (
         <ChapterList
           chapters={chapters}
             selectedChapter={selectedChapter}
@@ -953,7 +1006,7 @@ function ChatLayout() {
           />
         )}
 
-        {!showChapterPanel && (
+        {!isMobileLayout && !showChapterPanel && (
           <button
             type="button"
             className="panel-reopen-handle left"
@@ -998,7 +1051,7 @@ function ChatLayout() {
           llmStatusText={llmStatusText}
         />
 
-        {!showPdfPanel && (
+        {!isMobileLayout && !showPdfPanel && (
           <button
             type="button"
             className="panel-reopen-handle right"
@@ -1018,7 +1071,7 @@ function ChatLayout() {
           </button>
         )}
 
-        {showPdfPanel && (
+        {shouldRenderPdfPanel && (
           <PdfViewer
             pdfUrl={pdfUrl}
             chapterTitle={selectedChapter?.name}

@@ -4,7 +4,9 @@ function ClassGrid({ board, onSelectClass }) {
   return (
     <div className="dashboard-section">
       <div className="section-header">
+        <span className="section-kicker-badge">{board.name}</span>
         <h1>Select Your Class</h1>
+        <p>Pick your class level to continue with the correct subjects and chapter list.</p>
       </div>
       <div className="card-grid">
         {board.classes.map((cls) => (
@@ -16,6 +18,7 @@ function ClassGrid({ board, onSelectClass }) {
             disabled={!cls.available}
             aria-disabled={!cls.available}
           >
+            <div className="selection-card-glow" aria-hidden="true"></div>
             <div className="class-card-title">{cls.name}</div>
             <div className="class-card-description">{cls.description}</div>
             <div className="class-card-status">{cls.status}</div>

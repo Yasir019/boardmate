@@ -749,7 +749,7 @@ def _generate_cloud_response(
             api_key=GROQ_API_KEY,
             model_name=GROQ_MODEL,
             temperature=temperature if temperature is not None else 0.3,
-            max_tokens=max_tokens if max_tokens is not None else 1024,
+            max_tokens=max_tokens if max_tokens is not None else 2048,  # Increased default from 1024
         )
 
     chain = prompt_template | llm
@@ -1044,7 +1044,7 @@ def get_llm() -> ChatGroq:
         api_key=GROQ_API_KEY,
         model_name=GROQ_MODEL,
         temperature=0.3,
-        max_tokens=1024,
+        max_tokens=2048,  # Increased from 1024 for longer, more detailed chat responses
     )
 
 

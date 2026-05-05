@@ -5,7 +5,9 @@ function BoardGrid({ onSelectBoard }) {
   return (
     <div className="dashboard-section">
       <div className="section-header">
+        <span className="section-kicker-badge">BoardMate</span>
         <h1>Select Your Board</h1>
+        <p>Choose the board you study in to open the right textbooks, chapters, and AI tools.</p>
       </div>
       <div className="board-card-grid">
         {boardCatalog.map((board) => (
@@ -17,6 +19,7 @@ function BoardGrid({ onSelectBoard }) {
             disabled={!board.available}
             aria-disabled={!board.available}
           >
+            <div className="selection-card-glow" aria-hidden="true"></div>
             <div className="board-card-media">
               <img src={board.logo} alt={`${board.name} board`} />
             </div>

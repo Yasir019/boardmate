@@ -64,8 +64,8 @@ def _chat_max_tokens_for_question(question: str, is_local_mode: bool = False) ->
             return 384
         return 256
     if any(token in normalized for token in ("difference", "compare", "why", "how", "steps", "detail", "detailed", "long")):
-        return 640
-    return 384
+        return 512
+    return 256
 
 
 def _trim_chat_context_for_mode(context: str, is_local_mode: bool = False) -> str:
