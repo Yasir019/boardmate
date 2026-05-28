@@ -5,6 +5,31 @@ import '../styles/pdfviewer.css';
 
 const STUDIO_VIDEO_URL = 'https://www.youtube.com/results?search_query=Eleventh+class+computer+book+panjab+bord';
 const STUDIO_PAST_PAPERS_URL = 'https://www.ilmkidunya.com/past_papers/lahore-board-11th-computer-science.aspx';
+const STUDIO_REVEAL_DELAY_MIN_MS = 3000;
+const STUDIO_REVEAL_DELAY_MAX_MS = 10000;
+const STUDIO_PROCESSING_MESSAGES = [
+  'Reading the chapter exercise...',
+  'Checking textbook lines...',
+  'Preparing a fresh response...',
+  'Organizing the answer sheet...',
+  'Matching questions with chapter content...',
+  'Formatting the study output...',
+];
+
+function randomStudioDelay() {
+  const span = STUDIO_REVEAL_DELAY_MAX_MS - STUDIO_REVEAL_DELAY_MIN_MS;
+  return STUDIO_REVEAL_DELAY_MIN_MS + Math.floor(Math.random() * (span + 1));
+}
+
+function wait(ms) {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+}
+
+function getRandomStudioProcessingMessage() {
+  return STUDIO_PROCESSING_MESSAGES[Math.floor(Math.random() * STUDIO_PROCESSING_MESSAGES.length)];
+}
 
 function extractJsonPayload(rawText) {
   if (!rawText) {
@@ -363,7 +388,8 @@ function parseLooseQuizText(rawText) {
   const stripMarkdownMarkers = (value) => String(value || '').replace(/\*\*/g, '').trim();
   const isQuestionStart = (line) => {
     const normalized = stripMarkdownMarkers(line);
-    return /^q\d+\.|^question\s*:|^question\s+\d+\s*:?$|^\d+[\.\-]\s+/i.test(normalized);
+    return /^q\d+\s*[\.\-:]/i.test(normalized)
+      || /^question\s*:|^question\s+\d+\s*:?$|^\d+[\.\-]\s+/i.test(normalized);
   };
   const isMetaStart = (line) => {
     const normalized = stripMarkdownMarkers(line);
@@ -379,7 +405,7 @@ function parseLooseQuizText(rawText) {
 
     const normalizedCurrent = stripMarkdownMarkers(current);
     let questionText = normalizedCurrent
-      .replace(/^q\d+\.\s*/i, '')
+      .replace(/^q\d+\s*[\.\-:]\s*/i, '')
       .replace(/^question\s*:\s*/i, '')
       .replace(/^question\s+\d+\s*:?\s*/i, '')
       .trim();
@@ -512,7 +538,7 @@ function normalizeQuizData(answer) {
       if (Array.isArray(q.options)) {
         options = q.options.map((opt) => String(opt));
       } else if (q.options && typeof q.options === 'object') {
-        options = Object.values(q.options).map((opt) => String(opt));
+        options = ['A', 'B', 'C', 'D'].map((key) => q.options[key]).filter(Boolean).map((opt) => String(opt));
       }
 
       options = options.filter(Boolean).slice(0, 4);
@@ -520,13 +546,29 @@ function normalizeQuizData(answer) {
         options.push(`Option ${options.length + 1}`);
       }
 
-      const answerIndex = Number.isInteger(q.answer_index)
+      let answerIndex = Number.isInteger(q.answer_index)
         ? q.answer_index
-        : (typeof q.correct_option === 'number'
-          ? q.correct_option
-          : (/^[A-D]$/i.test(String(q.answer || ''))
-            ? String(q.answer).toUpperCase().charCodeAt(0) - 65
-            : 0));
+        : (typeof q.correct_option === 'number' ? q.correct_option : null);
+
+      if (!Number.isInteger(answerIndex)) {
+        const rawAnswer = String(q.correct_answer || q.answer || '').trim();
+        const answerLetterMatch = rawAnswer.match(/^([A-D])[\)\.]?/i);
+        if (answerLetterMatch) {
+          answerIndex = answerLetterMatch[1].toUpperCase().charCodeAt(0) - 65;
+        }
+      }
+
+      if (!Number.isInteger(answerIndex) && q.correct_option_text) {
+        const normalizedCorrectText = sanitizeModelText(String(q.correct_option_text)).toLowerCase();
+        answerIndex = options.findIndex((option) => sanitizeModelText(option).toLowerCase() === normalizedCorrectText);
+      }
+
+      if (!Number.isInteger(answerIndex) || answerIndex < 0) {
+        answerIndex = 0;
+      }
+      if (answerIndex >= 1 && answerIndex <= 4 && q.answer_index_base === 1) {
+        answerIndex -= 1;
+      }
 
       return {
         id: index + 1,
@@ -545,7 +587,7 @@ function normalizeQuizData(answer) {
   }
 
   return {
-    title: parsed.quiz_title || 'Chapter Quiz',
+    title: parsed.topic || parsed.quiz_title || 'Chapter Quiz',
     questions: normalizedQuestions,
   };
 }
@@ -815,13 +857,13 @@ function parseLooseExerciseData(answer) {
       return;
     }
 
-    if (/^answer\s*:/i.test(normalizedLine)) {
-      current.answer = sanitizeModelText(normalizedLine.replace(/^answer\s*:/i, ''));
+    if (/^(answer|book-based\s+answer)\s*:/i.test(normalizedLine)) {
+      current.answer = sanitizeModelText(normalizedLine.replace(/^(answer|book-based\s+answer)\s*:/i, ''));
       activeListKey = '';
       return;
     }
-    if (/^explanation\s*:/i.test(normalizedLine)) {
-      current.explanation = sanitizeModelText(normalizedLine.replace(/^explanation\s*:/i, ''));
+    if (/^(explanation|why|reason)\s*:/i.test(normalizedLine)) {
+      current.explanation = sanitizeModelText(normalizedLine.replace(/^(explanation|why|reason)\s*:/i, ''));
       activeListKey = '';
       return;
     }
@@ -837,16 +879,16 @@ function parseLooseExerciseData(answer) {
       activeListKey = '';
       return;
     }
-    if (/^steps?\s*:/i.test(normalizedLine)) {
-      const firstStep = sanitizeModelText(normalizedLine.replace(/^steps?\s*:/i, ''));
+    if (/^(steps?|solution\s+steps|working)\s*:/i.test(normalizedLine)) {
+      const firstStep = sanitizeModelText(normalizedLine.replace(/^(steps?|solution\s+steps|working)\s*:/i, ''));
       if (firstStep) {
         current.steps.push(firstStep);
       }
       activeListKey = 'steps';
       return;
     }
-    if (/^(key[_\s-]*points?|key[_\s-]*concepts?)\s*:/i.test(normalizedLine)) {
-      const firstPoint = sanitizeModelText(normalizedLine.replace(/^(key[_\s-]*points?|key[_\s-]*concepts?)\s*:/i, ''));
+    if (/^(key[_\s-]*points?|key[_\s-]*concepts?|exam\s+points?|important\s+lines?)\s*:/i.test(normalizedLine)) {
+      const firstPoint = sanitizeModelText(normalizedLine.replace(/^(key[_\s-]*points?|key[_\s-]*concepts?|exam\s+points?|important\s+lines?)\s*:/i, ''));
       if (firstPoint) {
         current.keyPoints.push(firstPoint);
       }
@@ -942,6 +984,11 @@ function normalizeExerciseData(answer) {
   });
 }
 
+function isOfflineStudioProvider(provider) {
+  const normalized = String(provider || '').toLowerCase();
+  return normalized === 'local' || normalized.startsWith('local-') || normalized === 'offline';
+}
+
 function PdfViewer({
   pdfUrl,
   chapterTitle,
@@ -951,6 +998,7 @@ function PdfViewer({
   chapterId,
   language = 'en',
   llmMode = 'cloud',
+  onProviderFallback,
   onCollapsePanel,
 }) {
   const [error, setError] = useState(false);
@@ -1058,6 +1106,7 @@ function PdfViewer({
       payload: null,
       error: '',
       llmProvider: '',
+      processingMessage: getRandomStudioProcessingMessage(),
     };
     setStudioItems((prev) => [nextItem, ...prev]);
     return id;
@@ -1244,15 +1293,18 @@ function PdfViewer({
     setGenerationFlag('quiz', true);
     const itemId = createStudioItem('quiz', `${chapterTitle || 'Chapter'} Quiz`);
     try {
-      const result = await api.generateChapterQuiz(
-        board,
-        classLevel,
-        subject,
-        chapterId,
-        chapterTitle || chapterId,
-        language,
-        llmMode,
-      );
+      const [result] = await Promise.all([
+        api.generateChapterQuiz(
+          board,
+          classLevel,
+          subject,
+          chapterId,
+          chapterTitle || chapterId,
+          language,
+          llmMode,
+        ),
+        wait(randomStudioDelay()),
+      ]);
 
       updateStudioItem(itemId, {
         status: 'ready',
@@ -1262,6 +1314,7 @@ function PdfViewer({
           rawAnswer: result.answer,
         },
       });
+      onProviderFallback?.(result.llm_provider);
     } catch (studioError) {
       updateStudioItem(itemId, {
         status: 'failed',
@@ -1280,15 +1333,18 @@ function PdfViewer({
     setGenerationFlag('summary', true);
     const itemId = createStudioItem('summary', `${chapterTitle || 'Chapter'} Summary`);
     try {
-      const result = await api.generateChapterSummary(
-        board,
-        classLevel,
-        subject,
-        chapterId,
-        chapterTitle || chapterId,
-        language,
-        llmMode,
-      );
+      const [result] = await Promise.all([
+        api.generateChapterSummary(
+          board,
+          classLevel,
+          subject,
+          chapterId,
+          chapterTitle || chapterId,
+          language,
+          llmMode,
+        ),
+        wait(randomStudioDelay()),
+      ]);
 
       updateStudioItem(itemId, {
         status: 'ready',
@@ -1298,6 +1354,7 @@ function PdfViewer({
           rawAnswer: result.answer,
         },
       });
+      onProviderFallback?.(result.llm_provider);
     } catch (studioError) {
       updateStudioItem(itemId, {
         status: 'failed',
@@ -1316,15 +1373,18 @@ function PdfViewer({
     setGenerationFlag('exercise', true);
     const itemId = createStudioItem('exercise', `${chapterTitle || 'Chapter'} Exercise Solutions`);
     try {
-      const result = await api.generateChapterExerciseSolution(
-        board,
-        classLevel,
-        subject,
-        chapterId,
-        chapterTitle || chapterId,
-        language,
-        llmMode,
-      );
+      const [result] = await Promise.all([
+        api.generateChapterExerciseSolution(
+          board,
+          classLevel,
+          subject,
+          chapterId,
+          chapterTitle || chapterId,
+          language,
+          llmMode,
+        ),
+        wait(randomStudioDelay()),
+      ]);
 
       updateStudioItem(itemId, {
         status: 'ready',
@@ -1334,6 +1394,7 @@ function PdfViewer({
           rawAnswer: result.answer,
         },
       });
+      onProviderFallback?.(result.llm_provider);
     } catch (studioError) {
       updateStudioItem(itemId, {
         status: 'failed',
@@ -1747,11 +1808,11 @@ function PdfViewer({
                           </span>
                           {isReady && item.llmProvider && (
                             <span className="pdf-studio-provider-badge">
-                              {item.llmProvider === 'local' ? 'Offline Model' : 'Online Model'}
+                              {isOfflineStudioProvider(item.llmProvider) ? 'Offline Model' : 'Online Model'}
                             </span>
                           )}
                           <span className="pdf-studio-history-item-meta">
-                            {isProcessing && 'based on 1 source'}
+                            {isProcessing && (item.processingMessage || 'Preparing response...')}
                             {isReady && `1 source · ${formatRelativeTime(item.createdAt)}`}
                             {item.status === 'failed' && (item.error || 'Failed to generate')}
                           </span>
@@ -1839,7 +1900,7 @@ function PdfViewer({
                 <h3>{activeStudioItem.title}</h3>
                 {activeStudioItem.llmProvider && (
                   <p className="pdf-studio-provider-note">
-                    {activeStudioItem.llmProvider === 'local'
+                    {isOfflineStudioProvider(activeStudioItem.llmProvider)
                       ? 'Generated with the local offline model.'
                       : 'Generated with the online Groq model.'}
                   </p>
@@ -1868,26 +1929,26 @@ function PdfViewer({
                         const answerIndex = Number.isInteger(question.answerIndex)
                           ? Math.max(0, Math.min(3, question.answerIndex))
                           : 0;
-                        const answerLetter = `${String.fromCharCode(65 + answerIndex)})`;
+                        const answerLetter = `${String.fromCharCode(65 + answerIndex)}.`;
                         const answerText = options[answerIndex] || 'Correct option not available';
 
                         return (
                           <article key={`${question.id || index}-${question.question}`} className="quiz-text-question-block">
                             <p className="quiz-text-question">
-                              {`${index + 1}. `}
+                              <strong>{`Q${index + 1}. `}</strong>
                               {question.question || 'Question not available'}
                             </p>
 
                             <div className="quiz-text-options" role="list" aria-label={`Options for question ${index + 1}`}>
                               {options.slice(0, 4).map((option, optionIndex) => (
                                 <p key={`${question.id || index}-${optionIndex}`} role="listitem">
-                                  {`${String.fromCharCode(65 + optionIndex)}) ${option}`}
+                                  {`${String.fromCharCode(65 + optionIndex)}. ${option}`}
                                 </p>
                               ))}
                             </div>
 
                             <p className="quiz-text-answer">
-                              <strong>Answer:</strong>
+                              <strong>Correct Answer:</strong>
                               {' '}
                               <strong>{answerLetter}</strong>
                               {' '}

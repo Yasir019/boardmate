@@ -17,6 +17,11 @@ const CHAT_STORAGE_PREFIX = 'boardmate-chat-v1';
 const DEFAULT_CHAPTER_KEY = '__subject__';
 const SESSION_EXPIRED_MESSAGE = 'Your session has expired. Please sign in again.';
 
+function isOfflineProvider(provider) {
+  const normalized = String(provider || '').toLowerCase();
+  return normalized === 'local' || normalized.startsWith('local-') || normalized === 'offline';
+}
+
 const UI_TEXT = {
   en: {
     listening: 'Listening now...',
@@ -26,7 +31,8 @@ const UI_TEXT = {
     micStartFailed: 'Could not start voice input. Try Chrome or Edge and refresh the page.',
     micGenericError: 'Voice input failed. Try again after allowing microphone access.',
     micNoSpeech: 'No speech was detected. Please speak a little closer to the microphone.',
-    micNetwork: 'Voice recognition service is unavailable right now. Urdu voice depends on your browser speech service.',
+    micNetwork: 'Browser voice recognition is unavailable right now. Chrome/Edge voice typing may still need internet even when the AI model is offline.',
+    micOfflineUnavailable: 'Offline AI mode is ready, but browser voice typing may still need internet. Type your question, or connect internet for microphone dictation.',
     inputPlaceholder: 'Ask a short question or tap the microphone...',
     chapterChanged: (chapter) => `Focused on ${chapter}. Ask about this chapter.`,
     welcome: 'Ask anything from this chapter.',
@@ -42,7 +48,8 @@ const UI_TEXT = {
     micStartFailed: 'Could not start voice input. Try Chrome or Edge and refresh the page.',
     micGenericError: 'Voice input failed. Try again after allowing microphone access.',
     micNoSpeech: 'No speech was detected. Please speak a little closer to the microphone.',
-    micNetwork: 'Voice recognition service is unavailable right now. Urdu voice depends on your browser speech service.',
+    micNetwork: 'Browser voice recognition is unavailable right now. Chrome/Edge voice typing may still need internet even when the AI model is offline.',
+    micOfflineUnavailable: 'Offline AI mode is ready, but browser voice typing may still need internet. Type your question, or connect internet for microphone dictation.',
     inputPlaceholder: 'Ask a short question or tap the microphone...',
     chapterChanged: (chapter) => `Focused on ${chapter}. Ask about this chapter.`,
     welcome: 'Ask anything from this chapter.',
@@ -333,6 +340,10 @@ function ChatLayout() {
           setLlmMode('local');
           return;
         }
+        if (runtime?.cloud_configured === false && runtime?.local_available) {
+          setLlmMode('local');
+          return;
+        }
         if (runtime?.default_mode === 'cloud' || runtime?.default_mode === 'auto') {
           setLlmMode('cloud');
         }
@@ -341,6 +352,37 @@ function ChatLayout() {
         console.error('Error fetching chat runtime:', error);
       });
   }, []);
+
+  useEffect(() => {
+    const handleOffline = () => {
+      if (chatRuntime?.local_available) {
+        setLlmMode('local');
+      }
+    };
+
+    const refreshRuntime = () => {
+      api.getChatRuntime()
+        .then((runtime) => {
+          setChatRuntime(runtime);
+          if (runtime?.cloud_configured !== false) {
+            setLlmMode('cloud');
+          } else if (runtime?.local_available) {
+            setLlmMode('local');
+          }
+        })
+        .catch((error) => {
+          console.error('Error refreshing chat runtime:', error);
+        });
+    };
+
+    window.addEventListener('offline', handleOffline);
+    window.addEventListener('online', refreshRuntime);
+
+    return () => {
+      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('online', refreshRuntime);
+    };
+  }, [chatRuntime?.local_available]);
 
   useEffect(() => {
     if (isAuthenticated()) {
@@ -690,6 +732,13 @@ function ChatLayout() {
         timestamp: new Date().toISOString(),
         language,
       };
+
+      if (isOfflineProvider(response.llm_provider)) {
+        setLlmMode('local');
+      } else if (response.llm_provider === 'cloud') {
+        setLlmMode('cloud');
+      }
+
       if (response.chat_id) {
         setActiveChatForChapter(requestChapterKey, response.chat_id);
       }
@@ -734,7 +783,7 @@ function ChatLayout() {
     }
   };
 
-  const handleStartVoiceInput = () => {
+  const handleStartVoiceInput = (spokenLanguage = language) => {
     if (!speechRecognitionSupported) {
       setVoiceError(text.micUnsupported);
       return;
@@ -752,7 +801,7 @@ function ChatLayout() {
 
     let recognition;
     try {
-      recognition = createSpeechRecognition(language);
+      recognition = createSpeechRecognition(spokenLanguage);
       if (!recognition) {
         setVoiceError(text.micUnsupported);
         return;
@@ -781,7 +830,7 @@ function ChatLayout() {
       } else if (errorCode === 'no-speech' || errorCode === 'aborted') {
         setVoiceError(text.micNoSpeech);
       } else if (errorCode === 'network') {
-        setVoiceError(text.micNetwork);
+        setVoiceError(llmMode === 'local' ? text.micOfflineUnavailable : text.micNetwork);
       } else {
         setVoiceError(text.micGenericError);
       }
@@ -866,8 +915,12 @@ function ChatLayout() {
       return 'Offline mode selected, but no local LLM was detected. Start Ollama, then try again.';
     }
 
-    if (!chatRuntime.cloud_available) {
+    if (chatRuntime.cloud_configured === false) {
       return 'Online mode selected, but no cloud API key is configured. Switch to Offline or set the backend API key.';
+    }
+
+    if (chatRuntime.internet_available === false) {
+      return 'Online mode selected. BoardMate will try Groq first and use Offline only if the request fails.';
     }
 
     return 'Online mode uses the Groq model.';
@@ -1081,6 +1134,13 @@ function ChatLayout() {
             chapterId={selectedChapter?.chapter}
             language={language}
             llmMode={llmMode}
+            onProviderFallback={(provider) => {
+              if (isOfflineProvider(provider)) {
+                setLlmMode('local');
+              } else if (provider === 'cloud') {
+                setLlmMode('cloud');
+              }
+            }}
             onCollapsePanel={handleTogglePdfPanel}
           />
         )}

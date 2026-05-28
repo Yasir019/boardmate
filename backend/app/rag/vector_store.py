@@ -2,12 +2,15 @@
 
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional
+from threading import RLock
+from typing import Callable, Dict, List, Optional, TypeVar
 
+from chromadb.api.client import SharedSystemClient
 from langchain_chroma import Chroma
 from langchain_community.embeddings import HuggingFaceEmbeddings
 
 logger = logging.getLogger(__name__)
+T = TypeVar("T")
 
 
 class VectorStore:
@@ -21,6 +24,7 @@ class VectorStore:
     ):
         self.persist_directory = persist_directory
         self.collection_name = collection_name
+        self._client_lock = RLock()
 
         persist_directory.mkdir(parents=True, exist_ok=True)
 
@@ -28,29 +32,48 @@ class VectorStore:
             model_name=embedding_model or "sentence-transformers/all-MiniLM-L6-v2"
         )
 
-        self.vectorstore = Chroma(
-            collection_name=collection_name,
-            embedding_function=self.embeddings,
-            persist_directory=str(persist_directory),
-        )
+        self.vectorstore = self._create_vectorstore()
 
-    def _reconnect(self):
-        """Recreate the Chroma client handle while keeping persisted data."""
-        self.vectorstore = Chroma(
+    def _create_vectorstore(self) -> Chroma:
+        return Chroma(
             collection_name=self.collection_name,
             embedding_function=self.embeddings,
             persist_directory=str(self.persist_directory),
         )
 
+    @staticmethod
+    def _is_closed_client_error(error: Exception) -> bool:
+        message = str(error).lower()
+        return "client has been closed" in message or "cannot send a request" in message
+
+    def _reconnect(self):
+        """Recreate the Chroma client handle while keeping persisted data."""
+        with self._client_lock:
+            # Chroma caches persistent clients by directory. If that cached system owns
+            # a closed httpx client, rebuilding Chroma without clearing the cache can
+            # return the same closed client again.
+            SharedSystemClient.clear_system_cache()
+            self.vectorstore = self._create_vectorstore()
+
+    def _run_with_reconnect(self, operation_name: str, operation: Callable[[], T]) -> T:
+        try:
+            return operation()
+        except Exception as e:
+            if not self._is_closed_client_error(e):
+                raise
+
+            logger.warning(
+                "Chroma client was closed during %s, reconnecting and retrying once",
+                operation_name,
+            )
+            self._reconnect()
+            return operation()
+
     def clear(self):
         """Delete all documents from the collection and recreate it."""
         try:
             self.vectorstore.delete_collection()
-            self.vectorstore = Chroma(
-                collection_name=self.collection_name,
-                embedding_function=self.embeddings,
-                persist_directory=str(self.persist_directory),
-            )
+            self.vectorstore = self._create_vectorstore()
             logger.info("Collection cleared")
         except Exception as e:
             logger.warning("Error clearing collection: %s", e)
@@ -62,10 +85,13 @@ class VectorStore:
         ids: List[str],
     ):
         """Add text chunks with metadata to the vector store."""
-        self.vectorstore.add_texts(
-            texts=chunks,
-            metadatas=metadatas,
-            ids=ids,
+        self._run_with_reconnect(
+            "add_documents",
+            lambda: self.vectorstore.add_texts(
+                texts=chunks,
+                metadatas=metadatas,
+                ids=ids,
+            ),
         )
 
     def search(
@@ -107,16 +133,7 @@ class VectorStore:
                 query=query, k=top_k
             )
 
-        try:
-            results = _run_search()
-        except Exception as e:
-            # Chroma/httpx can surface transient closed-client errors after restarts.
-            if "client has been closed" in str(e).lower():
-                logger.warning("Vector search client was closed, reconnecting and retrying once")
-                self._reconnect()
-                results = _run_search()
-            else:
-                raise
+        results = self._run_with_reconnect("search", _run_search)
 
         return [
             {
@@ -155,15 +172,7 @@ class VectorStore:
                 kwargs["limit"] = limit
             return self.vectorstore.get(**kwargs)
 
-        try:
-            data = _run_get()
-        except Exception as e:
-            if "client has been closed" in str(e).lower():
-                logger.warning("Vector client was closed during get_documents, reconnecting and retrying once")
-                self._reconnect()
-                data = _run_get()
-            else:
-                raise
+        data = self._run_with_reconnect("get_documents", _run_get)
 
         documents = data.get("documents", []) or []
         metadatas = data.get("metadatas", []) or []
@@ -177,10 +186,16 @@ class VectorStore:
 
     def as_retriever(self, search_kwargs: Dict = None):
         """Return a LangChain retriever interface."""
-        return self.vectorstore.as_retriever(
-            search_kwargs=search_kwargs or {"k": 5}
+        return self._run_with_reconnect(
+            "as_retriever",
+            lambda: self.vectorstore.as_retriever(
+                search_kwargs=search_kwargs or {"k": 5}
+            ),
         )
 
     def count(self) -> int:
         """Return the total number of documents in the collection."""
-        return len(self.vectorstore.get()["ids"])
+        return self._run_with_reconnect(
+            "count",
+            lambda: len(self.vectorstore.get()["ids"]),
+        )

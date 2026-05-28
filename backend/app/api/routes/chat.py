@@ -38,26 +38,39 @@ router = APIRouter()
 
 _STUDIO_RECENT_OUTPUTS: dict[str, deque[str]] = defaultdict(lambda: deque(maxlen=8))
 
+LOCAL_QUIZ_SYSTEM_PROMPT = QUIZ_SYSTEM_PROMPT
+STUDIO_VARIANT_COUNT = 5
+STUDIO_EXERCISE_VARIANT_COUNT = 3
+STUDIO_QUIZ_QUESTION_COUNT = 15
+STUDIO_VARIANTS_CACHE_PATH = Path(__file__).resolve().parents[2] / "storage" / "studio_variants_cache.json"
+
 
 def _is_local_mode_requested(mode_override: str | None) -> bool:
     return normalize_llm_mode(mode_override) == "local"
 
 
+def _studio_variant_count(task_name: str) -> int:
+    return STUDIO_EXERCISE_VARIANT_COUNT if task_name == "exercise" else STUDIO_VARIANT_COUNT
+
+
 def _studio_generation_settings(task_name: str, is_local_mode: bool) -> tuple[str, float, float, int, list[int]]:
     if task_name == "quiz":
         if is_local_mode:
-            return QUIZ_SYSTEM_PROMPT, 0.6, 0.85, 768, [6000]
-        return QUIZ_SYSTEM_PROMPT, 0.7, 0.9, 2048, [12000, 8000]
+            return LOCAL_QUIZ_SYSTEM_PROMPT, 0.35, 0.85, 2500, [5000]
+        # Groq on-demand llama-3.1-8b-instant has a low TPM cap; keep prompt +
+        # completion comfortably below 6000 tokens so online quiz does not fall
+        # back to local on 413.
+        return QUIZ_SYSTEM_PROMPT, 0.45, 0.9, 1800, [5000, 3500]
 
     if task_name == "summary":
         if is_local_mode:
             return SUMMARY_SYSTEM_PROMPT, 0.25, 0.85, 1024, [8000]
-        return SUMMARY_SYSTEM_PROMPT, 0.35, 0.9, 3072, [18000, 12000]
+        return SUMMARY_SYSTEM_PROMPT, 0.3, 0.9, 1800, [6500, 4500]
 
     if task_name == "exercise":
         if is_local_mode:
             return EXERCISE_SYSTEM_PROMPT, 0.25, 0.85, 1536, [12000, 9000]
-        return EXERCISE_SYSTEM_PROMPT, 0.35, 0.9, 8192, [48000, 32000]
+        return EXERCISE_SYSTEM_PROMPT, 0.3, 0.9, 2200, [8000, 5500]
 
     raise HTTPException(status_code=422, detail=f"Unsupported studio task: {task_name}")
 
@@ -164,6 +177,8 @@ class StudioGenerateResponse(BaseModel):
 class ChatRuntimeResponse(BaseModel):
     default_mode: str
     effective_mode: str
+    internet_available: bool = False
+    cloud_configured: bool = False
     cloud_available: bool
     local_available: bool
     configured_local_model: str
@@ -194,6 +209,40 @@ def _load_chapter_soup(board: str, class_level: str, subject: str, chapter: str)
         return BeautifulSoup(html_path.read_text(encoding="utf-8"), "html.parser")
     except Exception:
         return None
+
+
+def _read_studio_variants_cache() -> dict[str, Any]:
+    try:
+        if STUDIO_VARIANTS_CACHE_PATH.exists():
+            data = json.loads(STUDIO_VARIANTS_CACHE_PATH.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                data.setdefault("version", 1)
+                data.setdefault("items", {})
+                return data
+    except Exception:
+        pass
+    return {"version": 1, "items": {}}
+
+
+def _write_studio_variants_cache(cache: dict[str, Any]) -> None:
+    STUDIO_VARIANTS_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    STUDIO_VARIANTS_CACHE_PATH.write_text(
+        json.dumps(cache, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+
+def _studio_variant_cache_key(request: "StudioGenerateRequest", task_name: str) -> str:
+    cache_task_name = "exercise-v3" if task_name == "exercise" else task_name
+    parts = [
+        cache_task_name,
+        request.board,
+        request.class_level,
+        request.subject,
+        request.chapter,
+        request.language,
+    ]
+    return "::".join(_clean_text(str(part)).lower() for part in parts)
 
 
 def _clean_text(value: str) -> str:
@@ -303,6 +352,344 @@ def _choose_best_option(question: str, options: list[str], references: list[str]
     return best_option
 
 
+def _compact_quiz_option(value: str, max_chars: int = 180) -> str:
+    text = _clean_text(value)
+    text = re.sub(r"\b(?:it is like|think of it like|imagine)\b.*", "", text, flags=re.IGNORECASE).strip()
+    sentences = [
+        sentence.strip()
+        for sentence in re.split(r"(?<=[.!?])\s+", text)
+        if sentence.strip()
+    ]
+    if sentences:
+        text = sentences[0]
+    if len(text) > max_chars:
+        text = text[:max_chars].rsplit(" ", 1)[0].rstrip(".,;:") + "."
+    return text.rstrip(".") + "." if text else ""
+
+
+def _clean_quiz_term(value: str) -> str:
+    text = _clean_text(value)
+    text = re.sub(r"^\s*(?:chapter|section|unit|page|pg\.?|exercise)\s*(?:no\.?|number|#)?\s*[:.-]?\s*\d+(?:\.\d+)*\s*[:.)-]?\s*", "", text, flags=re.IGNORECASE)
+    text = re.sub(r"^\s*\d+(?:\.\d+)*\.?\s*", "", text).strip()
+    text = re.sub(r"\s*\((?:page|pg\.?|chapter|section|unit|exercise)\s*(?:no\.?|number|#)?\s*\d+(?:\.\d+)*\)", "", text, flags=re.IGNORECASE)
+    text = re.sub(r"\s*[,;:-]?\s*(?:page|pg\.?)\s*(?:no\.?|number|#)?\s*\d+\b\.?", "", text, flags=re.IGNORECASE)
+    text = re.sub(r"\s*[,;:-]?\s*(?:chapter|section|unit|exercise)\s*(?:no\.?|number|#)?\s*\d+(?:\.\d+)*\b\.?", "", text, flags=re.IGNORECASE)
+    return re.sub(r"\s{2,}", " ", text).strip(" .:-")
+
+
+def _short_quiz_option(value: str) -> str:
+    text = re.sub(r"^(?:the|a|an)\s+", "", _clean_quiz_term(value), flags=re.IGNORECASE).strip()
+    acronym_match = re.search(r"\(([A-Z0-9]{2,8})\)", text)
+    if acronym_match:
+        return acronym_match.group(1)
+    words = [
+        word
+        for word in re.findall(r"[A-Za-z0-9+\-*/%=<>!]+", text)
+        if word.lower() not in {"and", "or", "of", "in", "to", "for", "with"}
+    ]
+    return " ".join(words[:3]).strip() if words else ""
+
+
+def _quiz_clue(value: str, max_words: int = 14) -> str:
+    text = _clean_quiz_term(value)
+    text = re.sub(r"^(?:is|are|a|an|the)\s+", "", text, flags=re.IGNORECASE).strip()
+    words = text.split()
+    if len(words) > max_words:
+        text = " ".join(words[:max_words]).rstrip(".,;:")
+    return text.rstrip(".")
+
+
+def _quiz_question_for_candidate(item: dict[str, str], index: int) -> str:
+    term = _short_quiz_option(item.get("term", ""))
+    clue = _quiz_clue(item.get("definition", ""))
+    templates = [
+        "Which term means: {clue}?",
+        "Identify the concept: {clue}.",
+        "What is used for {clue}?",
+        "The statement describes which term: {clue}?",
+        "Choose the correct term for: {clue}.",
+        "Which option matches this idea: {clue}?",
+        "What is the name of this concept: {clue}?",
+        "Select the term related to: {clue}.",
+        "Which keyword fits this clue: {clue}?",
+        "Find the best label for: {clue}.",
+        "This describes which topic: {clue}?",
+        "Pick the matching concept: {clue}.",
+        "Which answer names this idea: {clue}?",
+        "What concept is shown by: {clue}?",
+        "Choose the topic connected with: {clue}.",
+        "Which term is closest to: {clue}?",
+        "What does this clue point to: {clue}?",
+        "Select the correct name: {clue}.",
+        "Which option best represents: {clue}?",
+        "Name the concept described here: {clue}.",
+    ]
+    return templates[(index - 1) % len(templates)].format(clue=clue or term)
+
+
+def _dedupe_short_options(values: list[str]) -> list[str]:
+    options: list[str] = []
+    seen = set()
+    for value in values:
+        option = _short_quiz_option(value)
+        key = option.lower()
+        if option and 1 <= len(option.split()) <= 3 and key not in seen:
+            seen.add(key)
+            options.append(option)
+    return options
+
+
+def _extract_local_quiz_items(answer: str) -> list[dict[str, str]]:
+    text = (answer or "").replace("\r", "")
+    if not text.strip():
+        return []
+
+    blocks = re.split(r"(?=^\s*(?:\*\*)?Q\d+\s*[\.\-:])", text, flags=re.IGNORECASE | re.MULTILINE)
+    items: list[dict[str, str]] = []
+    for block in blocks:
+        lines = [line.strip().strip("\\") for line in block.split("\n") if line.strip()]
+        if not lines or not re.match(r"^(?:\*\*)?Q\d+\s*[\.\-:]", lines[0], flags=re.IGNORECASE):
+            continue
+
+        question = re.sub(r"^\*\*|\*\*$", "", lines[0]).strip()
+        question = re.sub(r"^Q\d+\s*[\.\-:]\s*", "", question, flags=re.IGNORECASE).strip()
+        question = re.sub(r"\s+in\s+chapter\s*\w+\s*\??$", "?", question, flags=re.IGNORECASE).strip()
+        term = re.sub(r"^what\s+best\s+describes\s+", "", question, flags=re.IGNORECASE)
+        term = re.sub(r"\s+in\s+chapter\s*\w+\s*\??$", "", term, flags=re.IGNORECASE).strip(" ?.")
+
+        options: dict[str, str] = {}
+        correct_letter = ""
+        explanation = ""
+        for line in lines[1:]:
+            option_match = re.match(r"^([A-D])[\).]\s*(.+)$", line, flags=re.IGNORECASE)
+            if option_match:
+                options[option_match.group(1).upper()] = _clean_quiz_term(option_match.group(2))
+                continue
+            answer_match = re.match(r"^(?:\*\*)?(?:correct\s+answer|answer)(?:\*\*)?\s*:\s*([A-D])[\).]?\s*(.*)$", line, flags=re.IGNORECASE)
+            if answer_match:
+                correct_letter = answer_match.group(1).upper()
+                explanation = _clean_quiz_term(answer_match.group(2))
+                continue
+            explanation_match = re.match(r"^(?:explanation)\s*:\s*(.+)$", line, flags=re.IGNORECASE)
+            if explanation_match:
+                explanation = _clean_quiz_term(explanation_match.group(1))
+
+        if not explanation and correct_letter in options:
+            explanation = options[correct_letter]
+        if term and explanation:
+            items.append({"term": term, "definition": explanation})
+
+    return items
+
+
+def _format_local_quiz_items(
+    items: list[dict[str, str]],
+    generation_nonce: str,
+    desired_count: int | None = None,
+    topic: str = "Chapter Quiz",
+    subject: str = "",
+) -> str:
+    cleaned_items = [
+        {**item, "term": _short_quiz_option(item.get("term", ""))}
+        for item in items
+        if _short_quiz_option(item.get("term", "")) and _quiz_clue(item.get("definition", ""))
+    ]
+    cleaned_items = [
+        item for item in cleaned_items
+        if 1 <= len(item["term"].split()) <= 3
+    ]
+    if len(cleaned_items) < 4:
+        return ""
+
+    rng = random.Random(generation_nonce)
+    rng.shuffle(cleaned_items)
+    count = min(desired_count or len(cleaned_items), len(cleaned_items))
+    selected = cleaned_items[:count]
+    all_terms = _dedupe_short_options([item["term"] for item in cleaned_items])
+
+    questions: list[dict[str, Any]] = []
+    visible_index = 1
+    for item in selected:
+        correct_option = _short_quiz_option(item["term"])
+        distractors = [term for term in all_terms if term.lower() != correct_option.lower()]
+        rng.shuffle(distractors)
+        options = _dedupe_short_options([correct_option, *distractors[:3]])
+        if len(options) < 4:
+            continue
+        rng.shuffle(options)
+        answer_index = next((idx for idx, option in enumerate(options) if option.lower() == correct_option.lower()), 0)
+        correct_letter = chr(65 + answer_index)
+        difficulty = "Medium"
+        bloom_levels = ["Remember", "Understand", "Apply", "Analyze"]
+        questions.append({
+            "id": visible_index,
+            "question": _quiz_question_for_candidate(item, visible_index),
+            "options": {
+                "A": options[0],
+                "B": options[1],
+                "C": options[2],
+                "D": options[3],
+            },
+            "correct_answer": correct_letter,
+            "correct_option_text": options[answer_index],
+            "explanation": f"{options[answer_index]} is correct because {_quiz_clue(item.get('definition', ''), max_words=18)}.",
+            "bloom_level": bloom_levels[(visible_index - 1) % len(bloom_levels)],
+            "difficulty": difficulty,
+            "tags": [correct_option],
+        })
+        visible_index += 1
+
+    if not questions:
+        return ""
+
+    payload = {
+        "topic": topic or "Chapter Quiz",
+        "subject": subject or "",
+        "difficulty": "Medium",
+        "total_questions": len(questions),
+        "questions": questions,
+    }
+    return json.dumps(payload, ensure_ascii=False)
+
+
+def _extract_json_payload(text: str) -> Any:
+    cleaned = (text or "").strip()
+    if not cleaned:
+        return None
+    cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned, flags=re.IGNORECASE).strip()
+    cleaned = re.sub(r"\s*```$", "", cleaned).strip()
+    try:
+        return json.loads(cleaned)
+    except json.JSONDecodeError:
+        start = cleaned.find("{")
+        end = cleaned.rfind("}")
+        if start >= 0 and end > start:
+            try:
+                return json.loads(cleaned[start:end + 1])
+            except json.JSONDecodeError:
+                return None
+    return None
+
+
+def _repair_local_quiz_answer(
+    answer: str,
+    generation_nonce: str,
+    desired_count: int | None = None,
+    topic: str = "Chapter Quiz",
+    subject: str = "",
+) -> str:
+    parsed = _extract_json_payload(answer)
+    if isinstance(parsed, dict) and isinstance(parsed.get("questions"), list):
+        return json.dumps(parsed, ensure_ascii=False)
+    return _format_local_quiz_items(
+        _extract_local_quiz_items(answer),
+        generation_nonce=generation_nonce,
+        desired_count=desired_count,
+        topic=topic,
+        subject=subject,
+    ) or answer
+
+
+def _normalize_quiz_answer(
+    answer: str,
+    generation_nonce: str,
+    desired_count: int | None = None,
+    topic: str = "Chapter Quiz",
+    subject: str = "",
+) -> str:
+    """Return the same quiz JSON shape for online and offline generations."""
+    parsed = _extract_json_payload(answer)
+    if not isinstance(parsed, dict) or not isinstance(parsed.get("questions"), list):
+        return _repair_local_quiz_answer(
+            answer,
+            generation_nonce=generation_nonce,
+            desired_count=desired_count,
+            topic=topic,
+            subject=subject,
+        )
+
+    normalized_questions: list[dict[str, Any]] = []
+    limit = desired_count or len(parsed.get("questions") or [])
+    for index, raw_question in enumerate((parsed.get("questions") or [])[:limit], start=1):
+        if not isinstance(raw_question, dict):
+            continue
+
+        question_text = _clean_text(
+            str(raw_question.get("question") or raw_question.get("prompt") or raw_question.get("stem") or "")
+        )
+        if not question_text:
+            continue
+
+        raw_options = raw_question.get("options") or {}
+        if isinstance(raw_options, dict):
+            options = [
+                _clean_text(str(raw_options.get(letter) or ""))
+                for letter in ("A", "B", "C", "D")
+            ]
+        elif isinstance(raw_options, list):
+            options = [_clean_text(str(option)) for option in raw_options[:4]]
+        else:
+            options = []
+
+        options = [option for option in options if option]
+        if len(options) < 4:
+            continue
+
+        correct_answer = raw_question.get("correct_answer", raw_question.get("answer", ""))
+        answer_index = None
+        if isinstance(raw_question.get("answer_index"), int):
+            answer_index = raw_question["answer_index"]
+        elif isinstance(raw_question.get("correct_option"), int):
+            correct_option_index = raw_question["correct_option"]
+            answer_index = correct_option_index - 1 if 1 <= correct_option_index <= 4 else correct_option_index
+        elif isinstance(correct_answer, str) and re.fullmatch(r"[A-D]", correct_answer.strip(), flags=re.IGNORECASE):
+            answer_index = ord(correct_answer.strip().upper()) - ord("A")
+        else:
+            correct_text = _clean_text(str(raw_question.get("correct_option_text") or correct_answer))
+            answer_index = next(
+                (idx for idx, option in enumerate(options) if option.lower() == correct_text.lower()),
+                0,
+            )
+
+        answer_index = max(0, min(3, int(answer_index or 0)))
+
+        correct_letter = chr(ord("A") + answer_index)
+        normalized_questions.append({
+            "id": len(normalized_questions) + 1,
+            "question": question_text,
+            "options": {
+                "A": options[0],
+                "B": options[1],
+                "C": options[2],
+                "D": options[3],
+            },
+            "correct_answer": correct_letter,
+            "correct_option_text": options[answer_index],
+            "explanation": _clean_text(str(raw_question.get("explanation") or "")),
+            "bloom_level": _clean_text(str(raw_question.get("bloom_level") or "Understand")),
+            "difficulty": _clean_text(str(raw_question.get("difficulty") or parsed.get("difficulty") or "Medium")),
+            "tags": raw_question.get("tags") if isinstance(raw_question.get("tags"), list) else [],
+        })
+
+    if not normalized_questions:
+        return _repair_local_quiz_answer(
+            answer,
+            generation_nonce=generation_nonce,
+            desired_count=desired_count,
+            topic=topic,
+            subject=subject,
+        )
+
+    payload = {
+        "topic": _clean_text(str(parsed.get("topic") or parsed.get("quiz_title") or topic or "Chapter Quiz")),
+        "subject": _clean_text(str(parsed.get("subject") or subject or "")),
+        "difficulty": _clean_text(str(parsed.get("difficulty") or "Medium")),
+        "total_questions": len(normalized_questions),
+        "questions": normalized_questions,
+    }
+    return json.dumps(payload, ensure_ascii=False)
+
+
 def _extract_definition_candidates(paragraphs: list[str], headings: list[tuple[str, str]]) -> list[dict[str, str]]:
     candidates: list[dict[str, str]] = []
     seen = set()
@@ -317,15 +704,15 @@ def _extract_definition_candidates(paragraphs: list[str], headings: list[tuple[s
         for match in patterns:
             if not match:
                 continue
-            term = _clean_text(match.group(1))
-            definition = _clean_text(match.group(2))
+            term = _clean_quiz_term(match.group(1))
+            definition = _compact_quiz_option(match.group(2))
             if len(term) < 3 or len(definition) < 20:
                 continue
             signature = term.lower()
             if signature in seen:
                 continue
             seen.add(signature)
-            candidates.append({"term": term, "definition": definition.rstrip(".") + "."})
+            candidates.append({"term": term, "definition": definition})
             break
 
     if len(candidates) >= 10:
@@ -341,7 +728,11 @@ def _extract_definition_candidates(paragraphs: list[str], headings: list[tuple[s
         if signature in seen:
             continue
         seen.add(signature)
-        candidates.append({"term": heading, "definition": related.rstrip(".") + "."})
+        term = _clean_quiz_term(heading)
+        definition = _compact_quiz_option(related)
+        if not term or len(definition) < 20:
+            continue
+        candidates.append({"term": term, "definition": definition})
         if len(candidates) >= 12:
             break
 
@@ -359,35 +750,26 @@ def _build_offline_quiz_answer(
     if len(candidates) < 4:
         return ""
 
-    rng = random.Random(generation_nonce)
-    rng.shuffle(candidates)
+    candidates = [
+        {**item, "term": _short_quiz_option(item.get("term", ""))}
+        for item in candidates
+        if _short_quiz_option(item.get("term", ""))
+    ]
+    candidates = [
+        item for item in candidates
+        if 1 <= len(item["term"].split()) <= 3 and len(_quiz_clue(item.get("definition", ""))) >= 8
+    ]
+    if len(candidates) < 4:
+        return ""
+
     count = min(max(desired_count or 10, 10), 15, len(candidates))
-    selected = candidates[:count]
-
-    questions = []
-    all_definitions = [item["definition"] for item in candidates]
-    for index, item in enumerate(selected, start=1):
-        distractors = [definition for definition in all_definitions if definition != item["definition"]]
-        rng.shuffle(distractors)
-        options = [item["definition"], *distractors[:3]]
-        rng.shuffle(options)
-        answer_index = options.index(item["definition"])
-        questions.append({
-            "question": f"What best describes {item['term']} in {request.chapter}?",
-            "options": options,
-            "answer_index": answer_index,
-            "difficulty": "medium",
-            "concept": item["term"],
-            "explanation": item["definition"],
-        })
-
-    payload = {
-        "quiz_title": f"{request.chapter} Quiz",
-        "variant_id": generation_nonce,
-        "difficulty_mix": {"easy": max(1, count // 3), "medium": count - max(1, count // 3) - max(1, count // 5), "hard": max(1, count // 5)},
-        "questions": questions,
-    }
-    return json.dumps(payload)
+    return _format_local_quiz_items(
+        candidates,
+        generation_nonce=generation_nonce,
+        desired_count=count,
+        topic=request.chapter,
+        subject=request.subject,
+    )
 
 
 def _extract_exercise_from_soup(soup: BeautifulSoup | None) -> dict[str, list[dict[str, Any]]]:
@@ -406,7 +788,7 @@ def _extract_exercise_from_soup(soup: BeautifulSoup | None) -> dict[str, list[di
                 )
             exercise["mcqs"].append({"question_no": str(len(exercise["mcqs"]) + 1), "question": question_with_options, "options": options[:4]})
 
-    for selector, key in [("ol.sq-item > li.sq-item", "short_questions"), ("ol.lq-item > li.lq-item", "long_questions")]:
+    for selector, key in [("li.sq-item", "short_questions"), ("li.lq-item", "long_questions")]:
         for index, item in enumerate(soup.select(selector), start=1):
             question = _clean_text(item.get_text(" ", strip=True))
             if question:
@@ -415,57 +797,243 @@ def _extract_exercise_from_soup(soup: BeautifulSoup | None) -> dict[str, list[di
     return exercise
 
 
-def _build_offline_summary_answer(request: StudioGenerateRequest, soup: BeautifulSoup | None) -> str:
+def _rotated_values(values: list[Any], start: int) -> list[Any]:
+    if not values:
+        return []
+    offset = start % len(values)
+    return values[offset:] + values[:offset]
+
+
+def _build_offline_summary_answer(
+    request: StudioGenerateRequest,
+    soup: BeautifulSoup | None,
+    generation_nonce: str | None = None,
+    variant_index: int = 0,
+) -> str:
     paragraphs, headings, bullets = _non_exercise_blocks(soup)
     title = _extract_chapter_title_from_soup(soup, request.chapter)
-    overview = " ".join(paragraphs[:3])[:1200]
-    key_concepts = [heading for _, heading in headings[:8] if heading]
-    important_terms = _extract_definition_candidates(paragraphs, headings)[:6]
-    exam_takeaways = bullets[:6] or key_concepts[:6]
+    rng = random.Random(generation_nonce or f"{request.chapter}-{variant_index}")
+    paragraph_offset = variant_index * 2
+    heading_offset = variant_index
+    bullet_offset = variant_index * 3
+    rotated_paragraphs = _rotated_values(paragraphs, paragraph_offset)
+    rotated_headings = _rotated_values([heading for _, heading in headings if heading], heading_offset)
+    rotated_bullets = _rotated_values(bullets, bullet_offset)
+    important_terms = _extract_definition_candidates(paragraphs, headings)
+    rng.shuffle(important_terms)
 
-    payload = {
-        "summary_title": title,
-        "variant_id": f"{request.chapter.lower()}-offline-summary",
-        "overview": overview or f"Summary generated directly from chapter content for {request.chapter}.",
-        "key_concepts": key_concepts,
-        "important_terms": important_terms,
-        "exam_takeaways": exam_takeaways,
-        "revision_questions": [item["question"] for item in _extract_exercise_from_soup(soup).get("short_questions", [])[:5]],
-    }
-    return json.dumps(payload)
+    overview = " ".join(rotated_paragraphs[:3])[:1200]
+    key_concepts = rotated_headings[:8]
+    exam_takeaways = rotated_bullets[:8] or key_concepts[:8]
+    detailed = " ".join(rotated_paragraphs[3:8])[:1800] or overview
+
+    lines = [
+        f"**{title}**",
+        "",
+        "**Overview**",
+        overview or f"Summary generated directly from chapter content for {request.chapter}.",
+        "",
+        "**Detailed Summary**",
+        detailed,
+        "",
+        "**Key Points**",
+    ]
+    lines.extend(f"- {item}" for item in exam_takeaways[:8])
+    lines.extend(["", "**Key Concepts**"])
+    lines.extend(f"- {item}" for item in key_concepts[:8])
+    if important_terms:
+        lines.extend(["", "**Important Terms**"])
+        lines.extend(f"- {item['term']}: {item['definition']}" for item in important_terms[:6])
+    return "\n".join(lines).strip()
 
 
-def _build_offline_exercise_answer(request: StudioGenerateRequest, soup: BeautifulSoup | None) -> str:
+def _build_studio_variants(request: StudioGenerateRequest, task_name: str) -> list[str]:
+    soup = _load_chapter_soup(
+        board=request.board,
+        class_level=request.class_level,
+        subject=request.subject,
+        chapter=request.chapter,
+    )
+    variants: list[str] = []
+    for index in range(_studio_variant_count(task_name)):
+        generation_nonce = f"{task_name}-{request.board}-{request.class_level}-{request.subject}-{request.chapter}-{index}"
+        if task_name == "quiz":
+            answer = _build_offline_quiz_answer(
+                request=request,
+                soup=soup,
+                generation_nonce=generation_nonce,
+                desired_count=STUDIO_QUIZ_QUESTION_COUNT,
+            )
+        elif task_name == "summary":
+            answer = _build_offline_summary_answer(
+                request=request,
+                soup=soup,
+                generation_nonce=generation_nonce,
+                variant_index=index,
+            )
+        elif task_name == "exercise":
+            answer = _build_offline_exercise_answer(
+                request=request,
+                soup=soup,
+                generation_nonce=generation_nonce,
+                variant_index=index,
+            )
+        else:
+            answer = ""
+
+        if answer and answer not in variants:
+            variants.append(answer)
+
+    return variants
+
+
+def _get_cached_studio_variant(request: StudioGenerateRequest, task_name: str) -> tuple[str, str | None]:
+    if task_name not in {"quiz", "summary", "exercise"}:
+        return "", None
+
+    cache = _read_studio_variants_cache()
+    items = cache.setdefault("items", {})
+    cache_key = _studio_variant_cache_key(request, task_name)
+    entry = items.get(cache_key)
+    target_variant_count = _studio_variant_count(task_name)
+
+    if not isinstance(entry, dict) or not (entry.get("variants") or []):
+        variants = _build_studio_variants(request, task_name)
+        if not variants:
+            return "", None
+        entry = {
+            "cursor": random.SystemRandom().randint(0, max(0, len(variants[:target_variant_count]) - 1)),
+            "created_at": datetime.utcnow().isoformat(),
+            "variants": variants[:target_variant_count],
+        }
+        items[cache_key] = entry
+        _write_studio_variants_cache(cache)
+
+    variants = [variant for variant in (entry.get("variants") or []) if isinstance(variant, str) and variant.strip()]
+    if not variants:
+        return "", None
+
+    cursor = int(entry.get("cursor") or 0) % len(variants)
+    answer = variants[cursor]
+    entry["cursor"] = (cursor + 1) % len(variants)
+    entry["last_used_at"] = datetime.utcnow().isoformat()
+    items[cache_key] = entry
+    _write_studio_variants_cache(cache)
+    provider = "local-fast" if _is_local_mode_requested(request.llm_mode_override) else "cloud"
+    return answer, provider
+
+
+def _build_offline_exercise_answer(
+    request: StudioGenerateRequest,
+    soup: BeautifulSoup | None,
+    generation_nonce: str | None = None,
+    variant_index: int = 0,
+) -> str:
     paragraphs, _headings, _bullets = _non_exercise_blocks(soup)
     exercise = _extract_exercise_from_soup(soup)
+    if not (exercise["mcqs"] or exercise["short_questions"] or exercise["long_questions"]):
+        return ""
+    rng = random.Random(generation_nonce or f"{request.chapter}-exercise-{variant_index}")
+    variant_styles = [
+        {
+            "answer": "Answer",
+            "points": "Key Points",
+            "overview": "Chapter-end exercise solutions only.",
+        },
+        {
+            "answer": "Book-Based Answer",
+            "points": "Exam Points",
+            "overview": "Solved from the chapter exercise section only.",
+        },
+        {
+            "answer": "Solution",
+            "points": "Important Lines",
+            "overview": "Concise exercise answers grounded in the selected chapter.",
+        },
+    ]
+    style = variant_styles[variant_index % len(variant_styles)]
+
+    def three_line_answer(text: str, fallback_points: list[str]) -> str:
+        source = _clean_text(text)
+        if not source:
+            source = " ".join(fallback_points)
+        sentences = [
+            sentence.strip()
+            for sentence in re.split(r"(?<=[.!?])\s+", source)
+            if sentence.strip()
+        ]
+        lines = sentences[:3] if sentences else [source]
+        while len(lines) < 3 and fallback_points:
+            next_point = _clean_text(fallback_points[len(lines) - 1] if len(fallback_points) >= len(lines) else fallback_points[0])
+            if next_point and next_point not in lines:
+                lines.append(next_point)
+            else:
+                break
+        return "\n".join(lines[:3]).strip()
 
     def build_items(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
         built: list[dict[str, Any]] = []
         for item in items:
             question = item.get("question", "")
-            references = _match_reference_paragraphs(question, paragraphs, limit=2)
+            references = _match_reference_paragraphs(question, paragraphs, limit=3)
+            if references and variant_index:
+                references = _rotated_values(references, variant_index)
             answer = " ".join(references[:1]).strip()
             if item.get("options"):
-                answer = _choose_best_option(question, item["options"], references) or answer
+                best_option = _choose_best_option(question, item["options"], references)
+                if best_option:
+                    option_index = item["options"].index(best_option) if best_option in item["options"] else 0
+                    answer = f"{chr(65 + option_index)}) {best_option}"
+
+            key_points = references[:2]
+            if variant_index == 2 and len(references) > 1:
+                key_points = list(reversed(key_points))
+            rng.shuffle(key_points)
 
             built.append({
                 "question_no": item.get("question_no", str(len(built) + 1)),
                 "question": question,
                 "answer": answer or "Relevant answer could not be derived confidently from the chapter text alone.",
-                "steps": references[1:],
-                "key_points": references[:2],
+                "key_points": key_points,
             })
         return built
 
-    payload = {
-        "solution_title": f"{request.chapter} Exercise Solutions",
-        "overview": "Exercise response generated directly from chapter and exercise text because the AI model was unavailable.",
-        "mcqs": build_items(exercise["mcqs"]),
-        "short_questions": build_items(exercise["short_questions"]),
-        "long_questions": build_items(exercise["long_questions"]),
-        "numerical_problems": [],
-    }
-    return json.dumps(payload)
+    lines = [
+        f"**{request.chapter} Exercise Solutions**",
+        style["overview"],
+        "",
+        "**Multiple Choice Questions**",
+    ]
+
+    for item in build_items(exercise["mcqs"]):
+        lines.extend([
+            f"**Q{item['question_no']}.** {item['question']}",
+            f"**{style['answer']}:** {item['answer']}",
+        ])
+        lines.append("")
+
+    lines.append("**Short Questions**")
+    for item in build_items(exercise["short_questions"]):
+        lines.extend([
+            f"**Q{item['question_no']}.** {item['question']}",
+            f"**{style['answer']}:**",
+            three_line_answer(item["answer"], item["key_points"]),
+        ])
+        lines.append("")
+
+    lines.append("**Long Questions**")
+    for item in build_items(exercise["long_questions"]):
+        lines.extend([
+            f"**Q{item['question_no']}.** {item['question']}",
+            f"**{style['answer']}:**",
+            three_line_answer(item["answer"], item["key_points"]),
+        ])
+        if item["key_points"]:
+            lines.append(f"**{style['points']}:**")
+            lines.extend(f"- {point}" for point in item["key_points"])
+        lines.append("")
+
+    return "\n".join(lines).strip()
 
 
 def _serialize_source(source: dict) -> Source:
@@ -806,7 +1374,8 @@ def _studio_prompt(task: str, chapter: str, generation_nonce: str, quiz_count: i
             "RULES:\n"
             "- Use ONLY the context provided — do not draw on outside knowledge.\n"
             "- If context supports fewer than 10 questions, generate only what context supports and note the limitation.\n"
-            "- Output plain text (no JSON, no code blocks).\n"
+            "- Return only valid JSON, no markdown, no code blocks, no commentary.\n"
+            "- Use exactly the JSON schema required by the system prompt.\n"
             "- Cover the FULL chapter breadth — vary topic, type, and difficulty.\n"
             "- 4 options (A–D) per question; exactly 1 correct; wrong options must be plausible.\n"
             "- Never reveal the answer in the question wording.\n"
@@ -872,8 +1441,10 @@ def _fallback_studio_generation(
         if answer:
             return answer, "offline"
 
+    is_local_mode = _is_local_mode_requested(request.llm_mode_override)
     system_prompt = (
-        QUIZ_SYSTEM_PROMPT if task_name == "quiz"
+        LOCAL_QUIZ_SYSTEM_PROMPT if task_name == "quiz" and is_local_mode
+        else QUIZ_SYSTEM_PROMPT if task_name == "quiz"
         else SUMMARY_SYSTEM_PROMPT if task_name == "summary"
         else EXERCISE_SYSTEM_PROMPT
     )
@@ -885,8 +1456,17 @@ def _fallback_studio_generation(
         chapter=request.chapter,
         language=request.language,
         system_prompt=system_prompt,
+        llm_mode_override=request.llm_mode_override,
     )
-    return result.get("answer", ""), result.get("llm_provider")
+    answer = result.get("answer", "")
+    if task_name == "quiz" and is_local_mode:
+        answer = _normalize_quiz_answer(
+            answer,
+            generation_nonce=generation_nonce,
+            topic=request.chapter,
+            subject=request.subject,
+        )
+    return answer, result.get("llm_provider")
 
 
 def _studio_prompt_v2(task: str, chapter: str, generation_nonce: str, quiz_count: int | None = None) -> str:
@@ -902,16 +1482,14 @@ def _studio_prompt_v2(task: str, chapter: str, generation_nonce: str, quiz_count
             "- Make this attempt unique for the nonce by changing topic mix, wording, and option order.\n"
             "- Do not repeat the same first 5 questions from an earlier attempt.\n"
             "- Cover early, middle, and late parts of the chapter.\n"
-            "- Output plain text only.\n"
-            "- Use exactly this structure for every question:\n"
-            "  1. [Question text]\n"
-            "  A) [Option]\n"
-            "  B) [Option]\n"
-            "  C) [Option]\n"
-            "  D) [Option]\n"
-            "  Answer: [Letter]) [Correct option text]\n"
-            "- Leave one blank line between questions.\n"
-            "- Do not add a title, chapter heading, emojis, or separators."
+            "- Return only valid JSON, no markdown, no code blocks, no commentary.\n"
+            "- Use exactly the JSON schema required by the system prompt.\n"
+            "- Do not use generic options like Option 1, all of the above, or none of the above.\n"
+            "- Use exactly four options A, B, C, D per question.\n"
+            "- Keep every question to one sentence and every option short, ideally 1 to 6 words.\n"
+            "- Use the same compact MCQ style as the offline quiz: direct question, four short options, clear correct answer.\n"
+            "- Include correct_answer, correct_option_text, explanation, bloom_level, difficulty, and tags for every question.\n"
+            "- total_questions must equal questions.length."
         )
 
     if normalized_task == "summary":
@@ -920,49 +1498,49 @@ def _studio_prompt_v2(task: str, chapter: str, generation_nonce: str, quiz_count
             f"Nonce: {generation_nonce}.\n\n"
             "RULES:\n"
             "- Use only the provided textbook context.\n"
-            "- Output plain text only.\n"
+            "- Output clean markdown-style text only, never JSON.\n"
             "- Use exactly these section headings in this order:\n"
-            "  Overview\n"
-            "  Detailed Summary\n"
-            "  Key Points\n"
-            "  Key Concepts\n"
+            "  **Overview**\n"
+            "  **Detailed Summary**\n"
+            "  **Key Points**\n"
+            "  **Key Concepts**\n"
             "- Overview must be one short paragraph of 2 to 4 sentences.\n"
             "- Detailed Summary must contain 3 to 5 paragraphs with a blank line between paragraphs.\n"
             "- Key Points must be bullet points only.\n"
             "- Each key point should be a short important point or short definition, not a long paragraph.\n"
             "- Key Concepts must be bullet points of important terms or concepts only.\n"
-            "- Do not use ## headings, emojis, or markdown separators.\n"
+            "- Do not use numbered textbook headings as standalone headings like 2.3 or 6.2.1.\n"
+            "- Do not use emojis or markdown separators.\n"
             "- Keep all wording exam-focused and traceable to the context."
         )
 
     if normalized_task == "exercise":
         return (
-            f"Write complete exercise solutions for chapter '{chapter}'.\n"
+            f"Write chapter-end exercise solutions for chapter '{chapter}'.\n"
             f"Nonce: {generation_nonce}.\n\n"
             "RULES:\n"
             "- Use only the provided textbook context.\n"
+            "- Solve only the exercise given at the end of the chapter.\n"
             "- Treat the provided context as exercise-only retrieval, not whole-chapter notes.\n"
-            "- Search for and solve only questions found under headings like EXERCISE, Multiple Choice Questions, Short Questions, Long Questions, Numerical Problems, or similar exercise sections.\n"
+            "- Search for and solve only questions found under headings like EXERCISE, Multiple Choice Questions, Short Questions, Long Questions, Numerical Problems, or similar end-of-chapter exercise sections.\n"
             "- Do not invent extra questions. Do not answer random chapter paragraphs that are not part of the exercise.\n"
             "- List every visible MCQ, short question, long question, and numerical from the retrieved exercise context.\n"
             "- You may improve clarity, but every answer must stay grounded in book concepts.\n"
             "- For numericals, show every step.\n"
-            "- Output plain text only.\n"
+            "- Output clean markdown-style text only, never JSON.\n"
             "- Use these exact section headings in this order:\n"
-            "  Multiple Choice Questions\n"
-            "  Short Questions\n"
-            "  Long Questions\n"
-            "  Numerical Problems\n"
-            "- For MCQs include answer and explanation.\n"
-            "- For short questions include answer and key points.\n"
-            "- For long questions include a proper exam-style answer and key concepts.\n"
+            "  **Multiple Choice Questions**\n"
+            "  **Short Questions**\n"
+            "  **Long Questions**\n"
+            "  **Numerical Problems**\n"
+            "- For MCQs include only the correct option after the question. Do not include Explanation, Key Points, Why, or Reason for MCQs.\n"
+            "- For short questions write exactly 3 concise lines. Do not add key points under short questions.\n"
+            "- For long questions write exactly 3 concise lines, then add Key Points.\n"
             "- Format each item like this:\n"
-            "  1. [Question text]\n"
-            "  Answer: [Answer text]\n"
-            "  Explanation: [Only for MCQs]\n"
-            "  Key Points:\n"
-            "  - [Point]\n"
-            "- Do not add a title, emojis, markdown headings, or separators."
+            "  **Q1.** [Question text]\n"
+            "  **Answer:** [Answer text]\n"
+            "  **Key Points:** [Only for long questions]\n"
+            "- Do not add emojis, separators, or unrelated commentary."
         )
 
     raise HTTPException(status_code=422, detail=f"Unsupported studio task: {task}")
@@ -977,7 +1555,35 @@ async def generate_studio_content(
     try:
         generation_nonce = f"{datetime.utcnow().isoformat()}-{uuid4().hex[:8]}"
         task_name = _normalize_studio_task(request.task)
-        quiz_count = random.SystemRandom().randint(15, 20) if task_name == "quiz" else None
+        quiz_count = STUDIO_QUIZ_QUESTION_COUNT if task_name == "quiz" else None
+
+        cached_answer, cached_provider = _get_cached_studio_variant(request, task_name)
+        if cached_answer:
+            return StudioGenerateResponse(
+                answer=cached_answer,
+                task=request.task,
+                llm_provider=cached_provider,
+            )
+
+        if task_name == "quiz" and _is_local_mode_requested(request.llm_mode_override):
+            soup = _load_chapter_soup(
+                board=request.board,
+                class_level=request.class_level,
+                subject=request.subject,
+                chapter=request.chapter,
+            )
+            offline_quiz = _build_offline_quiz_answer(
+                request=request,
+                soup=soup,
+                generation_nonce=generation_nonce,
+                desired_count=quiz_count,
+            )
+            if offline_quiz:
+                return StudioGenerateResponse(
+                    answer=offline_quiz,
+                    task=request.task,
+                    llm_provider="local-fast",
+                )
 
         # ── retrieval top-k per task ──────────────────────────────────────────
         retrieval_top_k = 8 if task_name == "quiz" else 10 if task_name == "summary" else 12
@@ -1067,11 +1673,17 @@ async def generate_studio_content(
                 )
 
                 if llm_provider != "error" and (answer or "").strip():
+                    if task_name == "quiz":
+                        answer = _normalize_quiz_answer(
+                            answer,
+                            generation_nonce=generation_nonce,
+                            desired_count=quiz_count,
+                            topic=request.chapter,
+                            subject=request.subject,
+                        )
                     break
 
             if llm_provider == "error" or not (answer or "").strip():
-                if request.llm_mode_override in {"cloud", "local"}:
-                    _raise_if_studio_llm_unavailable(answer, llm_provider)
                 answer, llm_provider = _fallback_studio_generation(
                     request,
                     prompt,

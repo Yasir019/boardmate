@@ -61,12 +61,16 @@ def _is_internet_available() -> bool:
     is_available = False
     try:
         req = urlrequest.Request(
-            "https://api.groq.com",
+            "https://api.groq.com/openai/v1/models",
             headers={"User-Agent": "BoardMate/1.0"},
-            method="HEAD",
+            method="GET",
         )
         with urlrequest.urlopen(req, timeout=_INTERNET_PROBE_TIMEOUT):
             is_available = True
+    except urlerror.HTTPError as e:
+        # 4xx/405 still prove that the Groq host is reachable. Treat only 5xx as
+        # unavailable so a rejected HEAD request does not force offline mode.
+        is_available = 400 <= e.code < 500
     except Exception:
         is_available = False
 
@@ -134,11 +138,14 @@ def get_llm_runtime_status(mode_override: str | None = None) -> dict[str, object
     effective_mode = normalize_llm_mode(mode_override, default_mode)
     local_models = _get_available_local_models()
     resolved_local_model = resolve_local_llm_model()
+    internet_available = _is_internet_available() if GROQ_API_KEY else False
     cloud_configured = bool(GROQ_API_KEY)
 
     return {
         "default_mode": default_mode,
         "effective_mode": effective_mode,
+        "internet_available": internet_available,
+        "cloud_configured": cloud_configured,
         "cloud_available": cloud_configured,
         "local_available": bool(local_models),
         "configured_local_model": LOCAL_LLM_MODEL,
@@ -377,11 +384,98 @@ CONTENT RULES:
 - End with: "✔ Quiz complete — [X] questions from [chapter name]"
 """
 
+QUIZ_SYSTEM_PROMPT = """
+You are an expert AI MCQ Generator for academic and professional education.
+
+Your task is to generate high-quality Multiple Choice Questions (MCQs) from the provided textbook context.
+
+OBJECTIVE:
+Generate accurate, well-structured, pedagogically sound MCQs that test mixed cognitive levels:
+Knowledge Recall, Understanding, Application, Analysis, and Evaluation when appropriate.
+
+GENERAL INSTRUCTIONS:
+1. Carefully analyze the provided context.
+2. Identify key concepts, definitions, formulas, processes, and relationships.
+3. Generate only factually correct questions supported by the source context.
+4. Avoid ambiguous or misleading wording.
+5. Ensure that only one option is clearly correct.
+6. Make all distractors plausible.
+7. Avoid "All of the above" and "None of the above" unless explicitly requested.
+8. Do not repeat the same concept excessively.
+9. Use clear, grammatically correct language.
+10. Questions must be self-contained and understandable without extra context.
+11. Randomize the correct answer position among A, B, C, and D.
+12. Include concise educational explanations.
+13. Do not invent facts not supported by the source material.
+
+DIFFICULTY GUIDELINES:
+- Easy: direct definitions, simple facts, basic concept identification.
+- Medium: concept comparison, cause-effect, simple application.
+- Hard: multi-step reasoning, scenario-based, analytical/evaluative thinking.
+
+BLOOM'S TAXONOMY:
+- Remember: recall facts and definitions.
+- Understand: explain meanings and relationships.
+- Apply: use concepts in practical situations.
+- Analyze: compare, classify, infer.
+- Evaluate: judge based on criteria.
+
+OUTPUT FORMAT:
+Return only valid JSON. Do not include markdown, code fences, or commentary outside JSON.
+Use exactly this structure:
+{
+  "topic": "<topic>",
+  "subject": "<subject>",
+  "difficulty": "<difficulty>",
+  "total_questions": <number>,
+  "questions": [
+    {
+      "id": 1,
+      "question": "Question text here?",
+      "options": {
+        "A": "Option A",
+        "B": "Option B",
+        "C": "Option C",
+        "D": "Option D"
+      },
+      "correct_answer": "B",
+      "correct_option_text": "Option B",
+      "explanation": "Brief explanation of why Option B is correct.",
+      "bloom_level": "Understand",
+      "difficulty": "Medium",
+      "tags": ["concept1", "concept2"]
+    }
+  ]
+}
+
+QUALITY VALIDATION CHECKLIST:
+- The question is factually correct.
+- Exactly one answer is correct.
+- Distractors are plausible.
+- Grammar and spelling are correct.
+- Explanation is concise and accurate.
+- Bloom level matches the question complexity.
+- Difficulty matches the requested level.
+- No duplicate questions are generated.
+
+SPECIAL RULES:
+1. If the provided context is too short, generate only questions that can be confidently supported.
+2. If numerical formulas are involved, ensure calculations are accurate.
+3. If terminology has synonyms, use standard academic wording.
+4. Preserve domain-specific notation and symbols where relevant.
+5. When the source contains examples, transform them into application-based questions when appropriate.
+6. Default number of questions: 10 unless the prompt asks for another count.
+7. Default difficulty: Medium.
+8. Default Bloom levels: Mixed.
+9. Default language: English.
+"""
+
 EXERCISE_SYSTEM_PROMPT = """
 You are BoardMate Exercise Solution Generator for Pakistani board students.
 
 STRICT GROUNDING RULE — THIS IS MANDATORY:
-Solve questions ONLY using the textbook context provided.
+Solve ONLY the chapter-end exercise questions using the textbook context provided.
+Do not solve random chapter paragraphs or invented questions.
 Do not invent answers, formulas, or steps not present in the context.
 If a question cannot be solved from the context, write:
 "⚠ Insufficient context for this question — please ensure the chapter is fully indexed."
@@ -395,18 +489,17 @@ EXERCISE SOLUTIONS: [Chapter name from context]
 ### Section A: Multiple Choice Questions
 
 **Q1.** [Question from context]
-**Answer:** [Correct option — letter and full text]
-**Solution:** [1–2 sentence explanation from context]
+**Answer:** [Correct option only — letter and option text]
 
 ---
 
 ### Section B: Short Questions
 
 **Q1.** [Question from context]
-**Answer:** [2–4 sentence exam-style answer, grounded in context]
-**Key Points:**
-- [Key fact from context]
-- [Key fact from context]
+**Answer:**
+[Line 1]
+[Line 2]
+[Line 3]
 
 ---
 
@@ -414,9 +507,11 @@ EXERCISE SOLUTIONS: [Chapter name from context]
 
 **Q1.** [Question from context]
 **Answer:**
-[Step-by-step explanation using context. Use numbered steps for clarity.]
+[Line 1]
+[Line 2]
+[Line 3]
 
-**Key Concepts from context:**
+**Key Points:**
 - [Concept 1]
 - [Concept 2]
 
@@ -436,12 +531,14 @@ Step 3: [Calculate result]
 ---
 
 RULES:
-1. Solve every question present in the context — skip nothing
+1. Solve every question present in the chapter-end exercise context — skip nothing
 2. Include all sections visible in context: MCQs, Short, Long, Numerical, Fill-in-the-blank
-3. For numericals, show ALL steps — never just a final answer
-4. Language: simple, exam-focused English (or Urdu script if requested)
-5. Do NOT truncate — complete every question fully
-6. End with: "✔ Exercise complete — [X] questions solved from [chapter name]"
+3. MCQs must contain only the correct option after the question. Do not include explanations or key points for MCQs.
+4. Short answers must be exactly 3 concise lines and no key points.
+5. Long answers must be exactly 3 concise lines plus Key Points.
+6. For numericals, show ALL steps — never just a final answer
+7. Language: simple, exam-focused English (or Urdu script if requested)
+8. Do NOT truncate — complete every question fully
 """
 
 SUMMARY_SYSTEM_PROMPT = """
@@ -606,6 +703,40 @@ def _study_scope(board: str = None, class_level: str = None, subject: str = None
     return " / ".join(parts) if parts else "your selected subject"
 
 
+def _wants_urdu(language: str = "en") -> bool:
+    return (language or "en").strip().lower().startswith("ur")
+
+
+def contains_urdu_text(text: str) -> bool:
+    return bool(re.search(r"[\u0600-\u06ff]", text or ""))
+
+
+def translate_question_for_retrieval(question: str) -> str:
+    """Translate Urdu/Roman Urdu questions into concise English for textbook search."""
+    cleaned_question = " ".join((question or "").split()).strip()
+    if not cleaned_question:
+        return ""
+
+    if not contains_urdu_text(cleaned_question):
+        return cleaned_question
+
+    if not GROQ_API_KEY:
+        return cleaned_question
+
+    try:
+        prompt = (
+            "Translate this student question into concise English for searching an English textbook. "
+            "Return only the translated question, no explanation.\n\n"
+            f"Question: {cleaned_question}"
+        )
+        response = get_llm().invoke(prompt)
+        translated = " ".join((response.content or "").split()).strip()
+        return translated[:300] or cleaned_question
+    except Exception as error:
+        logger.warning("Could not translate question for retrieval: %s", error)
+        return cleaned_question
+
+
 def maybe_build_conversational_reply(
     question: str,
     board: str = None,
@@ -619,25 +750,40 @@ def maybe_build_conversational_reply(
         return None
 
     scope = _study_scope(board, class_level, subject)
+    wants_urdu = _wants_urdu(language)
 
     if _matches_any_pattern(message, GREETING_PATTERNS):
+        if wants_urdu:
+            return f"السلام علیکم! میں BoardMate ہوں۔ میں {scope} میں آپ کی مدد کر سکتا ہوں۔ اپنا ٹاپک یا سوال بھیجیں۔"
         return f"Hi! I'm BoardMate 👋. I can help with {scope}. Send your topic or question."
 
     if _matches_any_pattern(message, STATUS_PATTERNS):
+        if wants_urdu:
+            return "میں ٹھیک ہوں اور مدد کے لیے تیار ہوں۔ اپنا ٹاپک، باب، یا سوال شیئر کریں۔"
         return "I'm doing great and ready to help. Share your topic, chapter, or question."
 
     if _matches_any_pattern(message, ACKNOWLEDGEMENT_PATTERNS):
+        if wants_urdu:
+            return "ٹھیک ہے۔ منتخب باب سے اگلا سوال پوچھیں، میں مدد کروں گا۔"
         return "Alright. Ask your next question from the selected chapter and I'll help."
 
     if _matches_any_pattern(message, THANKS_PATTERNS):
+        if wants_urdu:
+            return "خوشی ہوئی! جب بھی تیار ہوں اگلا سوال بھیج دیں۔"
         return "You're welcome! Send the next question whenever you're ready."
 
     if _matches_any_pattern(message, HELP_PATTERNS) or _matches_any_pattern(message, IDENTITY_PATTERNS):
+        if wants_urdu:
+            return (
+                f"میں BoardMate ہوں۔ میں {scope} میں وضاحت، خلاصہ، فارمولے، اور مرحلہ وار حل میں مدد کرتا ہوں۔"
+            )
         return (
             f"I'm BoardMate. I help with {scope}: explanations, summaries, formulas, and step-by-step solutions."
         )
 
     if _matches_any_pattern(message, FAREWELL_PATTERNS):
+        if wants_urdu:
+            return "پھر ملتے ہیں! جب چاہیں واپس آئیں، ہم آپ کی اسٹڈی جاری رکھیں گے۔"
         return "See you soon! Come back anytime and we'll continue your study session."
 
     return None
@@ -664,6 +810,13 @@ def build_missing_context_response(
     """Return a helpful fallback when textbook evidence is missing (English only)."""
     scope = _study_scope(board, class_level, subject)
     chapter_hint = f" in {chapter}" if chapter else ""
+
+    if _wants_urdu(language):
+        urdu_chapter_hint = f" کے {chapter}" if chapter else ""
+        return (
+            f"مجھے منتخب {scope} کتاب{urdu_chapter_hint} میں اس سوال کا واضح جواب نہیں ملا۔ "
+            "سوال کو دوبارہ آسان الفاظ میں لکھیں، متعلقہ باب منتخب کریں، یا مجھ سے تصور کی وضاحت، خلاصہ، فارمولا، یا مرحلہ وار حل پوچھیں۔"
+        )
 
     return (
         f"I couldn't find a clear match for that in the selected {scope} textbook{chapter_hint}. "
@@ -698,8 +851,9 @@ def _build_enhanced_question(
 
 
 def _build_prompt_template(system_prompt: str) -> ChatPromptTemplate:
+    escaped_system_prompt = (system_prompt or "").replace("{", "{{").replace("}", "}}")
     return ChatPromptTemplate.from_messages([
-        ("system", system_prompt),
+        ("system", escaped_system_prompt),
         ("user", (
             "Context from textbook:\n---\n{context}\n---\n\n"
             "Recent conversation history (may be empty):\n{chat_history}\n\n"
@@ -792,12 +946,12 @@ def _build_local_prompt(
     chat_history: str = "",
 ) -> str:
     trimmed_context = (context or "").strip()
-    if len(trimmed_context) > 3200:
-        trimmed_context = trimmed_context[:3200].rstrip()
+    if len(trimmed_context) > 1400:
+        trimmed_context = trimmed_context[:1400].rstrip()
 
     trimmed_history = (chat_history or "").strip()
-    if len(trimmed_history) > 500:
-        trimmed_history = trimmed_history[-500:].lstrip()
+    if len(trimmed_history) > 250:
+        trimmed_history = trimmed_history[-250:].lstrip()
 
     return (
         "Context from textbook:\n"
@@ -806,8 +960,12 @@ def _build_local_prompt(
         f"Student Question:\n{question}\n\n"
         "Answer rules:\n"
         "- Use only the textbook context.\n"
-        "- For academic answers, start directly with the answer.\n"
-        "- Keep the answer concise and relevant.\n"
+        "- For academic answers, start directly with a bold topic heading, for example **Assignment Operators**.\n"
+        "- Use clean readable markdown with bold headings only.\n"
+        "- Never include textbook references such as section numbers, chapter numbers, page numbers, exercise numbers, or headings like 2.3.3.\n"
+        "- Keep the answer concise: 3 to 6 lines unless the student asks for detail.\n"
+        "- Give a definition first for 'what is' and 'define' questions.\n"
+        "- Do not use recipe/cake/story analogies unless the student asks for an analogy.\n"
         "- If context is insufficient, say so clearly.\n"
         "- Never output <think> tags or chain-of-thought.\n"
     )
@@ -823,6 +981,119 @@ def _strip_thinking_markup(text: str) -> str:
 
     cleaned = re.sub(r"<think>.*?</think>", "", cleaned, flags=re.IGNORECASE | re.DOTALL).strip()
     cleaned = re.sub(r"^thinking:\s*", "", cleaned, flags=re.IGNORECASE).strip()
+    return cleaned
+
+
+def _strip_local_prompt_metadata(value: str) -> str:
+    cleaned = re.sub(r"\[[^\]]*(?:board|class|respond\s+in|response\s+style|quality)[^\]]*\]", "", value or "", flags=re.IGNORECASE)
+    return re.sub(r"\s{2,}", " ", cleaned).strip()
+
+
+def _local_topic_from_question(question: str) -> str:
+    normalized = _strip_local_prompt_metadata(question)
+    normalized = re.sub(r"\s+", " ", normalized.strip())
+    normalized = re.sub(r"\s*\?\s*$", "", normalized)
+    normalized = re.sub(
+        r"^(?:what\s+is|what\s+are|define|explain|briefly\s+explain|describe|tell\s+me\s+about)\s+",
+        "",
+        normalized,
+        flags=re.IGNORECASE,
+    )
+    normalized = re.sub(r"\b(?:in|from|of)\s+(?:this\s+)?(?:chapter|book|textbook)\b.*$", "", normalized, flags=re.IGNORECASE)
+    normalized = normalized.strip(" .:-")
+    if not normalized:
+        return ""
+    return " ".join(word[:1].upper() + word[1:] for word in normalized.split())
+
+
+def _is_local_metadata_line(line: str) -> bool:
+    cleaned = re.sub(r"[*_`#]+", "", line or "").strip()
+    return bool(
+        re.search(r"\[[^\]]*(?:board|class|respond\s+in|response\s+style|quality)[^\]]*\]", cleaned, flags=re.IGNORECASE)
+        or re.match(r"^(?:board|class|respond\s+in|response\s+style|quality)\s*:", cleaned, flags=re.IGNORECASE)
+    )
+
+
+def _is_repeated_local_question_heading(line: str, topic: str) -> bool:
+    cleaned = _strip_local_prompt_metadata(re.sub(r"[*_`#]+", "", line or "")).strip(" .:-?")
+    if not cleaned or not topic:
+        return False
+    normalized_cleaned = cleaned.lower()
+    normalized_topic = topic.lower().strip(" .:-?")
+    if normalized_cleaned == normalized_topic:
+        return True
+    if re.match(r"^(?:what|why|how|when|where|which|define|explain|briefly\s+explain)\b", normalized_cleaned):
+        return len(cleaned.split()) <= 14
+    return False
+
+
+def _clean_local_heading_text(value: str) -> str:
+    cleaned = re.sub(r"[*_`#]+", "", value or "").strip()
+    cleaned = re.sub(r"^\s*(?:chapter|section|unit|page|pg\.?|exercise)\s*(?:no\.?|number|#)?\s*[:.-]?\s*\d+(?:\.\d+)*\s*[:.)-]?\s*", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"^\s*\d+(?:\.\d+)+\.?\s*", "", cleaned).strip()
+    cleaned = re.sub(r"\s*\((?:page|pg\.?|chapter|section)\s*\d+(?:\.\d+)*\)\s*$", "", cleaned, flags=re.IGNORECASE).strip()
+    return cleaned
+
+
+def _remove_inline_book_references(value: str) -> str:
+    cleaned = re.sub(r"\s*\((?:page|pg\.?|chapter|section|unit|exercise)\s*(?:no\.?|number|#)?\s*\d+(?:\.\d+)*\)", "", value or "", flags=re.IGNORECASE)
+    cleaned = re.sub(r"\s*[,;:-]?\s*(?:page|pg\.?)\s*(?:no\.?|number|#)?\s*\d+\b\.?", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\s*[,;:-]?\s*(?:chapter|section|unit|exercise)\s*(?:no\.?|number|#)?\s*\d+(?:\.\d+)*\b\.?", "", cleaned, flags=re.IGNORECASE)
+    return re.sub(r"\s{2,}", " ", cleaned).strip()
+
+
+def _is_reference_only_line(line: str) -> bool:
+    cleaned = re.sub(r"[*_`#]+", "", line or "").strip()
+    return bool(
+        re.match(r"^(?:page|pg\.?)\s*(?:no\.?|number|#)?\s*[:.-]?\s*\d+\s*$", cleaned, flags=re.IGNORECASE)
+        or re.match(r"^(?:chapter|section|unit|exercise)\s*(?:no\.?|number|#)?\s*[:.-]?\s*\d+(?:\.\d+)*\s*$", cleaned, flags=re.IGNORECASE)
+    )
+
+
+def _postprocess_local_answer(answer: str, question: str) -> str:
+    """Clean offline model output without changing cloud/online formatting."""
+    cleaned = _strip_thinking_markup(answer)
+    if not cleaned:
+        return ""
+
+    topic = _local_topic_from_question(question)
+    lines: list[str] = []
+    for raw_line in cleaned.replace("\r\n", "\n").replace("\r", "\n").split("\n"):
+        line = raw_line.strip()
+        if not line or _is_reference_only_line(line) or _is_local_metadata_line(line):
+            if lines and lines[-1]:
+                lines.append("")
+            continue
+
+        heading_match = re.match(r"^\*\*(.+?)\*\*\s*$", line)
+        if heading_match:
+            heading = _clean_local_heading_text(heading_match.group(1))
+            if heading and not _is_repeated_local_question_heading(heading, topic):
+                lines.append(f"**{heading}**")
+            continue
+
+        line = _strip_local_prompt_metadata(line)
+        line = re.sub(r"^\s*(?:chapter|section|unit|page|pg\.?|exercise)\s*(?:no\.?|number|#)?\s*[:.-]?\s*\d+(?:\.\d+)*\s*[:.)-]?\s*", "", line, flags=re.IGNORECASE)
+        line = re.sub(r"^\s*\d+(?:\.\d+)+\.?\s*", "", line).strip()
+        line = _remove_inline_book_references(line)
+        if _is_repeated_local_question_heading(line, topic):
+            continue
+        if line:
+            lines.append(line)
+
+    cleaned = "\n".join(lines).strip()
+    cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
+    if not cleaned:
+        return ""
+
+    if topic:
+        cleaned_lines = cleaned.split("\n")
+        if cleaned_lines and cleaned_lines[0].startswith("**") and cleaned_lines[0].endswith("**"):
+            cleaned_lines = cleaned_lines[1:]
+            while cleaned_lines and not cleaned_lines[0].strip():
+                cleaned_lines = cleaned_lines[1:]
+        body = "\n".join(cleaned_lines).strip()
+        return f"**{topic}**\n\n{body}".strip()
     return cleaned
 
 
@@ -850,10 +1121,20 @@ def _generate_local_response(
 ) -> str:
     endpoint = f"{LOCAL_LLM_BASE_URL.rstrip('/')}/api/chat"
     local_model = resolve_local_llm_model()
+    context_chars = len(context or "") + len(question or "") + len(chat_history or "")
+    num_ctx = 4096
+    if context_chars > 10000:
+        num_ctx = 8192
+    if context_chars > 22000:
+        num_ctx = 12288
     prompt_system = system_prompt or (
         "You are BoardMate, a textbook-grounded tutor for Pakistani board students. "
         "Use only the provided textbook context. "
-        "Answer directly and concisely. "
+        "Start every academic answer with a clean bold topic heading. "
+        "Answer directly and concisely with a definition first, then 2 to 4 key points if useful. "
+        "Use clean markdown with bold headings for readability. "
+        "Never include textbook section numbers, chapter numbers, page numbers, exercise numbers, or book references. "
+        "Do not use recipe, cake, or story analogies unless the student explicitly asks for an analogy. "
         "Do not include hidden reasoning, thinking tags, or analysis in the output. "
         "If the context is insufficient, say so clearly."
     )
@@ -876,8 +1157,8 @@ def _generate_local_response(
             "temperature": temperature if temperature is not None else 0.3,
             "top_p": top_p if top_p is not None else 0.9,
             "repeat_penalty": 1.1,
-            "num_predict": max_tokens if max_tokens is not None else 1024,
-            "num_ctx": 2048,
+            "num_predict": max_tokens if max_tokens is not None else 128,
+            "num_ctx": num_ctx,
         },
     }
 
@@ -903,7 +1184,8 @@ def _generate_local_response(
                 f"Local LLM returned reasoning without a final answer (done_reason={done_reason or 'unknown'})"
             )
         raise RuntimeError("Local LLM returned an empty response")
-    return _strip_academic_greeting_prefix(answer, question)
+    answer = _strip_academic_greeting_prefix(answer, question)
+    return _postprocess_local_answer(answer, question)
 
 
 def _is_local_connection_refused(error: Exception) -> bool:
@@ -946,23 +1228,43 @@ def generate_response_with_provider(
     mode = normalize_llm_mode(mode_override, LLM_MODE)
 
     if mode == "cloud":
+        if not GROQ_API_KEY:
+            logger.warning("Cloud mode requested but GROQ_API_KEY is not configured; falling back to local")
+        else:
+            try:
+                return _generate_cloud_response(
+                    enhanced_question,
+                    context,
+                    chat_history=chat_history,
+                    system_prompt=system_prompt,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+            ), "cloud"
+            except Exception as cloud_error:
+                logger.error("Cloud LLM error in cloud mode; falling back to local: %s", cloud_error)
+
         try:
-            return _generate_cloud_response(
-                enhanced_question,
+            return _generate_local_response(
+                question,
                 context,
                 chat_history=chat_history,
                 system_prompt=system_prompt,
                 temperature=temperature,
+                top_p=top_p,
                 max_tokens=max_tokens,
-            ), "cloud"
-        except Exception as cloud_error:
-            logger.error("Cloud LLM error in cloud mode: %s", cloud_error)
+            ), "local"
+        except Exception as local_error:
+            logger.error("Local LLM fallback failed in cloud mode: %s", local_error)
+            if _is_local_connection_refused(local_error):
+                return LOCAL_LLM_UNAVAILABLE_MESSAGE, "error"
+            if _is_local_timeout(local_error):
+                return LOCAL_LLM_TIMEOUT_MESSAGE, "error"
             return CLOUD_LLM_UNAVAILABLE_MESSAGE, "error"
 
     if mode == "local":
         try:
             return _generate_local_response(
-                enhanced_question,
+                question,
                 context,
                 chat_history=chat_history,
                 system_prompt=system_prompt,
@@ -1002,7 +1304,7 @@ def generate_response_with_provider(
     # Fallback: local LLM (Ollama)
     try:
         return _generate_local_response(
-            enhanced_question,
+            question,
             context,
             chat_history=chat_history,
             system_prompt=system_prompt,

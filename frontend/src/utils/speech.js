@@ -23,17 +23,25 @@ export function browserSupportsSpeechSynthesis() {
   return typeof window !== 'undefined' && 'speechSynthesis' in window;
 }
 
-export function createSpeechRecognition(language = 'en') {
+export function createSpeechRecognition(language = 'en', options = {}) {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) {
     return null;
   }
 
+  const config = getLanguageConfig(language);
   const recognition = new SpeechRecognition();
-  recognition.lang = getLanguageConfig(language).recognition[0];
+  recognition.lang = config.recognition[0];
   recognition.continuous = false;
   recognition.interimResults = false;
-  recognition.maxAlternatives = 1;
+  recognition.maxAlternatives = Math.max(1, config.recognition.length);
+
+  // Chromium exposes this experimentally for on-device recognition when a
+  // language pack is installed. Browsers that do not support it simply ignore it.
+  if (options.preferLocal && 'processLocally' in recognition) {
+    recognition.processLocally = true;
+  }
+
   return recognition;
 }
 

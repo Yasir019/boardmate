@@ -51,7 +51,7 @@ class Settings(BaseSettings):
     collection_name: str = "boardmate_textbooks"
 
     groq_api_key: str | None = Field(default=None, alias="GROQ_API_KEY")
-    groq_model: str = Field(default="llama-3.1-70b-versatile", alias="GROQ_MODEL")
+    groq_model: str = Field(default="llama-3.1-8b-instant", alias="GROQ_MODEL")
     llm_mode: str = Field(default="auto", alias="LLM_MODE")
     local_llm_base_url: str = Field(default="http://127.0.0.1:11434", alias="LOCAL_LLM_BASE_URL")
     local_llm_model: str = Field(default="qwen2.5:3b-instruct", alias="LOCAL_LLM_MODEL")
