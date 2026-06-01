@@ -6,6 +6,21 @@ BoardMate is an AI study assistant for Pakistani board students. It combines a R
 
 `https://boardmate-nu.vercel.app`
 
+## Screenshots
+
+<p align="center">
+  <img src="frontend/src/ss/landing.png" width="48%" alt="Landing page" />
+  <img src="frontend/src/ss/Chatinterface.png" width="48%" alt="Chat interface" />
+</p>
+<p align="center">
+  <img src="frontend/src/ss/Select%20Class.png" width="48%" alt="Select class" />
+  <img src="frontend/src/ss/Slect%20Subject.png" width="48%" alt="Select subject" />
+</p>
+<p align="center">
+  <img src="frontend/src/ss/View%20Book.png" width="48%" alt="Book viewer" />
+  <img src="frontend/src/ss/Screenshot%202026-05-10%20232432.png" width="48%" alt="Dashboard view" />
+</p>
+
 ## What The System Does
 
 - Student sign up and sign in with JWT authentication
@@ -21,6 +36,29 @@ BoardMate is an AI study assistant for Pakistani board students. It combines a R
 - Admin login plus reindex/upload backend routes
 
 ## Tech Stack
+
+<p align="center">
+  <img src="https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB" alt="React" />
+  <img src="https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=FFD62E" alt="Vite" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-06B6D4?logo=tailwindcss&logoColor=white" alt="Tailwind CSS" />
+  <img src="https://img.shields.io/badge/React_Router-CA4245?logo=reactrouter&logoColor=white" alt="React Router" />
+</p>
+<p align="center">
+  <img src="https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white" alt="FastAPI" />
+  <img src="https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white" alt="Python" />
+  <img src="https://img.shields.io/badge/SQLAlchemy-D71F00?logo=sqlalchemy&logoColor=white" alt="SQLAlchemy" />
+  <img src="https://img.shields.io/badge/Pydantic-E92063?logo=pydantic&logoColor=white" alt="Pydantic" />
+</p>
+<p align="center">
+  <img src="https://img.shields.io/badge/LangChain-1C3C3C?logo=langchain&logoColor=white" alt="LangChain" />
+  <img src="https://img.shields.io/badge/ChromaDB-FF6F00?logo=chromadb&logoColor=white" alt="ChromaDB" />
+  <img src="https://img.shields.io/badge/Sentence--Transformers-FFCC00?logo=huggingface&logoColor=black" alt="Sentence Transformers" />
+  <img src="https://img.shields.io/badge/SQLite-003B57?logo=sqlite&logoColor=white" alt="SQLite" />
+</p>
+<p align="center">
+  <img src="https://img.shields.io/badge/Groq-FD4E00?logo=groq&logoColor=white" alt="Groq" />
+  <img src="https://img.shields.io/badge/Ollama-000000?logo=ollama&logoColor=white" alt="Ollama" />
+</p>
 
 - Frontend: React 18, Vite, React Router
 - Backend: FastAPI, SQLAlchemy, Pydantic Settings
@@ -55,8 +93,6 @@ boardmate/
 |-- Books/
 |-- .env.example
 |-- run-all.bat
-|-- run-backend.bat
-|-- run-frontend.bat
 `-- stop-all.bat
 ```
 
@@ -139,17 +175,16 @@ cd ..
 
 ### 5. Start The App
 
-Single command on Windows:
+Use separate terminals:
 
 ```powershell
-.\run-all.bat
+cd backend
+..\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-Or use separate terminals:
-
 ```powershell
-.\run-backend.bat
-.\run-frontend.bat
+cd frontend
+npm run dev
 ```
 
 App URLs:
@@ -161,7 +196,7 @@ App URLs:
 ### 6. Stop The App
 
 ```powershell
-.\stop-all.bat
+Ctrl+C in each terminal
 ```
 
 ## Environment Variables

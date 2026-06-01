@@ -76,6 +76,9 @@ htmlcov/
 # =====================
 # Misc
 # =====================
+Boardmate_key.pem
+run-backend.bat
+run-frontend.bat
 *.bak
 *.tmp
 *.temp
