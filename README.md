@@ -18,7 +18,6 @@ BoardMate is an AI study assistant for Pakistani board students. It combines a R
 </p>
 <p align="center">
   <img src="frontend/src/ss/View%20Book.png" width="48%" alt="Book viewer" />
-  <img src="frontend/src/ss/Screenshot%202026-05-10%20232432.png" width="48%" alt="Dashboard view" />
 </p>
 
 ## What The System Does
