@@ -12,7 +12,6 @@ import {
   speakText,
   stopSpeaking,
 } from '../utils/speech';
-
 const CHAT_STORAGE_PREFIX = 'boardmate-chat-v1';
 const DEFAULT_CHAPTER_KEY = '__subject__';
 const SESSION_EXPIRED_MESSAGE = 'Your session has expired. Please sign in again.';
