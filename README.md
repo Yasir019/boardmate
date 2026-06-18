@@ -66,7 +66,7 @@ BoardMate is an AI study assistant for Pakistani board students. It combines a R
 
 ## Repository Layout
 
-```text
+```Text
 boardmate/
 |-- backend/
 |   |-- app/
